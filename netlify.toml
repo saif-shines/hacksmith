@@ -1,7 +1,8 @@
 
 [build]
-  command = "pnpm --filter @hacksmith/website build"
-  publish = "apps/website/dist"
+  base = "apps/website"
+  command = "pnpm run build"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
