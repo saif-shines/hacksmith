@@ -1,0 +1,9 @@
+node_modules
+dist
+.astro
+.turbo
+.vercel
+.netlify
+coverage
+apps/website/dist
+apps/website/.astro
