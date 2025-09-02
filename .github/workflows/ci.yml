@@ -9,11 +9,15 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v2
         with:
-          version: 10
+          version: 9
       - uses: oven-sh/setup-bun@v1
       - run: pnpm install
+      - name: Lint code
+        run: pnpm site:lint
+      - name: Format check
+        run: pnpm site:format --check
       - run: pnpm test:all
       - run: pnpm build:all
 
@@ -30,9 +34,9 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v2
         with:
-          version: 10
+          version: 9
       - uses: oven-sh/setup-bun@v1
       - run: pnpm install
       - run: pnpm build:all
