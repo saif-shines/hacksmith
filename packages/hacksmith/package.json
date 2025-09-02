@@ -18,7 +18,7 @@
     "prepack": "pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
-    "publish:np": "pnpm dlx np --any-branch"
+    "publish:np": "pnpm dlx np"
   },
   "engines": {
     "node": ">=18",
