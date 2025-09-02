@@ -6,15 +6,33 @@
   "bin": {
     "hacksmith": "./bin/hacksmith.js"
   },
+  "private": false,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon bin/hacksmith.js",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "build": "echo 'CLI build complete'",
+    "link:global": "npm link",
+    "unlink:global": "npm unlink -g hacksmith",
     "site:dev": "pnpm --filter @hacksmith/website dev",
     "site:build": "pnpm --filter @hacksmith/website build",
     "site:preview": "pnpm --filter @hacksmith/website preview",
     "site:lint": "pnpm --filter @hacksmith/website lint",
     "site:format": "pnpm --filter @hacksmith/website format",
     "turbo:dev": "turbo run dev --filter=@hacksmith/website",
-    "turbo:build": "turbo run build"
+    "turbo:build": "turbo run build",
+    "cli:dev": "pnpm --filter hacksmith dev",
+    "cli:test": "pnpm --filter hacksmith test",
+    "cli:test:watch": "pnpm --filter hacksmith test:watch",
+    "cli:build": "pnpm --filter hacksmith build",
+    "cli:link": "pnpm --filter hacksmith link:global",
+    "cli:unlink": "pnpm --filter hacksmith unlink:global",
+    "test:all": "turbo run test",
+    "build:all": "turbo run build",
+    "changeset": "changeset",
+    "release": "changeset publish",
+    "version": "changeset version",
+    "prepare": "husky"
   },
   "keywords": [
     "cli",
@@ -30,9 +48,14 @@
     "eslint-plugin-astro": "^0.34.0",
     "prettier": "^3.2.5",
     "prettier-plugin-astro": "^0.14.0",
+    "@changesets/cli": "^2.27.8",
     "turbo": "^2.0.6",
     "typescript": "^5.4.5",
     "husky": "^9.0.0",
-    "lint-staged": "^15.2.0"
+    "lint-staged": "^15.2.0",
+    "@types/node": "^20.14.2",
+    "nodemon": "^3.1.0",
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0"
   }
 }

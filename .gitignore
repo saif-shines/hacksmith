@@ -3,3 +3,7 @@ node_modules/
 .DS_Store
 apps/website/dist
 apps/website/.astro
+coverage/
+.changeset/*.md
+dist/
+build/
