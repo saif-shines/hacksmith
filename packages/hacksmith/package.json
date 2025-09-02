@@ -17,7 +17,8 @@
     "test": "bun test",
     "prepack": "pnpm build",
     "link:global": "npm link",
-    "unlink:global": "npm unlink -g hacksmith"
+    "unlink:global": "npm unlink -g hacksmith",
+    "publish:np": "pnpm dlx np --any-branch"
   },
   "engines": {
     "node": ">=18",

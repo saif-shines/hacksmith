@@ -23,6 +23,7 @@
     "cli:build": "pnpm --filter hacksmith build",
     "cli:link": "pnpm --filter hacksmith link:global",
     "cli:unlink": "pnpm --filter hacksmith unlink:global",
+    "cli:publish": "pnpm --filter hacksmith publish:np",
     "test:all": "turbo run test",
     "build:all": "turbo run build",
     "prepare": "husky"
