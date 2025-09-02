@@ -1,0 +1,26 @@
+{
+  "name": "hacksmith",
+  "version": "0.0.1",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "hacksmith": "bin/hacksmith"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --target=node --format=esm --minify --sourcemap --banner:js='#!/usr/bin/env node' --outfile=bin/hacksmith && chmod +x bin/hacksmith",
+    "test": "bun test",
+    "prepack": "pnpm build",
+    "link:global": "npm link",
+    "unlink:global": "npm unlink -g hacksmith"
+  },
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.1.0"
+  }
+}

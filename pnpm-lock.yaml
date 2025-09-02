@@ -69,6 +69,8 @@ importers:
         specifier: ^4.10.0
         version: 4.16.19(@types/node@24.3.0)(rollup@4.50.0)(typescript@5.9.2)
 
+  packages/hacksmith: {}
+
 packages:
 
   '@ampproject/remapping@2.3.0':

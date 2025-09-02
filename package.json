@@ -1,14 +1,10 @@
 {
-  "name": "hacksmith",
+  "name": "@hacksmith/monorepo",
   "version": "0.0.1",
-  "description": "A simple CLI tool - more features coming soon!",
-  "main": "index.js",
-  "bin": {
-    "hacksmith": "./bin/hacksmith.js"
-  },
-  "private": false,
+  "description": "Hacksmith monorepo",
+  "private": true,
   "scripts": {
-    "dev": "nodemon bin/hacksmith.js",
+    "dev": "turbo run dev --filter=hacksmith",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "build": "echo 'CLI build complete'",

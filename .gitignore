@@ -8,3 +8,17 @@ coverage/
 dist/
 build/
 .env
+.env.*
+!.env.example
+*.tsbuildinfo
+.turbo/
+.bun/
+bun.lockb
+pnpm-debug.log*
+.vscode/
+.idea/
+
+ # Package build outputs
+ packages/*/dist/
+ packages/*/build/
+ packages/hacksmith/bin/hacksmith
