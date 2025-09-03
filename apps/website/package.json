@@ -11,8 +11,9 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.25.0",
-    "astro": "^4.10.0"
-  },
-  "devDependencies": {}
+    "@astrojs/starlight": "^0.35.2",
+    "astro": "^5.13.5",
+    "starlight-site-graph": "^0.5.0",
+    "starlight-theme-obsidian": "^0.4.1"
+  }
 }
