@@ -11,4 +11,4 @@ Use the sidebar to explore the docs:
 
 - Overview → Introduction
 - Get Started → Install & Quickstart
-- CLI → Usage
+- [CLI → Usage](./cli/usage)
