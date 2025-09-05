@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       plugins: [starlightThemeObsidian()],
-      title: "Hacksmith Docs",
+      title: "hacksmith",
       description: "Documentation for the Hacksmith CLI",
       sidebar: [
         {
@@ -20,7 +20,7 @@ export default defineConfig({
         },
         {
           label: "CLI",
-          items: [{ label: "Usage", link: "cli/usage" }],
+          items: [{ label: "Usa  ge", link: "cli/usage" }],
         },
       ],
     }),
