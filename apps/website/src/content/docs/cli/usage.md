@@ -1,6 +1,8 @@
 ---
 title: CLI Usage
 description: Commands, flags, and examples
+sidebar:
+  label: CLI usage
 ---
 
 # CLI Usage

@@ -20,7 +20,7 @@ export default defineConfig({
         },
         {
           label: "CLI",
-          items: [{ label: "Usa  ge", link: "cli/usage" }],
+          autogenerate: { directory: "cli" },
         },
       ],
     }),
