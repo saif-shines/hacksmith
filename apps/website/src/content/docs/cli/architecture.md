@@ -32,3 +32,5 @@ terminal -> hacksmith
 hacksmith.contextifact -> "mission-brief.md"
 blueprint -> hacksmith.contextifact: "execute CLI flows"
 ```
+
+See [usage](/cli/usage) for more details.

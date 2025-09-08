@@ -4,9 +4,12 @@ import starlight from "@astrojs/starlight";
 import starlightThemeObsidian from "starlight-theme-obsidian";
 
 export default defineConfig({
-  site: "https://example.com",
+  site: "https://thehacksmith.dev",
   integrations: [
-    astroD2(),
+    astroD2({
+      layout: "elk",
+      sketch: true,
+    }),
     starlight({
       plugins: [starlightThemeObsidian()],
       title: "hacksmith",
