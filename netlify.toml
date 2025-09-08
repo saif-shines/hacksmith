@@ -2,7 +2,7 @@
 [build]
   base = "apps/website"
   command = "curl -fsSL https://d2lang.com/install.sh | sh -s -- && pnpm run build"
-  command = "pnpm run build"
+  command = "pnpm run site:build"
   publish = "dist"
 
 [build.environment]
