@@ -28,3 +28,9 @@ Preview the build:
 ```bash
 pnpm site:preview
 ```
+
+## Next Steps
+
+- Learn about [CLI Usage](./cli/usage)
+- Explore the [CLI Architecture](./cli/architecture)
+- Try the [Blueprint feature](./cli/blueprint)
