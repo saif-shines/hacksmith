@@ -1,0 +1,189 @@
+---
+title: "Blueprint"
+description: "TOML specification file that helps quicksmiths create CLI flows"
+draft: true
+---
+
+TOML specification file that helps quicksmiths create CLI flows.
+
+## Related Pages
+
+- [CLI Usage](/cli/usage/) - How to use the CLI
+- [Architecture Overview](/cli/architecture/) - Understanding the CLI structure
+- [Getting Started](/get-started/) - Installation and setup
+
+## Blueprint Structure
+
+Coming soon...
+
+```toml
+# Hacksmith Blueprint Configuration EXAMPLE
+# Version and metadata
+version = "1.0.0"
+name = "scalekit-sso-integration"
+description = "Single Sign-On integration blueprint for ScaleKit"
+provider = "scalekit"
+
+# Provider identification and authentication flow
+[auth]
+# Determines user flow - login vs signup
+has_account_check = true
+account_detection_method = "email_lookup"  # email_lookup, subdomain, manual
+login_url = "https://app.scalekit.com/login"
+signup_url = "https://app.scalekit.com/signup"
+callback_port = 8080
+callback_path = "/auth/callback"
+
+# Preview configuration - shown before browser redirect
+[preview]
+enabled = true
+title = "ScaleKit SSO Setup"
+description = "You'll be redirected to ScaleKit to configure your SSO settings and obtain API credentials"
+estimated_time = "5-10 minutes"
+steps = [
+    "Create or log into your ScaleKit account",
+    "Configure your SSO provider settings",
+    "Copy your API keys and environment ID",
+    "Return to CLI to complete integration"
+]
+
+# URL slugs with variable interpolation
+[slugs]
+base_url = "https://app.scalekit.com"
+
+# Static slugs
+[slugs.static]
+onboarding = "/onboarding/"
+dashboard = "/dashboard"
+api_keys = "/dashboard/api-keys"
+environments = "/dashboard/environments"
+
+# Dynamic slugs with variable support
+[slugs.dynamic]
+# Variables from previous steps: {env_id}, {org_id}, {app_id}
+environment_setup = "/onboarding/environment/{env_id}"
+sso_config = "/dashboard/environments/{env_id}/sso"
+app_settings = "/dashboard/environments/{env_id}/applications/{app_id}"
+webhook_config = "/dashboard/environments/{env_id}/webhooks"
+
+# Variable definitions and sources
+[variables]
+[variables.env_id]
+description = "Environment ID from ScaleKit dashboard"
+source = "user_input"  # user_input, extracted, callback_data
+required = true
+format = "string"
+validation = "^env_[a-zA-Z0-9]{12}$"
+
+[variables.org_id]
+description = "Organization ID"
+source = "extracted"
+css_selector = "[data-org-id]"
+required = true
+
+[variables.api_key]
+description = "ScaleKit API Key"
+source = "user_input"
+required = true
+sensitive = true
+format = "string"
+validation = "^sk_[a-zA-Z0-9]{32}$"
+
+[variables.api_secret]
+description = "ScaleKit API Secret"
+source = "user_input"
+required = true
+sensitive = true
+format = "string"
+
+# Context components for AI assistant prompts
+[context]
+[context.documentation]
+primary_docs = "https://docs.scalekit.com"
+quickstart_guide = "https://docs.scalekit.com/quickstart"
+api_reference = "https://docs.scalekit.com/api"
+sso_guide = "https://docs.scalekit.com/sso/setup"
+
+[context.community]
+discord = "https://discord.gg/scalekit"
+slack = "https://scalekit-community.slack.com"
+forum = "https://community.scalekit.com"
+support_email = "support@scalekit.com"
+
+[context.github_samples]
+main_repo = "https://github.com/scalekit-inc/scalekit-sdk-node"
+examples_repo = "https://github.com/scalekit-inc/examples"
+sample_apps = [
+    "https://github.com/scalekit-inc/examples/tree/main/nextjs-app",
+    "https://github.com/scalekit-inc/examples/tree/main/express-app",
+    "https://github.com/scalekit-inc/examples/tree/main/react-spa"
+]
+
+[context.swagger_spec]
+api_spec_url = "https://api.scalekit.com/openapi.json"
+interactive_docs = "https://api.scalekit.com/docs"
+postman_collection = "https://api.scalekit.com/postman/collection.json"
+
+[context.opensource_sdk]
+node_sdk = "https://github.com/scalekit-inc/scalekit-sdk-node"
+python_sdk = "https://github.com/scalekit-inc/scalekit-sdk-python"
+go_sdk = "https://github.com/scalekit-inc/scalekit-sdk-go"
+java_sdk = "https://github.com/scalekit-inc/scalekit-sdk-java"
+
+# SDK installation and setup preferences
+[sdk]
+preferred_language = "node"  # node, python, go, java
+package_manager = "npm"      # npm, yarn, pnpm, bun
+framework_hints = ["nextjs", "express", "fastify", "nuxt"]
+
+# AI Assistant prompt configuration
+[contextifact]
+# Template for the mission brief
+prompt_template = """
+You are helping a developer integrate {provider} {product_type} into their {framework} application.
+
+## Developer Context:
+- Experience level: {experience_level}
+- Current project: {project_type}
+- Tech stack: {tech_stack}
+
+## Integration Details:
+- API Environment: {env_id}
+- API Credentials: Available (stored securely)
+- Documentation: {documentation.primary_docs}
+
+## Specific Requirements:
+{requirements}
+
+## Available Resources:
+- SDK: {opensource_sdk.node_sdk}
+- Examples: {github_samples.sample_apps}
+- API Reference: {swagger_spec.interactive_docs}
+
+Please provide step-by-step integration guidance with code examples.
+"""
+
+# Data collection for personalized prompts
+[contextifact.user_profile]
+experience_level = "2-3 years"  # Filled by CLI
+project_type = "web_application"
+framework = "nextjs"
+tech_stack = ["typescript", "react", "tailwind"]
+
+# Output configuration
+[output]
+# Where to store collected data and credentials
+storage_path = "~/.hacksmith/scalekit"
+config_filename = "integration-config.json"
+credentials_filename = "credentials.env"
+
+# Mission brief generation
+mission_brief_filename = "mission-brief.claude.md"
+contextifact_filename = "contextifact.json"
+
+# Security settings
+[security]
+encrypt_credentials = true
+credential_expiry_days = 90
+require_confirmation_for_sensitive = true
+```

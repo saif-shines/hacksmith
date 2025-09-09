@@ -11,7 +11,11 @@ export default defineConfig({
       sketch: true,
     }),
     starlight({
-      plugins: [starlightThemeObsidian()],
+      plugins: [
+        starlightThemeObsidian({
+          graph: false,
+        }),
+      ],
       title: "hacksmith",
       description: "Documentation for the Hacksmith CLI",
       sidebar: [

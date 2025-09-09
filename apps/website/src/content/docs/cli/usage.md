@@ -27,3 +27,9 @@ More features coming soon...
 ```
 
 Flags and subcommands will be added as the CLI evolves.
+
+## Related
+
+- [Architecture Overview](/cli/architecture/) - Learn about the CLI structure
+- [Blueprint Feature](/cli/blueprint/) - Generate project scaffolding
+- [Back to Getting Started](/get-started/) - Installation instructions

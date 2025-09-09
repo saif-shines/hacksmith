@@ -4,7 +4,6 @@ import { pageThemeObsidianSchema } from "starlight-theme-obsidian/schema";
 
 export const collections = {
   docs: defineCollection({
-    type: "content",
     schema: docsSchema({ extend: pageThemeObsidianSchema }),
   }),
 };
