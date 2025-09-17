@@ -8,13 +8,14 @@
   },
   "files": [
     "bin",
+    "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --target=node --format=esm --minify --sourcemap --banner:js='#!/usr/bin/env node' --outfile=bin/hacksmith && chmod +x bin/hacksmith",
-    "test": "bun test",
+    "dev": "pnpm build && node --enable-source-maps dist/run.js",
+    "build": "tsc -p tsconfig.json",
+    "test": "pnpm build && bun test",
     "prepack": "pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
@@ -27,6 +28,14 @@
   "dependencies": {
     "@clack/core": "^0.5.0",
     "@clack/prompts": "^0.11.0",
+    "@oclif/core": "^4.5.3",
     "oclif": "^4.22.22"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "oclif": {
+    "bin": "hacksmith",
+    "commands": "./dist/commands"
   }
 }
