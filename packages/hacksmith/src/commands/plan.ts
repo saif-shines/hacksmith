@@ -15,9 +15,8 @@ export default class Plan extends Command {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parse(Plan);
-    this.log(`plan: first arg: ${args.firstArg}`);
-    if (flags.blueprint) {
-      this.log(`plan: blueprint: ${flags.blueprint}`);
-    }
+
+    args.firstArg && this.log(`plan: first arg: ${args.firstArg}`);
+    flags.blueprint && this.log(`plan: blueprint: ${flags.blueprint}`);
   }
 }
