@@ -8,13 +8,8 @@ const __dirname = dirname(__filename);
 const pkgRoot = dirname(__dirname);
 const binPath = join(pkgRoot, "bin", "hacksmith");
 
-test("hacksmith --help exits 0", () => {
-  const result = spawnSync(binPath, ["--help"], { encoding: "utf8" });
+test("hacksmith hello", () => {
+  const result = spawnSync(binPath, ["hello"], { encoding: "utf8" });
   expect(result.status).toBe(0);
-});
-
-test("hacksmith init placeholder runs", () => {
-  const result = spawnSync(binPath, ["init", "scalekit", "sso"], { encoding: "utf8" });
-  expect(result.status).toBe(0);
-  expect(result.stdout).toContain("init: placeholder");
+  expect(result.stdout).toContain("hello");
 });
