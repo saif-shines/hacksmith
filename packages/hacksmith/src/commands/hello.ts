@@ -1,7 +1,7 @@
 import { Args, Command } from "@oclif/core";
 
 export default class Hello extends Command {
-  static description = "Say hello";
+  static description = "CLI greets hello";
 
   static args = {
     name: Args.string({ required: false, description: "name to greet" }),
