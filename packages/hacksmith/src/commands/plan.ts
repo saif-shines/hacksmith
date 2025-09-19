@@ -14,7 +14,7 @@ export default class Plan extends Command {
   };
 
   async futurefunc(): Promise<void> {
-    this.log(`here is the joke:`);
+    this.log(`here is the joke -- new stuff`);
   }
 
   async run(): Promise<void> {
