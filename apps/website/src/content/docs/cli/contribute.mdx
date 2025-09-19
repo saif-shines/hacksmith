@@ -42,12 +42,22 @@ At the moment, the product is not even launched. Since we do not expect a lot of
         ```
     ````
 
+4.  To add any npm package you will need this --filter flag to be passed
+
+    ```sh
+    # Add to both projects individually
+    pnpm --filter hacksmith add <package-name>
+    pnpm --filter @hacksmith/website add <package-name>
+
+    # Or add as dev dependencies
+    pnpm --filter hacksmith add -D <package-name>
+    pnpm --filter @hacksmith/website add -D <package-name>
+
+    # Add to all workspaces
+    pnpm -r add <package-name>
+
+    # Add as dev dependencies to all
+    pnpm -r add -D <package-name>
+    ```
+
   </Steps>
-
-##### Website
-
-<Steps>
-
-1. coming soon
-
-</Steps>
