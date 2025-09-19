@@ -1,0 +1,53 @@
+---
+title: Contributor's guide
+---
+
+import { Steps } from "@astrojs/starlight/components";
+
+At the moment, the product is not even launched. Since we do not expect a lot of traffic coming our way, the contents in ths page are going to change drastically.
+
+#### Development mode
+
+##### Setup
+
+<Steps>
+1. Clone the repository
+   ```sh
+   git clone git@github.com:saif-shines/hacksmith.git
+   ```
+2. We decided to use `pnpm`. No good reason. Install dependencies.
+   ```sh
+    # Install and build everything
+    pnpm install && pnpm build:all
+
+    # Install only (what you asked for)
+    pnpm install
+
+    # Install with specific workspace filtering (if needed)
+    pnpm install --filter hacksmith
+    pnpm install --filter @hacksmith/website # we use astro starlight
+
+````
+3. You see this is a mono repo. There's both website and cli projects both present.
+ ```sh
+ # CLI development
+ pnpm cli:dev -- plan --blueprint foo # equivalent to hacksmith -- plan --blueprint foo
+
+ # Website development
+ pnpm site:dev
+
+ # Build everything
+ pnpm build:all
+ ```
+</Steps>
+
+
+
+##### Website
+
+<Steps>
+
+1. s
+
+</Steps>
+````

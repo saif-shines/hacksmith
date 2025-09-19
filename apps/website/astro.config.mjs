@@ -20,15 +20,11 @@ export default defineConfig({
       description: "Documentation for the Hacksmith CLI",
       sidebar: [
         {
-          label: "Overview",
-          items: [{ label: "Introduction", link: "get-started" }],
-        },
-        {
           label: "Get Started",
-          items: [{ label: "Install & Quickstart", link: "get-started" }],
+          autogenerate: { directory: "get-started" },
         },
         {
-          label: "CLI",
+          label: "Coming soon",
           autogenerate: { directory: "cli" },
         },
       ],
