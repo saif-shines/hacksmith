@@ -13,10 +13,14 @@ export default class Plan extends Command {
     }),
   };
 
+  async futurefunc(): Promise<void> {
+    this.log(`here is the joke:`);
+  }
+
   async run(): Promise<void> {
     const { args, flags } = await this.parse(Plan);
 
-    args.firstArg && this.log(`plan: first arg: ${args.firstArg}`);
+    args.firstArg && this.futurefunc();
     flags.blueprint && this.log(`plan: blueprint: ${flags.blueprint}`);
   }
 }
