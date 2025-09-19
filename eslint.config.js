@@ -32,6 +32,13 @@ export default [
         "error",
         { path: "never", types: "prefer-import", lib: "never" },
       ],
+      "@typescript-eslint/no-unused-expressions": [
+        "error",
+        {
+          allowShortCircuit: true,
+          allowTernary: true,
+        },
+      ],
     },
   },
 
