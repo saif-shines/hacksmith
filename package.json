@@ -18,6 +18,7 @@
     "turbo:dev": "turbo run dev --filter=@hacksmith/website",
     "turbo:build": "turbo run build",
     "cli:dev": "pnpm --filter hacksmith dev",
+    "cli:watch": "pnpm --filter hacksmith build:watch",
     "cli:test": "pnpm --filter hacksmith test",
     "cli:test:watch": "pnpm --filter hacksmith test:watch",
     "cli:build": "pnpm --filter hacksmith build",

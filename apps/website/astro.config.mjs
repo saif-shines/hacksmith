@@ -1,27 +1,41 @@
-import { defineConfig } from "astro/config";
+import { defineConfig, passthroughImageService } from "astro/config";
 import astroD2 from "astro-d2";
 import starlight from "@astrojs/starlight";
 import starlightThemeObsidian from "starlight-theme-obsidian";
 
 export default defineConfig({
-  site: "https://example.com",
+  site: "https://thehacksmith.dev",
+  image: {
+    service: passthroughImageService(),
+  },
   integrations: [
-    astroD2(),
+    astroD2({
+      layout: "elk",
+      sketch: true,
+    }),
     starlight({
-      plugins: [starlightThemeObsidian()],
+      // logo: {
+      // light: "./src/assets/logos/code-hammer-icon-dark.png",
+      // dark: "./src/assets/logos/hacksmith-icon-white.png",
+      // light: "./src/assets/logos/hacksmith-wordmark-dark.png",
+      // dark: "./src/assets/logos/hammer-icon-red-light.png",
+      // replacesTitle: false,
+      // },
+      plugins: [
+        starlightThemeObsidian({
+          graph: false,
+        }),
+      ],
       title: "hacksmith",
       description: "Documentation for the Hacksmith CLI",
+      customCss: ["./src/styles/custom.css"],
       sidebar: [
         {
-          label: "Overview",
-          items: [{ label: "Introduction", link: "get-started" }],
-        },
-        {
           label: "Get Started",
-          items: [{ label: "Install & Quickstart", link: "get-started" }],
+          autogenerate: { directory: "get-started" },
         },
         {
-          label: "CLI",
+          label: "Coming soon",
           autogenerate: { directory: "cli" },
         },
       ],

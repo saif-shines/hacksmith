@@ -1,6 +1,6 @@
 {
   "name": "hacksmith",
-  "version": "0.0.2",
+  "version": "0.0.3-0",
   "private": false,
   "type": "module",
   "bin": {
@@ -8,13 +8,15 @@
   },
   "files": [
     "bin",
+    "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --target=node --format=esm --minify --sourcemap --banner:js='#!/usr/bin/env node' --outfile=bin/hacksmith && chmod +x bin/hacksmith",
-    "test": "bun test",
+    "dev": "tsx src/run.ts",
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -p tsconfig.json -w",
+    "test": "pnpm build && bun test",
     "prepack": "pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
@@ -25,6 +27,18 @@
     "bun": ">=1.1.0"
   },
   "dependencies": {
+    "@clack/core": "^0.5.0",
+    "@clack/prompts": "^0.11.0",
+    "@oclif/core": "^4.5.3",
+    "oclif": "^4.22.22",
     "smol-toml": "^1.4.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "oclif": {
+    "bin": "hacksmith",
+    "commands": "./dist/commands"
   }
 }

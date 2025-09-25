@@ -1,0 +1,54 @@
+# Cursor Rules for CLI Development
+
+## CLI Guidelines Compliance
+This project follows the Command Line Interface Guidelines from https://github.com/cli-guidelines/cli-guidelines
+
+When writing or modifying CLI-related code:
+
+### Command Design
+- Use clear, descriptive command names that follow Unix conventions
+- Group related functionality using subcommands
+- Provide sensible defaults to minimize required arguments
+- Make destructive operations explicit and require confirmation
+
+### User Experience
+- Provide helpful error messages with actionable suggestions
+- Use appropriate exit codes (0 for success, non-zero for errors)
+- Support both human-readable and machine-readable output
+- Include progress indicators for long-running operations
+
+### Output Formatting
+- Use colors and formatting judiciously to enhance readability
+- Respect the user's NO_COLOR environment variable
+- Support different output formats (JSON, table, plain text)
+- Ensure output works well in both interactive and non-interactive environments
+
+### Error Handling
+- Catch and handle errors gracefully
+- Provide context about what went wrong and how to fix it
+- Use consistent error message formatting
+- Log appropriately for debugging purposes
+
+### Documentation
+- Include built-in help for all commands and options
+- Provide examples in help text
+- Use consistent terminology across all commands
+- Keep help text concise but informative
+
+### Testing
+- Write tests for all CLI commands and options
+- Test error conditions and edge cases
+- Verify output formatting and error messages
+- Test with different terminal environments
+
+### Code Organization
+- Follow the existing project structure and naming conventions
+- Use TypeScript for type safety
+- Implement proper input validation
+- Keep command implementations focused and modular
+
+## Development Commands
+- `npm test` - Run tests
+- `npm run lint` - Check code style
+- `npm run typecheck` - Run TypeScript checks
+- `npm run build` - Build the project
