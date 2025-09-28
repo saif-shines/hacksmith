@@ -1,9 +1,10 @@
-import { intro, outro, text, spinner } from "@clack/prompts";
+import { intro, outro, text } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
 // @ts-expect-error - terminal-kit doesn't have proper types
 import terminal from "terminal-kit";
-import { Command, CommandContext } from "../types/command.js";
+import { Command } from "../types/command.js";
+import { createInteractiveContext } from "./context-factory.js";
 
 export class InteractiveCLI {
   private commands = new Map<string, Command>();
@@ -44,30 +45,8 @@ export class InteractiveCLI {
     console.log();
   }
 
-  private createCommandContext(): CommandContext {
-    let currentSpinner: ReturnType<typeof spinner> | null = null;
-
-    return {
-      terminal: this.term,
-      output: (message: string) => {
-        console.log(message);
-      },
-      error: (message: string) => {
-        console.log(chalk.red(`${figures.cross} ${message}`));
-      },
-      spinner: {
-        start: (message: string) => {
-          currentSpinner = spinner();
-          currentSpinner.start(message);
-        },
-        stop: (message?: string) => {
-          if (currentSpinner) {
-            currentSpinner.stop(message || "Done");
-            currentSpinner = null;
-          }
-        },
-      },
-    };
+  private createCommandContext() {
+    return createInteractiveContext();
   }
 
   private async handleSlashCommand(input: string): Promise<void> {
@@ -118,6 +97,9 @@ export class InteractiveCLI {
     } catch (error) {
       const err = error as Error;
       console.log(chalk.red(`${figures.cross} Error executing command: ${err.message}`));
+      if (process.env.NODE_ENV === "development") {
+        console.log(chalk.gray(err.stack));
+      }
     }
   }
 

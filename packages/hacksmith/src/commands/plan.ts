@@ -1,6 +1,7 @@
 import { Command, CommandContext } from "../types/command.js";
 import { BlueprintFetcher } from "../utils/blueprint-fetcher.js";
 import { BlueprintFormatter } from "../utils/blueprint-formatter.js";
+import { createPlanArgumentParser, PlanArgs } from "../types/arguments.js";
 import chalk from "chalk";
 import figures from "figures";
 
@@ -10,7 +11,15 @@ export class PlanCommand extends Command {
   aliases = ["p"];
 
   async execute(args: string[], context: CommandContext): Promise<void> {
-    const parsed = this.parseArgs(args);
+    const parser = createPlanArgumentParser();
+    const parsed = parser.parse(args);
+
+    // Validate arguments
+    const validation = parser.validate(parsed);
+    if (!validation.isValid) {
+      validation.errors.forEach((error) => context.error(error));
+      return;
+    }
 
     // Show help if requested
     if (parsed.help || parsed.h) {
@@ -19,16 +28,25 @@ export class PlanCommand extends Command {
     }
 
     // Handle blueprint processing
-    if (parsed.blueprint || parsed.b) {
-      const blueprintPath = parsed.blueprint || parsed.b;
-      if (typeof blueprintPath === "string") {
-        await this.processBlueprint(blueprintPath, !!parsed.json || !!parsed.j, context);
-        return;
-      }
+    const blueprintPath = this.getBlueprintPath(parsed);
+    if (blueprintPath) {
+      const outputJson = this.shouldOutputJson(parsed);
+      await this.processBlueprint(blueprintPath, outputJson, context);
+      return;
     }
 
     // Default help if no arguments
     this.showDefaultHelp(context);
+  }
+
+  private getBlueprintPath(parsed: PlanArgs): string | null {
+    if (typeof parsed.blueprint === "string") return parsed.blueprint;
+    if (typeof parsed.b === "string") return parsed.b;
+    return null;
+  }
+
+  private shouldOutputJson(parsed: PlanArgs): boolean {
+    return !!parsed.json || !!parsed.j;
   }
 
   private async processBlueprint(
