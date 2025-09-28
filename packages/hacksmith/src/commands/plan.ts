@@ -1,70 +1,127 @@
-import { Args, Command, Flags } from "@oclif/core";
+import { Command, CommandContext } from "../types/command.js";
 import { BlueprintFetcher } from "../utils/blueprint-fetcher.js";
 import { BlueprintFormatter } from "../utils/blueprint-formatter.js";
+import { createPlanArgumentParser, PlanArgs } from "../types/arguments.js";
+import chalk from "chalk";
+import figures from "figures";
 
-export default class Plan extends Command {
-  static description = "Generate and manage integration plans";
+export class PlanCommand extends Command {
+  name = "plan";
+  description = "Generate and manage integration plans";
+  aliases = ["p"];
 
-  static examples = [
-    "<%= config.bin %> <%= command.id %> --blueprint ./blueprint.toml",
-    "<%= config.bin %> <%= command.id %> --blueprint https://example.com/blueprint.toml",
-  ];
+  async execute(args: string[], context: CommandContext): Promise<void> {
+    const parser = createPlanArgumentParser();
+    const parsed = parser.parse(args);
 
-  static args = {
-    firstArg: Args.string({
-      description: "Optional first argument",
-    }),
-  };
+    // Validate arguments
+    const validation = parser.validate(parsed);
+    if (!validation.isValid) {
+      validation.errors.forEach((error) => context.error(error));
+      return;
+    }
 
-  static flags = {
-    blueprint: Flags.string({
-      description: "Path to blueprint TOML file (local path or HTTP URL)",
-      char: "b",
-    }),
-    json: Flags.boolean({
-      description: "Output only JSON format",
-      char: "j",
-    }),
-  };
+    // Show help if requested
+    if (parsed.help || parsed.h) {
+      this.showHelp(context);
+      return;
+    }
 
-  private async processBlueprint(blueprintPath: string, jsonOnly = false): Promise<void> {
+    // Handle blueprint processing
+    const blueprintPath = this.getBlueprintPath(parsed);
+    if (blueprintPath) {
+      const outputJson = this.shouldOutputJson(parsed);
+      await this.processBlueprint(blueprintPath, outputJson, context);
+      return;
+    }
+
+    // Default help if no arguments
+    this.showDefaultHelp(context);
+  }
+
+  private getBlueprintPath(parsed: PlanArgs): string | null {
+    if (typeof parsed.blueprint === "string") return parsed.blueprint;
+    if (typeof parsed.b === "string") return parsed.b;
+    return null;
+  }
+
+  private shouldOutputJson(parsed: PlanArgs): boolean {
+    return !!parsed.json || !!parsed.j;
+  }
+
+  private async processBlueprint(
+    blueprintPath: string,
+    jsonOnly = false,
+    context: CommandContext
+  ): Promise<void> {
     try {
+      context.spinner.start(`Loading blueprint from ${blueprintPath}...`);
+
       const blueprint = await BlueprintFetcher.load(blueprintPath);
 
+      context.spinner.stop(`${figures.tick} Blueprint loaded successfully`);
+
       if (jsonOnly) {
-        console.log(JSON.stringify(blueprint, null, 2));
+        context.output(JSON.stringify(blueprint, null, 2));
         return;
       }
 
       const formatted = BlueprintFormatter.format(blueprint, blueprintPath);
-      BlueprintFormatter.print(formatted, this.log.bind(this));
+      BlueprintFormatter.print(formatted, context.output);
     } catch (error) {
+      context.spinner.stop();
       const err = error as Error;
-      this.error(`❌ Error processing blueprint: ${err.message}`);
+      context.error(`Error processing blueprint: ${err.message}`);
     }
   }
 
-  private showDefaultHelp(): void {
-    this.log("🔨 Hacksmith Plan Command");
-    this.log("\nUse --blueprint to specify a blueprint file:");
-    this.log("  hacksmith plan --blueprint ./path/to/blueprint.toml");
-    this.log("  hacksmith plan --blueprint https://example.com/blueprint.toml");
-    this.log("  hacksmith plan --blueprint ./blueprint.toml --json  # JSON output only");
+  private showHelp(context: CommandContext): void {
+    context.output(chalk.cyan.bold("Plan Command Help"));
+    context.output("");
+    context.output(chalk.yellow("Usage:"));
+    context.output(chalk.gray("  Interactive mode:"));
+    context.output("    /plan --blueprint <path>     Load and process a blueprint file");
+    context.output("    /plan -b <path> --json       Output blueprint as JSON");
+    context.output("    /plan --help                 Show this help message");
+    context.output("");
+    context.output(chalk.gray("  Direct command line:"));
+    context.output("    hacksmith plan --blueprint <path>     Load and process a blueprint file");
+    context.output("    hacksmith plan -b <path> --json       Output blueprint as JSON");
+    context.output("    hacksmith plan --help                 Show this help message");
+    context.output("");
+    context.output(chalk.yellow("Examples:"));
+    context.output(chalk.gray("  Interactive:"));
+    context.output("    /plan --blueprint ./blueprint.toml");
+    context.output("    /plan -b https://example.com/blueprint.toml");
+    context.output("    /plan --blueprint ./blueprint.toml --json");
+    context.output("");
+    context.output(chalk.gray("  Command line:"));
+    context.output("    hacksmith plan --blueprint ./blueprint.toml");
+    context.output("    hacksmith plan -b https://example.com/blueprint.toml");
+    context.output("    hacksmith plan --blueprint ./blueprint.toml --json");
+    context.output("");
+    context.output(chalk.yellow("Options:"));
+    context.output(
+      "  -b, --blueprint <path>  Path to blueprint TOML file (local path or HTTP URL)"
+    );
+    context.output("  -j, --json              Output only JSON format");
+    context.output("  -h, --help              Show help");
   }
 
-  async run(): Promise<void> {
-    const { args, flags } = await this.parse(Plan);
-
-    if (flags.blueprint) {
-      await this.processBlueprint(flags.blueprint, flags.json);
-      return;
-    }
-
-    if (args.firstArg) {
-      this.log("🚧 Future functionality placeholder");
-      return;
-    }
-
-    this.showDefaultHelp();
+  private showDefaultHelp(context: CommandContext): void {
+    context.output(`${figures.star} Hacksmith Plan Command`);
+    context.output("");
+    context.output("Use --blueprint to specify a blueprint file:");
+    context.output(chalk.gray("  Interactive mode:"));
+    context.output("    /plan --blueprint ./path/to/blueprint.toml");
+    context.output("    /plan --blueprint https://example.com/blueprint.toml");
+    context.output("    /plan --blueprint ./blueprint.toml --json");
+    context.output("");
+    context.output(chalk.gray("  Command line mode:"));
+    context.output("    hacksmith plan --blueprint ./path/to/blueprint.toml");
+    context.output("    hacksmith plan --blueprint https://example.com/blueprint.toml");
+    context.output("    hacksmith plan --blueprint ./blueprint.toml --json");
+    context.output("");
+    context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
   }
 }
