@@ -21,8 +21,10 @@ export class PlanCommand extends Command {
     // Handle blueprint processing
     if (parsed.blueprint || parsed.b) {
       const blueprintPath = parsed.blueprint || parsed.b;
-      await this.processBlueprint(blueprintPath, parsed.json || parsed.j, context);
-      return;
+      if (typeof blueprintPath === "string") {
+        await this.processBlueprint(blueprintPath, !!parsed.json || !!parsed.j, context);
+        return;
+      }
     }
 
     // Default help if no arguments
@@ -59,14 +61,26 @@ export class PlanCommand extends Command {
     context.output(chalk.cyan.bold("Plan Command Help"));
     context.output("");
     context.output(chalk.yellow("Usage:"));
-    context.output("  /plan --blueprint <path>     Load and process a blueprint file");
-    context.output("  /plan -b <path> --json       Output blueprint as JSON");
-    context.output("  /plan --help                 Show this help message");
+    context.output(chalk.gray("  Interactive mode:"));
+    context.output("    /plan --blueprint <path>     Load and process a blueprint file");
+    context.output("    /plan -b <path> --json       Output blueprint as JSON");
+    context.output("    /plan --help                 Show this help message");
+    context.output("");
+    context.output(chalk.gray("  Direct command line:"));
+    context.output("    hacksmith plan --blueprint <path>     Load and process a blueprint file");
+    context.output("    hacksmith plan -b <path> --json       Output blueprint as JSON");
+    context.output("    hacksmith plan --help                 Show this help message");
     context.output("");
     context.output(chalk.yellow("Examples:"));
-    context.output("  /plan --blueprint ./blueprint.toml");
-    context.output("  /plan -b https://example.com/blueprint.toml");
-    context.output("  /plan --blueprint ./blueprint.toml --json");
+    context.output(chalk.gray("  Interactive:"));
+    context.output("    /plan --blueprint ./blueprint.toml");
+    context.output("    /plan -b https://example.com/blueprint.toml");
+    context.output("    /plan --blueprint ./blueprint.toml --json");
+    context.output("");
+    context.output(chalk.gray("  Command line:"));
+    context.output("    hacksmith plan --blueprint ./blueprint.toml");
+    context.output("    hacksmith plan -b https://example.com/blueprint.toml");
+    context.output("    hacksmith plan --blueprint ./blueprint.toml --json");
     context.output("");
     context.output(chalk.yellow("Options:"));
     context.output(
@@ -80,10 +94,16 @@ export class PlanCommand extends Command {
     context.output(`${figures.star} Hacksmith Plan Command`);
     context.output("");
     context.output("Use --blueprint to specify a blueprint file:");
-    context.output("  /plan --blueprint ./path/to/blueprint.toml");
-    context.output("  /plan --blueprint https://example.com/blueprint.toml");
-    context.output("  /plan --blueprint ./blueprint.toml --json");
+    context.output(chalk.gray("  Interactive mode:"));
+    context.output("    /plan --blueprint ./path/to/blueprint.toml");
+    context.output("    /plan --blueprint https://example.com/blueprint.toml");
+    context.output("    /plan --blueprint ./blueprint.toml --json");
     context.output("");
-    context.output('Type "/plan --help" for more options.');
+    context.output(chalk.gray("  Command line mode:"));
+    context.output("    hacksmith plan --blueprint ./path/to/blueprint.toml");
+    context.output("    hacksmith plan --blueprint https://example.com/blueprint.toml");
+    context.output("    hacksmith plan --blueprint ./blueprint.toml --json");
+    context.output("");
+    context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
   }
 }
