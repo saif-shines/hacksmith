@@ -1,3 +1,19 @@
-import { run } from "@oclif/core";
+#!/usr/bin/env node
 
-await run(process.argv.slice(2), import.meta.url);
+import { InteractiveCLI } from "./cli/interactive.js";
+import { PlanCommand } from "./commands/plan.js";
+
+async function main() {
+  const cli = new InteractiveCLI();
+
+  // Register commands
+  cli.registerCommand(new PlanCommand());
+
+  // Start interactive mode
+  await cli.start();
+}
+
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});
