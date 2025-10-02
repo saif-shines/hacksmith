@@ -1,169 +1,271 @@
-# Hacksmith Blueprint Configuration
-# Version and metadata
+# Hacksmith Blueprint: Generic Product Onboarding
+# Authoring notes:
+# - Keep this file product-agnostic; fill in provider-specific URLs and copy.
+# - You can safely remove sections you don't need. Unknown keys are ignored by older CLIs.
+# - Multi-line instructional text supports TOML multi-line strings (""" ... """).
+
+schema_version = "1.0"
+
+# Core identity
 version = "1.0.0"
-name = "scalekit-sso-integration"
-description = "Single Sign-On integration blueprint for ScaleKit"
-provider = "scalekit"
+name = "Generic Product Onboarding"
+provider = "example-provider"
+description = "Guided onboarding to capture identifiers, set redirects, and install SDK or generate an AI integration prompt."
 
-# Provider identification and authentication flow
-[auth]
-# Determines user flow - login vs signup
-has_account_check = true
-account_detection_method = "email_lookup"  # email_lookup, subdomain, manual
-login_url = "https://app.scalekit.com/login"
-signup_url = "https://app.scalekit.com/signup"
-callback_port = 8080
-callback_path = "/auth/callback"
-
-# Preview configuration - shown before browser redirect
+# Optional preview for human-friendly summary
 [preview]
 enabled = true
-title = "ScaleKit SSO Setup"
-description = "You'll be redirected to ScaleKit to configure your SSO settings and obtain API credentials"
-estimated_time = "5-10 minutes"
+title = "Onboard to Your Product"
+estimated_time = "10-15 minutes"
 steps = [
-    "Create or log into your ScaleKit account",
-    "Configure your SSO provider settings",
-    "Copy your API keys and environment ID",
-    "Return to CLI to complete integration"
+  "Create account or login",
+  "Capture identifiers and API credentials",
+  "Configure redirect/callback",
+  "Install SDK or generate integration prompt"
 ]
 
-# URL slugs with variable interpolation
-[slugs]
-base_url = "https://app.scalekit.com"
+# Authentication-related context (purely informational for now)
+[auth]
+login_url = "https://auth.example.com/login"
+signup_url = "https://auth.example.com/signup"
+callback_path = "/auth/callback"  # Adjust for your app
 
-# Static slugs
-[slugs.static]
-onboarding = "/onboarding/"
-dashboard = "/dashboard"
-api_keys = "/dashboard/api-keys"
-environments = "/dashboard/environments"
-
-# Dynamic slugs with variable support
-[slugs.dynamic]
-# Variables from previous steps: {env_id}, {org_id}, {app_id}
-environment_setup = "/onboarding/environment/{env_id}"
-sso_config = "/dashboard/environments/{env_id}/sso"
-app_settings = "/dashboard/environments/{env_id}/applications/{app_id}"
-webhook_config = "/dashboard/environments/{env_id}/webhooks"
-
-# Variable definitions and sources
-[variables]
-[variables.env_id]
-description = "Environment ID from ScaleKit dashboard"
-source = "user_input"  # user_input, extracted, callback_data
+# Variables captured during the flow. Keep names simple and reusable across products.
+[variables.environment_id]
+description = "Environment identifier from dashboard (e.g., env_123456)"
 required = true
-format = "string"
-validation = "^env_[a-zA-Z0-9]{12}$"
+sensitive = false
+validation = "^env_[0-9]+$"
 
-[variables.org_id]
-description = "Organization ID"
-source = "extracted"
-css_selector = "[data-org-id]"
+[variables.environment_url]
+description = "Environment base URL (from API settings)"
 required = true
+sensitive = false
 
-[variables.api_key]
-description = "ScaleKit API Key"
-source = "user_input"
+[variables.client_id]
+description = "Client ID from API credentials"
+required = true
+sensitive = false
+
+[variables.client_secret]
+description = "Client Secret from API credentials"
 required = true
 sensitive = true
-format = "string"
-validation = "^sk_[a-zA-Z0-9]{32}$"
 
-[variables.api_secret]
-description = "ScaleKit API Secret"
-source = "user_input"
-required = true
-sensitive = true
-format = "string"
+# Optional: Persist outputs to files if/when the CLI supports it
+[output]
+storage_path = "~/.config/hacksmith"
+config_filename = "onboarding.config.json"
+credentials_filename = "credentials.secrets.json"
+mission_brief_filename = "mission-brief.txt"
+contextifact_filename = "contextifact.txt"
 
-# Context components for AI assistant prompts
-[context]
+# Optional security knobs
+[security]
+encrypt_credentials = false
+credential_expiry_days = 0
+require_confirmation_for_sensitive = true
+
+# Product context and references (docs, samples, API specs)
 [context.documentation]
-primary_docs = "https://docs.scalekit.com"
-quickstart_guide = "https://docs.scalekit.com/quickstart"
-api_reference = "https://docs.scalekit.com/api"
-sso_guide = "https://docs.scalekit.com/sso/setup"
+primary_docs = "https://docs.example.com"
+quickstart_guide = "https://docs.example.com/quickstart"
+api_reference = "https://docs.example.com/api"
+sso_guide = "https://docs.example.com/sso"
 
 [context.community]
-discord = "https://discord.gg/scalekit"
-slack = "https://scalekit-community.slack.com"
-forum = "https://community.scalekit.com"
-support_email = "support@scalekit.com"
+discord = "https://discord.gg/example"
+support_email = "support@example.com"
 
 [context.github_samples]
-main_repo = "https://github.com/scalekit-inc/scalekit-sdk-node"
-examples_repo = "https://github.com/scalekit-inc/examples"
-sample_apps = [
-    "https://github.com/scalekit-inc/examples/tree/main/nextjs-app",
-    "https://github.com/scalekit-inc/examples/tree/main/express-app",
-    "https://github.com/scalekit-inc/examples/tree/main/react-spa"
-]
+main_repo = "https://github.com/example/product"
+examples_repo = "https://github.com/example/examples"
+sample_apps = ["https://github.com/example/sample-app-1"]
 
 [context.swagger_spec]
-api_spec_url = "https://api.scalekit.com/openapi.json"
-interactive_docs = "https://api.scalekit.com/docs"
-postman_collection = "https://api.scalekit.com/postman/collection.json"
+api_spec_url = "https://api.example.com/openapi.json"
+interactive_docs = "https://api.example.com/docs"
+postman_collection = "https://api.example.com/postman.json"
 
-[context.opensource_sdk]
-node_sdk = "https://github.com/scalekit-inc/scalekit-sdk-node"
-python_sdk = "https://github.com/scalekit-inc/scalekit-sdk-python"
-go_sdk = "https://github.com/scalekit-inc/scalekit-sdk-go"
-java_sdk = "https://github.com/scalekit-inc/scalekit-sdk-java"
-
-# SDK installation and setup preferences
 [sdk]
-preferred_language = "node"  # node, python, go, java
-package_manager = "npm"      # npm, yarn, pnpm, bun
-framework_hints = ["nextjs", "express", "fastify", "nuxt"]
+preferred_language = "node"
+package_manager = "npm"
+framework_hints = ["node", "python", "go", "nextjs"]
 
-# AI Assistant prompt configuration
+# Reusable URL pieces for templating
+[slugs]
+base_url = "https://app.example.com"
+
+[slugs.dynamic]
+dashboard = "/ws/environments/{{ environment_id }}/quick-start"
+api_credentials = "/ws/environments/{{ environment_id }}/settings/api-credentials"
+auth_redirects = "/ws/environments/{{ environment_id }}/authentication/redirects"
+
+# Optional: general-purpose prompt template building block
 [contextifact]
-# Template for the mission brief
 prompt_template = """
-You are helping a developer integrate {provider} {product_type} into their {framework} application.
-
-## Developer Context:
-- Experience level: {experience_level}
-- Current project: {project_type}
-- Tech stack: {tech_stack}
-
-## Integration Details:
-- API Environment: {env_id}
-- API Credentials: Available (stored securely)
-- Documentation: {documentation.primary_docs}
-
-## Specific Requirements:
-{requirements}
-
-## Available Resources:
-- SDK: {opensource_sdk.node_sdk}
-- Examples: {github_samples.sample_apps}
-- API Reference: {swagger_spec.interactive_docs}
-
-Please provide step-by-step integration guidance with code examples.
+You are helping integrate the Example product without a prebuilt SDK.
+Inputs:
+- Environment ID: {{ environment_id }}
+- Environment URL: {{ environment_url }}
+- Client ID: {{ client_id }}
+- Client Secret: {{ client_secret }}
+Goal: Outline the exact code changes and API calls needed to authenticate
+and fetch a minimal resource, with curl and language-agnostic examples.
+Include redirect config for {{ auth.callback_path }} if relevant.
 """
 
-# Data collection for personalized prompts
-[contextifact.user_profile]
-experience_level = "2-3 years"  # Filled by CLI
-project_type = "web_application"
-framework = "nextjs"
-tech_stack = ["typescript", "react", "tailwind"]
+# --- Proposed step protocol (forward-compatible). Current CLI will parse this
+# --- structure but may not yet execute steps. It is safe to leave here.
 
-# Output configuration
-[output]
-# Where to store collected data and credentials
-storage_path = "~/.hacksmith/scalekit"
-config_filename = "integration-config.json"
-credentials_filename = "credentials.env"
+[[flows]]
+id = "onboarding"
+title = "Generic Product Onboarding"
 
-# Mission brief generation
-mission_brief_filename = "mission-brief.claude.md"
-contextifact_filename = "contextifact.json"
+# 1) Welcome / overview
+[[flows.steps]]
+id = "welcome"
+type = "info"
+title = "Welcome"
+markdown = """
+Follow these steps to capture identifiers and set up the SDK.
+If you already have credentials, you can skip ahead.
+"""
 
-# Security settings
-[security]
-encrypt_credentials = true
-credential_expiry_days = 90
-require_confirmation_for_sensitive = true
+# 2) Login / Signup
+[[flows.steps]]
+id = "auth-info"
+type = "info"
+title = "Create an account or login"
+markdown = """
+- Login — {{ auth.login_url }}
+- Sign up — {{ auth.signup_url }}
+Complete email/OTP/magic link/OAuth and ensure you can access the dashboard.
+"""
+
+[[flows.steps]]
+id = "open-login"
+type = "navigate"
+title = "Open login page"
+url = "{{ auth.login_url }}"
+instructions = [
+  "Enter your email",
+  "Complete OTP/magic link/OAuth",
+  "Open the dashboard once authenticated"
+]
+
+# 3) Capture Environment ID
+[[flows.steps]]
+id = "open-dashboard"
+type = "navigate"
+title = "Open dashboard"
+url = "{{ slugs.base_url }}{{ slugs.dynamic.dashboard }}"
+instructions = [
+  "Locate your Environment ID on the dashboard (e.g., env_123...)"
+]
+
+[[flows.steps]]
+id = "capture-env-id"
+type = "input"
+title = "Paste Environment ID"
+save_to = "environment_id"
+validate.pattern = "^env_[0-9]+$"
+validate.message = "Must look like env_123456..."
+
+# 4) Capture API credentials
+[[flows.steps]]
+id = "open-api-creds"
+type = "navigate"
+title = "Open API credentials"
+url = "{{ slugs.base_url }}{{ slugs.dynamic.api_credentials }}"
+instructions = [
+  "Copy Client ID, Client Secret, and Environment URL"
+]
+
+[[flows.steps]]
+id = "capture-creds"
+type = "input"
+title = "Paste API credentials"
+# Multiple inputs captured in a single step
+[[flows.steps.inputs]]
+name = "client_id"
+sensitive = false
+
+[[flows.steps.inputs]]
+name = "client_secret"
+sensitive = true
+
+[[flows.steps.inputs]]
+name = "environment_url"
+sensitive = false
+
+# 5) Configure redirect URL
+[[flows.steps]]
+id = "open-redirects"
+type = "navigate"
+title = "Open Authentication Redirects"
+url = "{{ slugs.base_url }}{{ slugs.dynamic.auth_redirects }}"
+instructions = [
+  "Enter the chosen redirect URL for your app (e.g., http://localhost:3000{{ auth.callback_path }})",
+  "Click Add to register it"
+]
+
+# 6) Choose stack
+[[flows.steps]]
+id = "choose-stack"
+type = "choice"
+title = "Pick your stack"
+save_to = "sdk.language"
+options = ["node", "python", "go", "nextjs", "no_sdk"]
+
+# 7) SDK-specific guidance
+[[flows.steps]]
+id = "node-install"
+type = "show_commands"
+when = "sdk.language == 'node'"
+commands = [
+  "npm i @vendor/sdk",
+  "npx vendor init"
+]
+
+[[flows.steps]]
+id = "python-install"
+type = "show_commands"
+when = "sdk.language == 'python'"
+commands = [
+  "pip install vendor-sdk"
+]
+
+[[flows.steps]]
+id = "go-install"
+type = "show_commands"
+when = "sdk.language == 'go'"
+commands = [
+  "go get github.com/vendor/sdk"
+]
+
+[[flows.steps]]
+id = "nextjs-install"
+type = "show_commands"
+when = "sdk.language == 'nextjs'"
+commands = [
+  "npm i @vendor/sdk",
+  "npx vendor init --framework nextjs"
+]
+
+# 8) No SDK path — generate integration prompt
+[[flows.steps]]
+id = "no-sdk-prompt"
+type = "ai_prompt"
+when = "sdk.language == 'no_sdk'"
+provider = "claude"
+model = "claude-3-7-sonnet"
+prompt_template = """
+Using:
+- Env ID: {{ environment_id }}
+- Env URL: {{ environment_url }}
+- Client ID: {{ client_id }}
+- Client Secret: {{ client_secret }}
+Describe minimal API calls and code changes to authenticate and fetch a resource.
+Include curl and a language-agnostic outline. Mask secrets in output.
+"""
