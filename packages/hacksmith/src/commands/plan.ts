@@ -160,7 +160,7 @@ export class PlanCommand extends Command {
   }
 
   private showDefaultHelp(context: CommandContext): void {
-    context.output(`${figures.star} Hacksmith Plan Command`);
+    context.output(`${figures.smiley} Planning...`);
     context.output("");
     context.output("Use --blueprint for files or --github for repositories:");
     context.output(chalk.gray("  Interactive mode:"));
