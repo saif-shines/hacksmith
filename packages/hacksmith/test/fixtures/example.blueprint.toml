@@ -4,31 +4,22 @@
 # - You can safely remove sections you don't need. Unknown keys are ignored by older CLIs.
 # - Multi-line instructional text supports TOML multi-line strings (""" ... """).
 
-schema_version = "1.0"
-
-# Core identity
-version = "1.0.0"
-name = "Generic Product Onboarding"
-provider = "example-provider"
-description = "Guided onboarding to capture identifiers, set redirects, and install SDK or generate an AI integration prompt."
+schema_version = "0.1"
+smith="saif-shines/hacksmith-blueprints"
+description = "Example blueprint for onboarding a user to Scalekit for SSO"
 
 # Optional preview for human-friendly summary
 [preview]
 enabled = true
-title = "Onboard to Your Product"
-estimated_time = "10-15 minutes"
+title = "Onboard to Scalekit for SSO"
+estimated_time = "60s"
+
 steps = [
   "Create account or login",
   "Capture identifiers and API credentials",
   "Configure redirect/callback",
   "Install SDK or generate integration prompt"
 ]
-
-# Authentication-related context (purely informational for now)
-[auth]
-login_url = "https://auth.example.com/login"
-signup_url = "https://auth.example.com/signup"
-callback_path = "/auth/callback"  # Adjust for your app
 
 # Variables captured during the flow. Keep names simple and reusable across products.
 [variables.environment_id]
@@ -53,18 +44,18 @@ required = true
 sensitive = true
 
 # Optional: Persist outputs to files if/when the CLI supports it
-[output]
-storage_path = "~/.config/hacksmith"
-config_filename = "onboarding.config.json"
-credentials_filename = "credentials.secrets.json"
-mission_brief_filename = "mission-brief.txt"
-contextifact_filename = "contextifact.txt"
+# [output]
+# storage_path = "~/.config/hacksmith"
+# config_filename = "onboarding.config.json"
+# credentials_filename = "credentials.secrets.json"
+# mission_brief_filename = "mission-brief.txt"
+# contextifact_filename = "contextifact.txt"
 
 # Optional security knobs
-[security]
-encrypt_credentials = false
-credential_expiry_days = 0
-require_confirmation_for_sensitive = true
+# [security]
+# encrypt_credentials = false
+# credential_expiry_days = 0
+# require_confirmation_for_sensitive = true
 
 # Product context and references (docs, samples, API specs)
 [context.documentation]

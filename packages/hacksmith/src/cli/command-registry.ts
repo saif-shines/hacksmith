@@ -41,6 +41,7 @@ export class CommandRegistry {
       cmd
         .option("-b, --blueprint <path>", "Path to blueprint TOML file (local path or HTTP URL)")
         .option("-g, --github <repo>", "GitHub repository (owner/repo format)")
+        .option("-e, --execute", "Execute blueprint flows interactively")
         .option("-j, --json", "Output only JSON format")
         .option("-h, --help", "Show help");
     }

@@ -3,6 +3,7 @@ import type { BlueprintSource, BlueprintOption } from "./blueprint-sources/base-
 import { FileSource } from "./blueprint-sources/file-source.js";
 import { HttpSource } from "./blueprint-sources/http-source.js";
 import { GitHubSource } from "./blueprint-sources/github-source.js";
+import { BlueprintValidator } from "./blueprint-validator.js";
 
 export class BlueprintService {
   private static sources: BlueprintSource[] = [
@@ -10,6 +11,7 @@ export class BlueprintService {
     new HttpSource(),
     new FileSource(),
   ];
+  private static validator = new BlueprintValidator();
 
   static getSourceForInput(input: string): BlueprintSource {
     const source = this.sources.find((s) => s.canHandle(input));
@@ -19,9 +21,45 @@ export class BlueprintService {
     return source;
   }
 
-  static async load(input: string): Promise<BlueprintConfig> {
+  static async load(
+    input: string,
+    options?: { skipValidation?: boolean }
+  ): Promise<BlueprintConfig> {
     const source = this.getSourceForInput(input);
-    return source.load(input);
+    const blueprint = await source.load(input);
+
+    // Validate blueprint unless explicitly skipped
+    if (!options?.skipValidation) {
+      const validation = this.validator.validate(blueprint);
+
+      if (!validation.valid) {
+        const errorMessages = validation.errors
+          .map((err) => `  - ${err.field}: ${err.message}`)
+          .join("\n");
+
+        throw new Error(`Blueprint validation failed:\n${errorMessages}\n\nSource: ${input}`);
+      }
+
+      // Validate individual flow steps if flows exist
+      if (blueprint.flows) {
+        for (const flow of blueprint.flows) {
+          for (const step of flow.steps) {
+            const stepValidation = this.validator.validateStepType(step);
+            if (!stepValidation.valid) {
+              const stepErrors = stepValidation.errors
+                .map((err) => `  - ${err.field}: ${err.message}`)
+                .join("\n");
+
+              throw new Error(
+                `Flow "${flow.id}" step "${step.id}" validation failed:\n${stepErrors}`
+              );
+            }
+          }
+        }
+      }
+    }
+
+    return blueprint;
   }
 
   static async listAvailable(input: string): Promise<BlueprintOption[]> {

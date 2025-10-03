@@ -12,6 +12,8 @@ export interface PlanArgs extends ParsedArgs {
   g?: string | boolean;
   json?: boolean;
   j?: boolean;
+  execute?: boolean;
+  e?: boolean;
 }
 
 // Type-safe argument parser result
