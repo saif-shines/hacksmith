@@ -26,6 +26,7 @@ This project follows the [Command Line Interface Guidelines](https://github.com/
 - Provide progress indicators for long operations
 - Support different output formats (JSON, table, etc.)
 - Respect the user's terminal capabilities
+- After you generate the code, see if there's a good opportunity to refactor code for better maintainability
 
 ### Error Handling
 
