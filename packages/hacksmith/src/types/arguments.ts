@@ -8,6 +8,8 @@ export interface ParsedArgs {
 export interface PlanArgs extends ParsedArgs {
   blueprint?: string | boolean;
   b?: string | boolean;
+  github?: string | boolean;
+  g?: string | boolean;
   json?: boolean;
   j?: boolean;
 }
@@ -27,14 +29,22 @@ export function createArgumentParser<T extends ParsedArgs>(): ArgumentParser<T> 
       for (let i = 0; i < args.length; i++) {
         const arg = args[i];
         if (arg.startsWith("--")) {
-          const key = arg.slice(2) as keyof T;
-          const nextArg = args[i + 1];
-
-          if (nextArg && !nextArg.startsWith("-")) {
-            parsed[key] = nextArg as T[keyof T];
-            i++; // Skip next arg since we consumed it
+          // Handle --key=value format
+          if (arg.includes("=")) {
+            const [keyPart, ...valueParts] = arg.slice(2).split("=");
+            const key = keyPart as keyof T;
+            const value = valueParts.join("=");
+            parsed[key] = value as T[keyof T];
           } else {
-            parsed[key] = true as T[keyof T];
+            const key = arg.slice(2) as keyof T;
+            const nextArg = args[i + 1];
+
+            if (nextArg && !nextArg.startsWith("-")) {
+              parsed[key] = nextArg as T[keyof T];
+              i++; // Skip next arg since we consumed it
+            } else {
+              parsed[key] = true as T[keyof T];
+            }
           }
         } else if (arg.startsWith("-")) {
           const key = arg.slice(1) as keyof T;
@@ -68,9 +78,22 @@ export function createPlanArgumentParser(): ArgumentParser<PlanArgs> {
     validate: (parsed: PlanArgs): { isValid: boolean; errors: string[] } => {
       const errors: string[] = [];
 
+      // Check if both blueprint and github flags are provided
+      const hasBlueprint = typeof parsed.blueprint === "string" || typeof parsed.b === "string";
+      const hasGithub = typeof parsed.github === "string" || typeof parsed.g === "string";
+
+      if (hasBlueprint && hasGithub) {
+        errors.push("Cannot use both --blueprint and --github flags simultaneously");
+      }
+
       // If blueprint is requested as flag only (true), ensure path is provided
       if (parsed.blueprint === true || parsed.b === true) {
         errors.push("Blueprint path is required when using --blueprint or -b");
+      }
+
+      // If github is requested as flag only (true), ensure repo is provided
+      if (parsed.github === true || parsed.g === true) {
+        errors.push("GitHub repository is required when using --github or -g");
       }
 
       // Validate blueprint path format if provided
@@ -83,6 +106,18 @@ export function createPlanArgumentParser(): ArgumentParser<PlanArgs> {
 
       if (blueprintPath !== null && blueprintPath.length === 0) {
         errors.push("Blueprint path cannot be empty");
+      }
+
+      // Validate github repo format if provided
+      const githubRepo =
+        typeof parsed.github === "string"
+          ? parsed.github
+          : typeof parsed.g === "string"
+            ? parsed.g
+            : null;
+
+      if (githubRepo !== null && githubRepo.length === 0) {
+        errors.push("GitHub repository cannot be empty");
       }
 
       return {
