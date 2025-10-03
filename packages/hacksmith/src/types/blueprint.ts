@@ -76,7 +76,73 @@ export interface SecurityConfig {
   require_confirmation_for_sensitive?: boolean;
 }
 
+export interface FlowInput {
+  name: string;
+  label?: string;
+  sensitive?: boolean;
+  placeholder?: string;
+}
+
+export interface FlowValidation {
+  pattern?: string;
+  message?: string;
+}
+
+export type FlowStepType =
+  | "info"
+  | "navigate"
+  | "input"
+  | "choice"
+  | "confirm"
+  | "show_commands"
+  | "ai_prompt";
+
+export interface FlowStep {
+  id: string;
+  type: FlowStepType;
+  title?: string;
+  when?: string;
+
+  // info step
+  markdown?: string;
+
+  // navigate step
+  url?: string;
+  instructions?: string[];
+
+  // input step
+  save_to?: string;
+  placeholder?: string;
+  validate?: FlowValidation;
+  inputs?: FlowInput[];
+
+  // choice step
+  options?: string[];
+
+  // confirm step
+  message?: string;
+
+  // show_commands step
+  commands?: string[];
+
+  // ai_prompt step
+  provider?: string;
+  model?: string;
+  prompt_template?: string;
+
+  // Index signature for validator compatibility
+  [key: string]: unknown;
+}
+
+export interface Flow {
+  id: string;
+  title: string;
+  steps: FlowStep[];
+}
+
 export interface BlueprintConfig {
+  schema_version?: string;
+  smith?: string;
   version?: string;
   name?: string;
   description?: string;
@@ -97,5 +163,6 @@ export interface BlueprintConfig {
     prompt_template?: string;
     user_profile?: Record<string, unknown>;
   };
+  flows?: Flow[];
   [key: string]: unknown;
 }

@@ -2,6 +2,7 @@ import { Command, CommandContext } from "../types/command.js";
 import { BlueprintService } from "../services/blueprint-service.js";
 import { UIService } from "../services/ui-service.js";
 import { BlueprintFormatter } from "../utils/blueprint-formatter.js";
+import { FlowExecutor } from "../services/flow-executor.js";
 import { createPlanArgumentParser, PlanArgs } from "../types/arguments.js";
 import { PLAN_COMMAND_DEFINITION } from "../types/command-options.js";
 import chalk from "chalk";
@@ -41,7 +42,8 @@ export class PlanCommand extends Command {
     const blueprintPath = this.getBlueprintPath(parsed);
     if (blueprintPath) {
       const outputJson = this.shouldOutputJson(parsed);
-      await this.processInput(blueprintPath, outputJson, context, false);
+      const shouldExecute = this.shouldExecuteFlow(parsed);
+      await this.processInput(blueprintPath, outputJson, context, false, shouldExecute);
       return;
     }
 
@@ -65,11 +67,16 @@ export class PlanCommand extends Command {
     return !!parsed.json || !!parsed.j;
   }
 
+  private shouldExecuteFlow(parsed: PlanArgs): boolean {
+    return !!parsed.execute || !!parsed.e;
+  }
+
   private async processInput(
     input: string,
     jsonOnly = false,
     context: CommandContext,
-    allowListing = false
+    allowListing = false,
+    executeFlow = false
   ): Promise<void> {
     try {
       // Check if we can list blueprints from this input
@@ -84,10 +91,10 @@ export class PlanCommand extends Command {
         }
 
         // Load the selected blueprint
-        await this.loadAndDisplayBlueprint(selectedUrl, jsonOnly, context);
+        await this.loadAndDisplayBlueprint(selectedUrl, jsonOnly, context, executeFlow);
       } else {
         // Direct blueprint loading
-        await this.loadAndDisplayBlueprint(input, jsonOnly, context);
+        await this.loadAndDisplayBlueprint(input, jsonOnly, context, executeFlow);
       }
     } catch (error) {
       context.spinner.stop();
@@ -100,7 +107,8 @@ export class PlanCommand extends Command {
   private async loadAndDisplayBlueprint(
     input: string,
     jsonOnly: boolean,
-    context: CommandContext
+    context: CommandContext,
+    executeFlow: boolean
   ): Promise<void> {
     context.spinner.start(`Loading blueprint from ${input}...`);
     const blueprint = await BlueprintService.load(input);
@@ -108,6 +116,22 @@ export class PlanCommand extends Command {
 
     if (jsonOnly) {
       context.output(JSON.stringify(blueprint, null, 2));
+      return;
+    }
+
+    // Check if we should execute flows
+    if (executeFlow && blueprint.flows && blueprint.flows.length > 0) {
+      const executor = new FlowExecutor();
+      const result = await executor.executeFlows(blueprint);
+
+      if (result.success) {
+        executor.displaySummary();
+      } else if (result.cancelled) {
+        context.output(chalk.yellow("\nFlow execution cancelled"));
+      } else {
+        context.error(`Flow execution failed: ${result.error || "Unknown error"}`);
+      }
+
       return;
     }
 
@@ -120,32 +144,40 @@ export class PlanCommand extends Command {
     context.output("");
     context.output(chalk.yellow("Usage:"));
     context.output(chalk.gray("  Interactive mode:"));
-    context.output("    /plan --blueprint <path>     Load and process a blueprint file");
-    context.output("    /plan -b <path> --json       Output blueprint as JSON");
-    context.output("    /plan --github <owner/repo>  List and select from GitHub repository");
-    context.output("    /plan -g <owner/repo>        List and select from GitHub repository");
-    context.output("    /plan --help                 Show this help message");
+    context.output("    /plan --blueprint <path>          Load and process a blueprint file");
+    context.output("    /plan -b <path> --execute         Load and execute blueprint flows");
+    context.output("    /plan -b <path> --json            Output blueprint as JSON");
+    context.output("    /plan --github <owner/repo>       List and select from GitHub repository");
+    context.output("    /plan -g <owner/repo>             List and select from GitHub repository");
+    context.output("    /plan --help                      Show this help message");
     context.output("");
     context.output(chalk.gray("  Direct command line:"));
-    context.output("    hacksmith plan --blueprint <path>     Load and process a blueprint file");
-    context.output("    hacksmith plan -b <path> --json       Output blueprint as JSON");
     context.output(
-      "    hacksmith plan --github <owner/repo>  List and select from GitHub repository"
+      "    hacksmith plan --blueprint <path>          Load and process a blueprint file"
     );
     context.output(
-      "    hacksmith plan -g <owner/repo>        List and select from GitHub repository"
+      "    hacksmith plan -b <path> --execute         Load and execute blueprint flows"
     );
-    context.output("    hacksmith plan --help                 Show this help message");
+    context.output("    hacksmith plan -b <path> --json            Output blueprint as JSON");
+    context.output(
+      "    hacksmith plan --github <owner/repo>       List and select from GitHub repository"
+    );
+    context.output(
+      "    hacksmith plan -g <owner/repo>             List and select from GitHub repository"
+    );
+    context.output("    hacksmith plan --help                      Show this help message");
     context.output("");
     context.output(chalk.yellow("Examples:"));
     context.output(chalk.gray("  Interactive:"));
     context.output("    /plan --blueprint ./blueprint.toml");
+    context.output("    /plan -b ./blueprint.toml --execute");
     context.output("    /plan -b https://example.com/blueprint.toml");
     context.output("    /plan --github saif-shines/hacksmith-blueprints");
     context.output("    /plan --github=owner/repo --json");
     context.output("");
     context.output(chalk.gray("  Command line:"));
     context.output("    hacksmith plan --blueprint ./blueprint.toml");
+    context.output("    hacksmith plan -b ./blueprint.toml --execute");
     context.output("    hacksmith plan -b https://example.com/blueprint.toml");
     context.output("    hacksmith plan --github saif-shines/hacksmith-blueprints");
     context.output("    hacksmith plan --github=owner/repo --json");
@@ -155,25 +187,36 @@ export class PlanCommand extends Command {
       "  -b, --blueprint <path>  Path to blueprint TOML file (local path or HTTP URL)"
     );
     context.output("  -g, --github <repo>     GitHub repository (owner/repo format)");
+    context.output("  -e, --execute           Execute blueprint flows interactively");
     context.output("  -j, --json              Output only JSON format");
     context.output("  -h, --help              Show help");
   }
 
   private showDefaultHelp(context: CommandContext): void {
-    context.output(`${figures.star} Hacksmith Plan Command`);
+    context.output(`${figures.smiley} Planning...`);
     context.output("");
     context.output("Use --blueprint for files or --github for repositories:");
     context.output(chalk.gray("  Interactive mode:"));
     context.output("    /plan --blueprint ./path/to/blueprint.toml");
+    context.output(
+      "    /plan -b ./blueprint.toml --execute          " + chalk.gray("# Execute flows")
+    );
     context.output("    /plan --blueprint https://example.com/blueprint.toml");
     context.output("    /plan --github saif-shines/hacksmith-blueprints");
     context.output("    /plan --github=owner/repo --json");
     context.output("");
     context.output(chalk.gray("  Command line mode:"));
     context.output("    hacksmith plan --blueprint ./path/to/blueprint.toml");
+    context.output(
+      "    hacksmith plan -b ./blueprint.toml --execute   " + chalk.gray("# Execute flows")
+    );
     context.output("    hacksmith plan --blueprint https://example.com/blueprint.toml");
     context.output("    hacksmith plan --github saif-shines/hacksmith-blueprints");
     context.output("    hacksmith plan --github=owner/repo --json");
+    context.output("");
+    context.output(chalk.yellow("Key Options:"));
+    context.output("  -e, --execute    Execute blueprint flows interactively");
+    context.output("  -j, --json       Output blueprint as JSON");
     context.output("");
     context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
   }

@@ -1,10 +1,10 @@
 ---
 title: "Blueprint"
 description: "TOML specification file that helps quicksmiths create CLI flows"
-draft: true
+draft: false
 ---
 
-TOML specification file that helps quicksmiths create CLI flows.
+Blueprint files are TOML specifications that define interactive CLI flows for product integrations. They guide users through multi-step processes like authentication, configuration, and API setup using structured, validated flows.
 
 ## Related Pages
 
@@ -12,9 +12,17 @@ TOML specification file that helps quicksmiths create CLI flows.
 - [Architecture Overview](/cli/architecture/) - Understanding the CLI structure
 - [Getting Started](/get-started/) - Installation and setup
 
+## Quick Start
+
+Execute a blueprint flow:
+
+```bash
+hacksmith plan --blueprint ./my-blueprint.toml --execute
+```
+
 ## Blueprint Structure
 
-Coming soon...
+A blueprint consists of several sections:
 
 ```toml
 # Hacksmith Blueprint Configuration EXAMPLE
@@ -184,6 +192,374 @@ contextifact_filename = "contextifact.json"
 # Security settings
 [security]
 encrypt_credentials = true
-credential_expiry_days = 90
+credential_expiry_day = 90
 require_confirmation_for_sensitive = true
 ```
+
+## Authoring Blueprint Flows
+
+The `[[flows]]` section is where you define interactive user journeys. Each flow contains sequential steps that execute using @clack/prompts.
+
+### Basic Flow Structure
+
+```toml
+[[flows]]
+id = "onboarding"
+title = "Product Onboarding"
+
+[[flows.steps]]
+id = "welcome"
+type = "info"
+title = "Welcome"
+markdown = "Welcome to the setup process!"
+```
+
+### Available Step Types
+
+#### 1. Info Step
+
+Display information to the user.
+
+```toml
+[[flows.steps]]
+id = "welcome"
+type = "info"
+title = "Welcome"
+markdown = """
+Follow these steps to complete setup:
+- Create an account
+- Get API credentials
+- Configure your app
+"""
+```
+
+#### 2. Navigate Step
+
+Direct users to a URL with instructions.
+
+```toml
+[[flows.steps]]
+id = "open-dashboard"
+type = "navigate"
+title = "Open Dashboard"
+url = "https://app.example.com/dashboard"
+instructions = [
+  "Locate your Environment ID",
+  "Copy the ID (starts with env_)",
+]
+```
+
+**With Variable Interpolation:**
+
+```toml
+[[flows.steps]]
+id = "open-settings"
+type = "navigate"
+title = "Open API Settings"
+url = "https://app.example.com/env/{{ environment_id }}/settings"
+instructions = [
+  "Copy your Client ID",
+  "Copy your Client Secret"
+]
+```
+
+#### 3. Input Step
+
+Capture user input with validation.
+
+**Single Input:**
+
+```toml
+[[flows.steps]]
+id = "capture-env-id"
+type = "input"
+title = "Paste Environment ID"
+save_to = "environment_id"
+placeholder = "env_123456"
+
+[flows.steps.validate]
+pattern = "^env_[0-9]+$"
+message = "Must start with env_ followed by numbers"
+```
+
+**Multiple Inputs:**
+
+```toml
+[[flows.steps]]
+id = "capture-credentials"
+type = "input"
+title = "Enter API Credentials"
+
+[[flows.steps.inputs]]
+name = "client_id"
+label = "Client ID"
+sensitive = false
+
+[[flows.steps.inputs]]
+name = "client_secret"
+label = "Client Secret"
+sensitive = true
+```
+
+#### 4. Choice Step
+
+Present options for user selection.
+
+```toml
+[[flows.steps]]
+id = "choose-language"
+type = "choice"
+title = "Select your programming language"
+save_to = "sdk.language"
+options = ["node", "python", "go", "java"]
+```
+
+#### 5. Confirm Step
+
+Ask for user confirmation.
+
+```toml
+[[flows.steps]]
+id = "confirm-ready"
+type = "confirm"
+title = "Are you ready to proceed?"
+message = "Press Enter when logged in"
+```
+
+#### 6. Show Commands Step
+
+Display commands for users to run.
+
+```toml
+[[flows.steps]]
+id = "install-sdk"
+type = "show_commands"
+title = "Install SDK"
+commands = [
+  "npm install @vendor/sdk",
+  "npx vendor init"
+]
+```
+
+### Conditional Steps
+
+Use `when` to conditionally execute steps based on variables.
+
+```toml
+[[flows.steps]]
+id = "node-install"
+type = "show_commands"
+when = "sdk.language == 'node'"
+title = "Install Node SDK"
+commands = ["npm i @vendor/sdk"]
+
+[[flows.steps]]
+id = "python-install"
+type = "show_commands"
+when = "sdk.language == 'python'"
+title = "Install Python SDK"
+commands = ["pip install vendor-sdk"]
+```
+
+### Variable Interpolation
+
+Use `{{ variable_name }}` to inject values captured in previous steps.
+
+```toml
+[[flows.steps]]
+id = "show-config"
+type = "info"
+markdown = """
+Your configuration:
+- Environment: {{ environment_id }}
+- Client ID: {{ client_id }}
+- Redirect URL: {{ redirect_url }}
+"""
+```
+
+**Nested Variables:**
+
+```toml
+url = "{{ slugs.base_url }}/env/{{ environment_id }}/settings"
+```
+
+## Complete Flow Example
+
+```toml
+schema_version = "0.1"
+description = "Complete onboarding flow example"
+
+[[flows]]
+id = "onboarding"
+title = "Product Onboarding"
+
+# Step 1: Welcome
+[[flows.steps]]
+id = "welcome"
+type = "info"
+title = "Welcome"
+markdown = "Let's get you set up!"
+
+# Step 2: Login or Signup
+[[flows.steps]]
+id = "choose-auth"
+type = "choice"
+title = "Do you have an account?"
+save_to = "has_account"
+options = ["login", "signup"]
+
+# Step 3a: Login (conditional)
+[[flows.steps]]
+id = "login"
+type = "navigate"
+when = "has_account == 'login'"
+title = "Login"
+url = "https://app.example.com/login"
+instructions = ["Enter your credentials"]
+
+# Step 3b: Signup (conditional)
+[[flows.steps]]
+id = "signup"
+type = "navigate"
+when = "has_account == 'signup'"
+title = "Sign Up"
+url = "https://app.example.com/signup"
+instructions = ["Create your account"]
+
+# Step 4: Capture Environment ID
+[[flows.steps]]
+id = "get-env-id"
+type = "input"
+title = "Paste Environment ID"
+save_to = "environment_id"
+placeholder = "env_12345"
+
+[flows.steps.validate]
+pattern = "^env_[0-9]+$"
+message = "Invalid format"
+
+# Step 5: Capture Credentials
+[[flows.steps]]
+id = "get-credentials"
+type = "input"
+title = "Enter API Credentials"
+
+[[flows.steps.inputs]]
+name = "client_id"
+label = "Client ID"
+
+[[flows.steps.inputs]]
+name = "client_secret"
+label = "Client Secret"
+sensitive = true
+
+# Step 6: Summary
+[[flows.steps]]
+id = "summary"
+type = "info"
+title = "Setup Complete!"
+markdown = """
+✓ Environment: {{ environment_id }}
+✓ Client ID: {{ client_id }}
+✓ Ready to integrate!
+"""
+```
+
+## Best Practices
+
+### 1. Clear Step Titles
+
+Use descriptive titles that clearly indicate what the user should do.
+
+```toml
+# Good
+title = "Paste Environment ID from Dashboard"
+
+# Avoid
+title = "Step 2"
+```
+
+### 2. Helpful Instructions
+
+Provide specific guidance for navigate steps.
+
+```toml
+instructions = [
+  "Click on 'API Settings' in the left sidebar",
+  "Copy the Environment ID (starts with env_)",
+  "Return to this terminal"
+]
+```
+
+### 3. Input Validation
+
+Always validate user input with clear error messages.
+
+```toml
+[flows.steps.validate]
+pattern = "^sk_[a-zA-Z0-9]{32}$"
+message = "API key must start with sk_ followed by 32 characters"
+```
+
+### 4. Use Variables Wisely
+
+Capture values once, reuse everywhere.
+
+```toml
+# Capture once
+save_to = "environment_id"
+
+# Reuse in URLs
+url = "https://app.example.com/env/{{ environment_id }}/settings"
+```
+
+### 5. Conditional Logic
+
+Keep conditional expressions simple.
+
+```toml
+# Good
+when = "language == 'node'"
+
+# Complex conditions not yet supported
+# when = "language == 'node' AND framework == 'nextjs'"
+```
+
+## Validation
+
+Blueprints are validated against a JSON Schema. Common validation errors:
+
+- **Missing required fields**: Each step type requires specific fields
+- **Invalid step type**: Must be one of: info, navigate, input, choice, confirm, show_commands
+- **Invalid validation pattern**: Regex pattern syntax errors
+- **Missing save_to**: Input and choice steps must specify where to save values
+
+## Testing Your Blueprint
+
+1. **Validate without execution:**
+
+```bash
+hacksmith plan --blueprint ./my-blueprint.toml
+```
+
+2. **Execute the flow:**
+
+```bash
+hacksmith plan --blueprint ./my-blueprint.toml --execute
+```
+
+3. **Test from GitHub:**
+
+```bash
+hacksmith plan --github owner/repo --execute
+```
+
+## Schema Reference
+
+All blueprints must include:
+
+```toml
+schema_version = "0.1"  # Required
+```
+
+Full schema available at: [blueprint-schema.json](https://github.com/saif-shines/hacksmith/blob/main/spec/blueprint-schema.json)

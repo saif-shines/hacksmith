@@ -1,9 +1,16 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 import { Command } from "commander";
 import { InteractiveCLI } from "./cli/interactive.js";
 import { CommandRegistry } from "./cli/command-registry.js";
 import { PlanCommand } from "./commands/plan.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
+const version = packageJson.version;
 
 async function main() {
   // Initialize command registry
@@ -27,7 +34,7 @@ async function main() {
     program
       .name("hacksmith")
       .description("Hacksmith CLI - Generate and manage integration plans")
-      .version("0.0.3-0");
+      .version(version);
 
     // Setup commands from registry
     registry.setupCommanderProgram(program);

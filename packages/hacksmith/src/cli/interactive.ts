@@ -142,6 +142,16 @@ export class InteractiveCLI {
     console.log();
   }
 
+  private getCommandHint(): string {
+    const builtInCommands = ["/help", "/clear", "/history", "/exit"];
+    const userCommands = Array.from(this.commands.entries())
+      .filter(([name, command]) => name === command.name)
+      .map(([name]) => `/${name}`);
+
+    const allCommands = [...userCommands, ...builtInCommands];
+    return chalk.gray(`Available: ${allCommands.join(", ")}`);
+  }
+
   async start() {
     this.isRunning = true;
 
@@ -150,9 +160,10 @@ export class InteractiveCLI {
 
     while (this.isRunning) {
       try {
+        console.log(this.getCommandHint());
         const input = await text({
           message: chalk.green("hacksmith>"),
-          placeholder: "Enter a slash command (e.g., /plan --help)",
+          placeholder: "Enter a slash command",
         });
 
         if (typeof input === "string" && input.trim()) {
