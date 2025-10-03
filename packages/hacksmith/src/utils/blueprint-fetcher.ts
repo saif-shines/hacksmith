@@ -2,6 +2,8 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parse } from "smol-toml";
 import type { BlueprintConfig } from "../types/blueprint.js";
+import { GitHubUrlUtils } from "./github-url-utils.js";
+import { GitHubRepoService, type BlueprintFile } from "./github-repo-service.js";
 
 export class BlueprintFetcher {
   static async fetchContent(blueprintPath: string): Promise<string> {
@@ -13,10 +15,25 @@ export class BlueprintFetcher {
   }
 
   private static async fetchFromUrl(url: string): Promise<string> {
+    let fetchUrl = url;
+
+    // Handle GitHub blob URLs - convert to raw URLs
+    if (GitHubUrlUtils.isGitHubBlobUrl(url)) {
+      fetchUrl = GitHubUrlUtils.convertBlobToRaw(url);
+    }
+
+    // Handle GitHub repository URLs - provide helpful error
+    if (GitHubUrlUtils.isGitHubRepoUrl(url)) {
+      const repoInfo = GitHubUrlUtils.parseRepoInfo(url);
+      throw new Error(
+        `URL points to a GitHub repository, not a specific file. Use --github ${repoInfo?.owner}/${repoInfo?.repo} to list available blueprint files.`
+      );
+    }
+
     // eslint-disable-next-line no-undef
-    const response = await fetch(url);
+    const response = await fetch(fetchUrl);
     if (!response.ok) {
-      throw new Error(`Failed to fetch blueprint from ${url}: ${response.statusText}`);
+      throw new Error(`Failed to fetch blueprint from ${fetchUrl}: ${response.statusText}`);
     }
     return await response.text();
   }
@@ -38,5 +55,9 @@ export class BlueprintFetcher {
   static async load(blueprintPath: string): Promise<BlueprintConfig> {
     const content = await this.fetchContent(blueprintPath);
     return this.parseBlueprint(content);
+  }
+
+  static async listBlueprintsFromRepo(repoInput: string): Promise<BlueprintFile[]> {
+    return GitHubRepoService.listBlueprintsFromInput(repoInput);
   }
 }

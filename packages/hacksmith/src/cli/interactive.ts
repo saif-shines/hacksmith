@@ -40,7 +40,7 @@ export class InteractiveCLI {
 
   private showWelcome() {
     console.log();
-    console.log(chalk.cyan.bold(`${figures.star} Hacksmith Interactive CLI`));
+    console.log(chalk.cyan.bold(`${figures.smiley} Be that _hacksmith`));
     console.log(chalk.gray("Type /help to see available commands or /exit to quit"));
     console.log();
   }
