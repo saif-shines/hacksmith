@@ -85,7 +85,11 @@ framework_hints = ["node", "python", "go", "nextjs"]
 
 # Reusable URL pieces for templating
 [slugs]
-base_url = "https://app.example.com"
+base_url = "https://app.scalekit.cloud"
+
+[slugs.static]
+login="https://auth.scalekit.cloud/a/auth/login"
+signup="https://auth.scalekit.cloud/a/auth/signup"
 
 [slugs.dynamic]
 dashboard = "/ws/environments/{{ environment_id }}/quick-start"
@@ -117,21 +121,9 @@ title = "Generic Product Onboarding"
 [[flows.steps]]
 id = "welcome"
 type = "info"
-title = "Welcome"
+title = "Welcome to Scalekit!"
 markdown = """
-Follow these steps to capture identifiers and set up the SDK.
-If you already have credentials, you can skip ahead.
-"""
-
-# 2) Login / Signup
-[[flows.steps]]
-id = "auth-info"
-type = "info"
-title = "Create an account or login"
-markdown = """
-- Login — {{ auth.login_url }}
-- Sign up — {{ auth.signup_url }}
-Complete email/OTP/magic link/OAuth and ensure you can access the dashboard.
+You are going to get ready to use Scalekit for SSO.
 """
 
 [[flows.steps]]

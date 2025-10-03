@@ -2,21 +2,12 @@ import { Ajv, type ErrorObject } from "ajv";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import type { BlueprintConfig } from "../types/blueprint.js";
+import type { BlueprintConfig, FlowStep } from "@/types/blueprint.js";
+import { stepRegistry } from "./step-types/index.js";
+import type { ValidationError, ValidationResult } from "./step-types/base-step.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-export interface ValidationError {
-  field: string;
-  message: string;
-  value?: unknown;
-}
-
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-}
 
 export class BlueprintValidator {
   private ajv: Ajv;
@@ -76,80 +67,7 @@ export class BlueprintValidator {
     });
   }
 
-  validateStepType(step: { type: string; [key: string]: unknown }): ValidationResult {
-    const errors: ValidationError[] = [];
-
-    // Validate required fields per step type
-    switch (step.type) {
-      case "info":
-        if (!step.markdown) {
-          errors.push({
-            field: "markdown",
-            message: "Info steps require a 'markdown' field",
-          });
-        }
-        break;
-
-      case "navigate":
-        if (!step.url) {
-          errors.push({
-            field: "url",
-            message: "Navigate steps require a 'url' field",
-          });
-        }
-        break;
-
-      case "input":
-        if (!step.save_to && !step.inputs) {
-          errors.push({
-            field: "save_to",
-            message: "Input steps require either 'save_to' or 'inputs' field",
-          });
-        }
-        break;
-
-      case "choice":
-        if (!step.options) {
-          errors.push({
-            field: "options",
-            message: "Choice steps require an 'options' field",
-          });
-        }
-        if (!step.save_to) {
-          errors.push({
-            field: "save_to",
-            message: "Choice steps require a 'save_to' field",
-          });
-        }
-        break;
-
-      case "show_commands":
-        if (!step.commands) {
-          errors.push({
-            field: "commands",
-            message: "Show_commands steps require a 'commands' field",
-          });
-        }
-        break;
-
-      case "confirm":
-        // Optional: message field
-        break;
-
-      case "ai_prompt":
-        // Optional: provider, model, prompt_template
-        break;
-
-      default:
-        errors.push({
-          field: "type",
-          message: `Unknown step type: ${step.type}`,
-        });
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-    };
+  validateStepType(step: FlowStep): ValidationResult {
+    return stepRegistry.validate(step);
   }
 }

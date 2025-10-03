@@ -1,8 +1,8 @@
 import { outro, cancel } from "@clack/prompts";
-import type { Flow, FlowStep, BlueprintConfig } from "../types/blueprint.js";
-import type { VariableContext } from "../utils/template-engine.js";
-import { TemplateEngine } from "../utils/template-engine.js";
-import { StepHandlers } from "./step-handlers.js";
+import type { Flow, FlowStep, BlueprintConfig } from "@/types/blueprint.js";
+import type { VariableContext } from "@/utils/template-engine.js";
+import { TemplateEngine } from "@/utils/template-engine.js";
+import { stepRegistry } from "./step-types/index.js";
 import chalk from "chalk";
 import figures from "figures";
 
@@ -104,34 +104,7 @@ export class FlowExecutor {
     cancelled?: boolean;
     error?: string;
   }> {
-    switch (step.type) {
-      case "info":
-        return await StepHandlers.executeInfoStep(step, this.context);
-
-      case "navigate":
-        return await StepHandlers.executeNavigateStep(step, this.context);
-
-      case "input":
-        return await StepHandlers.executeInputStep(step, this.context);
-
-      case "choice":
-        return await StepHandlers.executeChoiceStep(step, this.context);
-
-      case "confirm":
-        return await StepHandlers.executeConfirmStep(step, this.context);
-
-      case "show_commands":
-        return await StepHandlers.executeShowCommandsStep(step, this.context);
-
-      case "ai_prompt":
-        return await StepHandlers.executeAiPromptStep(step, this.context);
-
-      default:
-        return {
-          success: false,
-          error: `Unknown step type: ${(step as FlowStep).type}`,
-        };
-    }
+    return await stepRegistry.execute(step, this.context);
   }
 
   /**
