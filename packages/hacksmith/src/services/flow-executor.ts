@@ -143,11 +143,6 @@ export class FlowExecutor {
       context.auth = blueprint.auth;
     }
 
-    // Add SDK config
-    if (blueprint.sdk) {
-      context.sdk = blueprint.sdk;
-    }
-
     // Add variables with default values
     if (blueprint.variables) {
       context.variables = blueprint.variables;
@@ -179,13 +174,18 @@ export class FlowExecutor {
     const blueprintId = getBlueprintId(this.blueprint);
     const schemaVersion = this.blueprint.schema_version || "0.1.0";
 
-    // Extract only user-captured variables (not blueprint config)
+    // Save user data and interpolated slugs, exclude blueprint config
     const variablesToSave: Record<string, unknown> = {};
-    const configKeys = ["slugs", "auth", "sdk", "variables", "schema_version"];
+    const configKeysToExclude = ["auth", "variables", "schema_version"];
 
     Object.entries(this.context).forEach(([key, value]) => {
-      if (!configKeys.includes(key)) {
-        variablesToSave[key] = value;
+      if (!configKeysToExclude.includes(key)) {
+        // Interpolate slugs before saving
+        if (key === "slugs" && typeof value === "object" && value !== null) {
+          variablesToSave[key] = TemplateEngine.interpolateObject(value, this.context);
+        } else {
+          variablesToSave[key] = value;
+        }
       }
     });
 

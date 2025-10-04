@@ -86,24 +86,6 @@ export class BlueprintFormatter {
       sections.push({ title: "📝 Variables", content: variableContent });
     }
 
-    // SDK section
-    if (blueprint.sdk) {
-      const sdkContent: string[] = [];
-      if (blueprint.sdk.preferred_language) {
-        sdkContent.push(`   Preferred Language: ${blueprint.sdk.preferred_language}`);
-      }
-      if (blueprint.sdk.package_manager) {
-        sdkContent.push(`   Package Manager: ${blueprint.sdk.package_manager}`);
-      }
-      if (blueprint.sdk.framework_hints && blueprint.sdk.framework_hints.length > 0) {
-        sdkContent.push(`   Framework Hints: ${blueprint.sdk.framework_hints.join(", ")}`);
-      }
-
-      if (sdkContent.length > 0) {
-        sections.push({ title: "⚙️ SDK Configuration", content: sdkContent });
-      }
-    }
-
     return {
       header,
       sections,

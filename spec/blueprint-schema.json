@@ -8,8 +8,8 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "description": "Blueprint schema version",
-      "pattern": "^\\d+\\.\\d+$"
+      "description": "Blueprint schema version (semver format)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
     },
     "smith": {
       "type": "string",
@@ -93,7 +93,7 @@
                 },
                 "when": {
                   "type": "string",
-                  "description": "Conditional expression (e.g., 'sdk.language == \"node\"')"
+                  "description": "Conditional expression (e.g., 'has_account == \"Yes\"')"
                 },
                 "markdown": {
                   "type": "string",

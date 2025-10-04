@@ -4,7 +4,7 @@
 # - You can safely remove sections you don't need. Unknown keys are ignored by older CLIs.
 # - Multi-line instructional text supports TOML multi-line strings (""" ... """).
 
-schema_version = "0.1"
+schema_version = "0.1.0"
 smith="saif-shines/hacksmith-blueprints"
 description = "Example blueprint for onboarding a user to Scalekit for SSO"
 
@@ -62,11 +62,6 @@ sample_apps = ["https://github.com/example/sample-app-1"]
 api_spec_url = "https://api.example.com/openapi.json"
 interactive_docs = "https://api.example.com/docs"
 postman_collection = "https://api.example.com/postman.json"
-
-[sdk]
-preferred_language = "node"
-package_manager = "npm"
-framework_hints = ["node", "python", "go", "nextjs"]
 
 # Reusable URL pieces for templating
 [slugs]
