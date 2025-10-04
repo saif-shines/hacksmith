@@ -25,7 +25,13 @@ export class InfoStepType extends BaseStepType {
 
     note(renderedContent, step.title || "Info");
 
-    return { success: true };
+    // Save rendered content if save_to is specified
+    const variables: Record<string, unknown> = {};
+    if (step.save_to) {
+      variables[step.save_to] = content;
+    }
+
+    return { success: true, variables };
   }
 }
 

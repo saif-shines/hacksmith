@@ -31,7 +31,13 @@ export class ConfirmStepType extends BaseStepType {
       return { success: false, cancelled: true };
     }
 
-    return { success: true };
+    // Save confirmation result if save_to is specified
+    const variables: Record<string, unknown> = {};
+    if (step.save_to) {
+      variables[step.save_to] = result;
+    }
+
+    return { success: true, variables };
   }
 }
 
