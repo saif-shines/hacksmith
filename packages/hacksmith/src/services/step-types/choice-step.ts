@@ -1,4 +1,5 @@
 import { select } from "@clack/prompts";
+import chalk from "chalk";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -12,13 +13,25 @@ export class ChoiceStepType extends BaseStepType {
   requiredFields = ["options", "save_to"];
   optionalFields = ["title", "when"];
 
-  async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
+  async execute(step: FlowStep, context: VariableContext, devMode = false): Promise<StepResult> {
     const interpolated = TemplateEngine.interpolateObject(step, context);
     const options = interpolated.options || [];
     const saveTo = interpolated.save_to;
 
     if (!saveTo) {
       return { success: false };
+    }
+
+    // Auto-select first option in dev mode
+    if (devMode) {
+      const firstOption = options[0] || "";
+      console.log(
+        chalk.gray(`[DEV MODE] Auto-selecting first option for ${saveTo}: "${firstOption}"`)
+      );
+      return {
+        success: true,
+        variables: { [saveTo]: firstOption },
+      };
     }
 
     const selected = await select({

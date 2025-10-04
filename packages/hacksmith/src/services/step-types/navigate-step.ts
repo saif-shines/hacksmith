@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
+import { MarkdownRenderer } from "@/utils/markdown-renderer.js";
 import { BaseStepType, type StepResult } from "./base-step.js";
 
 const execAsync = promisify(exec);
@@ -17,7 +18,7 @@ export class NavigateStepType extends BaseStepType {
   requiredFields = ["url"];
   optionalFields = ["title", "instructions", "when"];
 
-  async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
+  async execute(step: FlowStep, context: VariableContext, devMode = false): Promise<StepResult> {
     const interpolated = TemplateEngine.interpolateObject(step, context);
     const url = interpolated.url || "";
     const instructions = interpolated.instructions || [];
@@ -28,11 +29,18 @@ export class NavigateStepType extends BaseStepType {
     if (instructions.length > 0) {
       message += "\n\n" + chalk.yellow("Next steps:");
       instructions.forEach((instruction: string, index: number) => {
-        message += `\n  ${index + 1}. ${instruction}`;
+        const renderedInstruction = MarkdownRenderer.render(instruction);
+        message += `\n  ${index + 1}. ${renderedInstruction}`;
       });
     }
 
     note(message, step.title || "Navigate");
+
+    // Skip browser opening and confirmation in dev mode
+    if (devMode) {
+      console.log(chalk.gray("[DEV MODE] Skipping browser opening and confirmation"));
+      return { success: true };
+    }
 
     // Open browser
     const s = spinner();

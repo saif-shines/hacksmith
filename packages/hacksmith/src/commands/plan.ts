@@ -43,7 +43,8 @@ export class PlanCommand extends Command {
     if (blueprintPath) {
       const outputJson = this.shouldOutputJson(parsed);
       const shouldExecute = this.shouldExecuteFlow(parsed);
-      await this.processInput(blueprintPath, outputJson, context, false, shouldExecute);
+      const devMode = this.isDevMode(parsed);
+      await this.processInput(blueprintPath, outputJson, context, false, shouldExecute, devMode);
       return;
     }
 
@@ -71,12 +72,17 @@ export class PlanCommand extends Command {
     return !!parsed.execute || !!parsed.e;
   }
 
+  private isDevMode(parsed: PlanArgs): boolean {
+    return !!parsed.dev || !!parsed.d;
+  }
+
   private async processInput(
     input: string,
     jsonOnly = false,
     context: CommandContext,
     allowListing = false,
-    executeFlow = false
+    executeFlow = false,
+    devMode = false
   ): Promise<void> {
     try {
       // Check if we can list blueprints from this input
@@ -91,10 +97,10 @@ export class PlanCommand extends Command {
         }
 
         // Load the selected blueprint
-        await this.loadAndDisplayBlueprint(selectedUrl, jsonOnly, context, executeFlow);
+        await this.loadAndDisplayBlueprint(selectedUrl, jsonOnly, context, executeFlow, devMode);
       } else {
         // Direct blueprint loading
-        await this.loadAndDisplayBlueprint(input, jsonOnly, context, executeFlow);
+        await this.loadAndDisplayBlueprint(input, jsonOnly, context, executeFlow, devMode);
       }
     } catch (error) {
       context.spinner.stop();
@@ -108,7 +114,8 @@ export class PlanCommand extends Command {
     input: string,
     jsonOnly: boolean,
     context: CommandContext,
-    executeFlow: boolean
+    executeFlow: boolean,
+    devMode: boolean
   ): Promise<void> {
     context.spinner.start(`Loading blueprint from ${input}...`);
     const blueprint = await BlueprintService.load(input);
@@ -121,7 +128,7 @@ export class PlanCommand extends Command {
 
     // Check if we should execute flows
     if (executeFlow && blueprint.flows && blueprint.flows.length > 0) {
-      const executor = new FlowExecutor();
+      const executor = new FlowExecutor(devMode);
       const result = await executor.executeFlows(blueprint);
 
       if (result.success) {
