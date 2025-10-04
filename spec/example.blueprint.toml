@@ -115,19 +115,19 @@ Include redirect config for {{ auth.callback_path }} if relevant.
 
 [[flows]]
 id = "onboarding"
-title = "Generic Product Onboarding"
+title = "Onboard onto Scalekit"
 
 # 1) Welcome / overview
 [[flows.steps]]
-id = "welcome"
 type = "info"
 title = "Welcome to Scalekit!"
 markdown = """
-You are going to get ready to use Scalekit for SSO.
+You are going to get ready to use Scalekit for integrating SSO into your applications.
 """
 
+
+
 [[flows.steps]]
-id = "open-login"
 type = "navigate"
 title = "Open login page"
 url = "{{ slugs.static.login }}"
@@ -139,7 +139,6 @@ instructions = [
 
 # 3) Capture Environment ID
 [[flows.steps]]
-id = "open-dashboard"
 type = "navigate"
 title = "Open dashboard"
 url = "{{ slugs.base_url }}{{ slugs.dynamic.dashboard }}"
@@ -148,7 +147,6 @@ instructions = [
 ]
 
 [[flows.steps]]
-id = "capture-env-id"
 type = "input"
 title = "Paste Environment ID"
 save_to = "environment_id"
@@ -157,7 +155,6 @@ validate.message = "Must look like env_123456..."
 
 # 4) Capture API credentials
 [[flows.steps]]
-id = "open-api-creds"
 type = "navigate"
 title = "Open API credentials"
 url = "{{ slugs.base_url }}{{ slugs.dynamic.api_credentials }}"
@@ -166,7 +163,6 @@ instructions = [
 ]
 
 [[flows.steps]]
-id = "capture-creds"
 type = "input"
 title = "Paste API credentials"
 # Multiple inputs captured in a single step
@@ -184,7 +180,6 @@ sensitive = false
 
 # 5) Configure redirect URL
 [[flows.steps]]
-id = "open-redirects"
 type = "navigate"
 title = "Open Authentication Redirects"
 url = "{{ slugs.base_url }}{{ slugs.dynamic.auth_redirects }}"
@@ -195,7 +190,6 @@ instructions = [
 
 # 6) Choose stack
 [[flows.steps]]
-id = "choose-stack"
 type = "choice"
 title = "Pick your stack"
 save_to = "sdk.language"
@@ -203,8 +197,8 @@ options = ["node", "python", "go", "nextjs", "no_sdk"]
 
 # 7) SDK-specific guidance
 [[flows.steps]]
-id = "node-install"
 type = "show_commands"
+title = "Install Node.js SDK"
 when = "sdk.language == 'node'"
 commands = [
   "npm i @vendor/sdk",
@@ -212,24 +206,24 @@ commands = [
 ]
 
 [[flows.steps]]
-id = "python-install"
 type = "show_commands"
+title = "Install Python SDK"
 when = "sdk.language == 'python'"
 commands = [
   "pip install vendor-sdk"
 ]
 
 [[flows.steps]]
-id = "go-install"
 type = "show_commands"
+title = "Install Go SDK"
 when = "sdk.language == 'go'"
 commands = [
   "go get github.com/vendor/sdk"
 ]
 
 [[flows.steps]]
-id = "nextjs-install"
 type = "show_commands"
+title = "Install Next.js SDK"
 when = "sdk.language == 'nextjs'"
 commands = [
   "npm i @vendor/sdk",
@@ -238,8 +232,8 @@ commands = [
 
 # 8) No SDK path — generate integration prompt
 [[flows.steps]]
-id = "no-sdk-prompt"
 type = "ai_prompt"
+title = "Generate integration guide"
 when = "sdk.language == 'no_sdk'"
 provider = "claude"
 model = "claude-3-7-sonnet"

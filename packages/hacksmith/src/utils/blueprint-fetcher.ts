@@ -4,6 +4,7 @@ import { parse } from "smol-toml";
 import type { BlueprintConfig } from "../types/blueprint.js";
 import { GitHubUrlUtils } from "./github-url-utils.js";
 import { GitHubRepoService, type BlueprintFile } from "./github-repo-service.js";
+import { generateUniqueId } from "./slugify.js";
 
 export class BlueprintFetcher {
   static async fetchContent(blueprintPath: string): Promise<string> {
@@ -45,7 +46,34 @@ export class BlueprintFetcher {
 
   static parseBlueprint(content: string): BlueprintConfig {
     try {
-      return parse(content) as BlueprintConfig;
+      const config = parse(content) as BlueprintConfig;
+
+      // Auto-generate IDs for flow steps that don't have them
+      if (config.flows) {
+        for (const flow of config.flows) {
+          if (flow.steps) {
+            const existingIds = new Set<string>();
+
+            // First pass: collect existing IDs
+            for (const step of flow.steps) {
+              if (step.id) {
+                existingIds.add(step.id);
+              }
+            }
+
+            // Second pass: generate IDs for steps without them
+            for (const step of flow.steps) {
+              if (!step.id) {
+                // Use title if available, otherwise use type and a counter
+                const baseText = step.title || `${step.type}-step`;
+                step.id = generateUniqueId(baseText, existingIds);
+              }
+            }
+          }
+        }
+      }
+
+      return config;
     } catch (error) {
       const err = error as Error;
       throw new Error(`Failed to parse blueprint TOML: ${err.message}`);

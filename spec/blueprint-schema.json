@@ -68,11 +68,11 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["id", "type"],
+              "required": ["type"],
               "properties": {
                 "id": {
                   "type": "string",
-                  "description": "Unique step identifier"
+                  "description": "Unique step identifier (auto-generated from title if not provided)"
                 },
                 "type": {
                   "type": "string",
