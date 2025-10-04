@@ -17,7 +17,10 @@ export class BlueprintValidator {
     this.ajv = new Ajv({ allErrors: true, verbose: true });
 
     // Load the JSON schema
-    const schemaPath = join(__dirname, "..", "..", "..", "..", "spec", "blueprint-schema.json");
+    // When running from dist/, __dirname is dist/services
+    // When running from source, __dirname is src/services
+    // The spec folder is always at the package root
+    const schemaPath = join(__dirname, "..", "..", "spec", "blueprint-schema.json");
     this.schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
   }
 

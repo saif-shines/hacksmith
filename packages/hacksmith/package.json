@@ -9,6 +9,7 @@
   "files": [
     "bin",
     "dist",
+    "spec",
     "README.md",
     "LICENSE"
   ],
