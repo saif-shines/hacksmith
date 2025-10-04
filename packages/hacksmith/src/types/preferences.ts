@@ -1,4 +1,5 @@
 import type { AICLIProvider } from "../utils/ai-cli-detector.js";
+import type { TechStack } from "../utils/tech-stack-detector.js";
 
 export interface AIAgentPreference {
   provider: AICLIProvider | "none";
@@ -9,4 +10,5 @@ export interface AIAgentPreference {
 
 export interface PreferencesSchema {
   ai_agent?: AIAgentPreference;
+  tech_stack?: TechStack;
 }

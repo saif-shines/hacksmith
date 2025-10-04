@@ -4,6 +4,7 @@ import figures from "figures";
 import { Command, CommandContext } from "../types/command.js";
 import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "../utils/ai-cli-detector.js";
 import { preferences } from "../utils/preferences-storage.js";
+import { TechStackDetector } from "../utils/tech-stack-detector.js";
 
 export class PreferencesCommand extends Command {
   name = "preferences";
@@ -20,13 +21,16 @@ export class PreferencesCommand extends Command {
       case "reset":
         await this.resetPreferences(context);
         break;
+      case "scan":
+        await this.scanTechStack(context);
+        break;
       case undefined:
       case "setup":
         await this.setupPreferences(context);
         break;
       default:
         context.error(`Unknown subcommand: ${subcommand}`);
-        context.output("Usage: hacksmith preferences [show|reset|setup]");
+        context.output("Usage: hacksmith preferences [show|reset|setup|scan]");
     }
   }
 
@@ -34,7 +38,10 @@ export class PreferencesCommand extends Command {
    * Interactive AI agent setup
    */
   private async setupPreferences(context: CommandContext): Promise<void> {
-    context.output(chalk.cyan.bold("\n✨ Let's set up your AI agent preferences\n"));
+    context.output(chalk.cyan.bold("\n✨ Let's set up your preferences\n"));
+
+    // Step 1: AI Agent Setup
+    context.output(chalk.bold("Step 1: AI Agent Configuration\n"));
 
     // Detect installed AI CLIs
     const s = context.spinner;
@@ -42,6 +49,8 @@ export class PreferencesCommand extends Command {
 
     const detected = await AICLIDetector.detectAll();
     s.stop("Scan complete");
+
+    let aiAgentConfigured = false;
 
     if (detected.length === 0) {
       context.output(
@@ -52,52 +61,86 @@ export class PreferencesCommand extends Command {
             `  • Google Gemini: (installation link)\n`
         )
       );
-      return;
-    }
-
-    // Show detected tools
-    context.output(chalk.green(`\n${figures.tick} Found ${detected.length} AI CLI(s):\n`));
-    detected.forEach((tool) => {
-      const version = tool.version ? chalk.gray(`v${tool.version}`) : "";
-      context.output(`  ${figures.pointer} ${chalk.bold(tool.displayName)} ${version}`);
-      context.output(chalk.gray(`    ${tool.path}`));
-    });
-
-    // If only one detected, ask to confirm
-    if (detected.length === 1) {
-      const tool = detected[0];
-      const shouldUse = await confirm({
-        message: `Use ${tool.displayName} as your AI agent?`,
-        initialValue: true,
+    } else {
+      // Show detected tools
+      context.output(chalk.green(`\n${figures.tick} Found ${detected.length} AI CLI(s):\n`));
+      detected.forEach((tool) => {
+        const version = tool.version ? chalk.gray(`v${tool.version}`) : "";
+        context.output(`  ${figures.pointer} ${chalk.bold(tool.displayName)} ${version}`);
+        context.output(chalk.gray(`    ${tool.path}`));
       });
 
-      if (typeof shouldUse === "symbol" || !shouldUse) {
-        context.output(chalk.gray("\nSetup cancelled"));
-        return;
-      }
+      // If only one detected, ask to confirm
+      if (detected.length === 1) {
+        const tool = detected[0];
+        const shouldUse = await confirm({
+          message: `Use ${tool.displayName} as your AI agent?`,
+          initialValue: true,
+        });
 
-      this.savePreference(tool);
-      return;
+        if (typeof shouldUse !== "symbol" && shouldUse) {
+          this.savePreference(tool);
+          aiAgentConfigured = true;
+        }
+      } else {
+        // Multiple tools detected, show selection menu
+        const selected = await select({
+          message: "Which AI agent would you like to use?",
+          options: detected.map((tool) => ({
+            value: tool.name,
+            label: tool.displayName,
+            hint: tool.version ? `v${tool.version}` : undefined,
+          })),
+        });
+
+        if (typeof selected !== "symbol") {
+          const tool = detected.find((t) => t.name === selected);
+          if (tool) {
+            this.savePreference(tool);
+            aiAgentConfigured = true;
+          }
+        }
+      }
     }
 
-    // Multiple tools detected, show selection menu
-    const selected = await select({
-      message: "Which AI agent would you like to use?",
-      options: detected.map((tool) => ({
-        value: tool.name,
-        label: tool.displayName,
-        hint: tool.version ? `v${tool.version}` : undefined,
-      })),
+    // Step 2: Tech Stack Scanning
+    context.output(chalk.bold("\n\nStep 2: Tech Stack Scanning\n"));
+
+    const shouldScanTechStack = await confirm({
+      message: "Would you like to scan and save your project's tech stack?",
+      initialValue: true,
     });
 
-    if (typeof selected === "symbol") {
-      context.output(chalk.gray("\nSetup cancelled"));
-      return;
+    if (typeof shouldScanTechStack !== "symbol" && shouldScanTechStack) {
+      context.output("");
+      s.start("Analyzing project structure and dependencies...");
+
+      try {
+        const projectPath = process.cwd();
+        const techStack = await TechStackDetector.scan(projectPath);
+
+        s.stop("Scan complete!");
+
+        // Display summary
+        context.output(chalk.green(`\n${figures.tick} Tech stack detected:\n`));
+        context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
+
+        // Save to preferences
+        preferences.saveTechStack(techStack);
+        context.output(chalk.green(`\n${figures.tick} Tech stack saved to preferences!`));
+      } catch (error) {
+        s.stop("Scan failed");
+        context.error(
+          `Failed to scan tech stack: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
     }
 
-    const tool = detected.find((t) => t.name === selected);
-    if (tool) {
-      this.savePreference(tool);
+    // Final summary
+    if (aiAgentConfigured || shouldScanTechStack) {
+      outro(chalk.green(`\n${figures.tick} Setup complete!`));
+    } else {
+      context.output(chalk.gray("\nSetup cancelled"));
     }
   }
 
@@ -118,30 +161,91 @@ export class PreferencesCommand extends Command {
   }
 
   /**
+   * Scan and save tech stack
+   */
+  private async scanTechStack(context: CommandContext): Promise<void> {
+    context.output(chalk.cyan.bold("\n🔍 Scanning project tech stack...\n"));
+
+    const s = context.spinner;
+    s.start("Analyzing project structure and dependencies...");
+
+    try {
+      const projectPath = process.cwd();
+      const techStack = await TechStackDetector.scan(projectPath);
+
+      s.stop("Scan complete!");
+
+      // Display summary
+      context.output(chalk.green(`\n${figures.tick} Tech stack detected:\n`));
+      context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
+
+      // Ask to save
+      const shouldSave = await confirm({
+        message: "Save this tech stack to preferences?",
+        initialValue: true,
+      });
+
+      if (typeof shouldSave === "symbol" || !shouldSave) {
+        context.output(chalk.gray("\nScan cancelled"));
+        return;
+      }
+
+      // Save to preferences
+      preferences.saveTechStack(techStack);
+      outro(chalk.green(`${figures.tick} Tech stack saved to preferences!`));
+    } catch (error) {
+      s.stop("Scan failed");
+      context.error(
+        `Failed to scan tech stack: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
    * Show current preferences
    */
   private async showPreferences(context: CommandContext): Promise<void> {
     const agent = preferences.getAIAgent();
+    const techStack = preferences.getTechStack();
 
+    context.output(chalk.cyan.bold("\n📋 Current Preferences\n"));
+
+    // Show AI Agent
     if (!agent || agent.provider === "none") {
       context.output(
         chalk.yellow(
-          `\n${figures.warning} No AI agent configured.\n\nRun: ${chalk.cyan("hacksmith preferences")} to set up`
+          `${figures.warning} No AI agent configured.\n\nRun: ${chalk.cyan("hacksmith preferences setup")} to set up`
         )
       );
-      return;
+    } else {
+      const updatedAt = new Date(agent.updated_at);
+      const timeAgo = this.getTimeAgo(updatedAt);
+
+      context.output(chalk.bold("AI Agent:"));
+      context.output(`${chalk.green(figures.tick)} Provider: ${chalk.bold(agent.provider)}`);
+      context.output(`${chalk.green(figures.tick)} Path: ${agent.cli_path}`);
+      if (agent.version) {
+        context.output(`${chalk.green(figures.tick)} Version: ${agent.version}`);
+      }
+      context.output(`${chalk.green(figures.tick)} Last updated: ${timeAgo}\n`);
     }
 
-    const updatedAt = new Date(agent.updated_at);
-    const timeAgo = this.getTimeAgo(updatedAt);
+    // Show Tech Stack
+    if (!techStack) {
+      context.output(
+        chalk.yellow(
+          `${figures.warning} No tech stack scanned.\n\nRun: ${chalk.cyan("hacksmith preferences scan")} to scan project`
+        )
+      );
+    } else {
+      const scannedAt = new Date(techStack.scannedAt);
+      const timeAgo = this.getTimeAgo(scannedAt);
 
-    context.output(chalk.cyan.bold("\n📋 Current Preferences\n"));
-    context.output(`${chalk.green(figures.tick)} AI Agent: ${chalk.bold(agent.provider)}`);
-    context.output(`${chalk.green(figures.tick)} Path: ${agent.cli_path}`);
-    if (agent.version) {
-      context.output(`${chalk.green(figures.tick)} Version: ${agent.version}`);
+      context.output(chalk.bold("\nTech Stack:"));
+      context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
+      context.output(`\n${chalk.green(figures.tick)} Scanned: ${timeAgo}`);
+      context.output(`${chalk.green(figures.tick)} Path: ${techStack.projectPath}\n`);
     }
-    context.output(`${chalk.green(figures.tick)} Last updated: ${timeAgo}\n`);
   }
 
   /**

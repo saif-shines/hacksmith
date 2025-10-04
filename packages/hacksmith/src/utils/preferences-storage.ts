@@ -2,6 +2,7 @@ import Conf from "conf";
 import { homedir } from "os";
 import { join } from "path";
 import type { PreferencesSchema, AIAgentPreference } from "../types/preferences.js";
+import type { TechStack } from "./tech-stack-detector.js";
 
 class PreferencesStorage {
   private config: Conf<PreferencesSchema>;
@@ -24,6 +25,25 @@ class PreferencesStorage {
             updated_at: { type: "string" },
           },
           required: ["provider", "cli_path", "updated_at"],
+        },
+        tech_stack: {
+          type: "object",
+          properties: {
+            technologies: { type: "array" },
+            languages: { type: "object" },
+            dependencies: { type: "object" },
+            frameworks: { type: "array" },
+            scannedAt: { type: "string" },
+            projectPath: { type: "string" },
+          },
+          required: [
+            "technologies",
+            "languages",
+            "dependencies",
+            "frameworks",
+            "scannedAt",
+            "projectPath",
+          ],
         },
       },
     });
@@ -56,6 +76,27 @@ class PreferencesStorage {
    */
   clearAIAgent(): void {
     this.config.delete("ai_agent");
+  }
+
+  /**
+   * Save tech stack
+   */
+  saveTechStack(techStack: TechStack): void {
+    this.config.set("tech_stack", techStack);
+  }
+
+  /**
+   * Get tech stack
+   */
+  getTechStack(): TechStack | undefined {
+    return this.config.get("tech_stack");
+  }
+
+  /**
+   * Clear tech stack
+   */
+  clearTechStack(): void {
+    this.config.delete("tech_stack");
   }
 
   /**
