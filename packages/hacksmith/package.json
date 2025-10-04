@@ -1,6 +1,6 @@
 {
   "name": "hacksmith",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": false,
   "type": "module",
   "bin": {
@@ -21,7 +21,7 @@
     "prepack": "mkdir -p spec && cp ../../spec/blueprint-schema.json spec/ && pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
-    "publish:np": "pnpm dlx np --message 'chore(release): %s'"
+    "publish:np": "HUSKY=0 pnpm dlx np --message 'chore(release): %s'"
   },
   "engines": {
     "node": ">=18",
