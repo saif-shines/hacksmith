@@ -255,3 +255,9 @@ When implementing new CLI features:
 3. Consider accessibility and internationalization
 4. Validate user input appropriately
 5. Provide clear feedback for all operations
+
+## AI tools
+
+These are the docs that hacksmith will rely on to trigger an AI agent and intiate integration
+
+- https://docs.claude.com/en/docs/claude-code/cli-reference
