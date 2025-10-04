@@ -14,23 +14,23 @@ cd packages/hacksmith
 
 # Build for macOS (ARM64)
 echo "Building for macOS ARM64..."
-bun build ./src/run.ts --compile --target=bun-darwin-arm64 --outfile ../../dist/binaries/hacksmith-darwin-arm64
+bun build ./src/run.ts --compile --target=bun-darwin-arm64 --outfile ../../dist/binaries/hacksmith-darwin-arm64 --packages external
 
 # Build for macOS (x64)
 echo "Building for macOS x64..."
-bun build ./src/run.ts --compile --target=bun-darwin-x64 --outfile ../../dist/binaries/hacksmith-darwin-x64
+bun build ./src/run.ts --compile --target=bun-darwin-x64 --outfile ../../dist/binaries/hacksmith-darwin-x64 --packages external
 
 # Build for Linux (x64)
 echo "Building for Linux x64..."
-bun build ./src/run.ts --compile --target=bun-linux-x64 --outfile ../../dist/binaries/hacksmith-linux-x64
+bun build ./src/run.ts --compile --target=bun-linux-x64 --outfile ../../dist/binaries/hacksmith-linux-x64 --packages external
 
 # Build for Linux (ARM64)
 echo "Building for Linux ARM64..."
-bun build ./src/run.ts --compile --target=bun-linux-arm64 --outfile ../../dist/binaries/hacksmith-linux-arm64
+bun build ./src/run.ts --compile --target=bun-linux-arm64 --outfile ../../dist/binaries/hacksmith-linux-arm64 --packages external
 
 # Build for Windows (x64)
 echo "Building for Windows x64..."
-bun build ./src/run.ts --compile --target=bun-windows-x64 --outfile ../../dist/binaries/hacksmith-windows-x64.exe
+bun build ./src/run.ts --compile --target=bun-windows-x64 --outfile ../../dist/binaries/hacksmith-windows-x64.exe --packages external
 
 cd ../..
 
