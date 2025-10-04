@@ -3,6 +3,7 @@ import chalk from "chalk";
 import figures from "figures";
 import { writeFileSync } from "fs";
 import { join } from "path";
+import clipboardy from "clipboardy";
 import { Command, CommandContext } from "../types/command.js";
 import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "../utils/ai-cli-detector.js";
 import { preferences } from "../utils/preferences-storage.js";
@@ -68,10 +69,19 @@ export class PreferencesCommand extends Command {
     if (detected.length === 0) {
       context.output(
         chalk.yellow(
-          `\n${figures.warning} No AI CLIs detected.\n\nInstall one of the following:\n` +
-            `  • Claude Code: https://claude.com/claude-code\n` +
-            `  • GitHub Copilot: gh extension install copilot\n` +
-            `  • Google Gemini: (installation link)\n`
+          `\n${figures.warning} No AI CLIs detected.\n\nYou can:\n` +
+            `  1. Install an AI CLI:\n` +
+            `     • Claude Code: https://claude.com/claude-code\n` +
+            `     • GitHub Copilot: gh extension install copilot\n` +
+            `     • Google Gemini: (installation link)\n` +
+            `  2. Use VS Code Copilot, Cursor, Windsurf, or other AI assistants\n`
+        )
+      );
+
+      context.output(
+        chalk.cyan(
+          `\n${figures.info} When you execute blueprints, you can copy the mission brief to clipboard\n` +
+            `  and paste it into any AI assistant to get help with integration.\n`
         )
       );
     } else {
@@ -83,30 +93,46 @@ export class PreferencesCommand extends Command {
         context.output(chalk.gray(`    ${tool.path}`));
       });
 
-      // If only one detected, ask to confirm
-      if (detected.length === 1) {
-        const tool = detected[0];
-        const shouldUse = await confirm({
-          message: `Use ${tool.displayName} as your AI agent?`,
-          initialValue: true,
-        });
+      // Always show selection menu with manual option
+      const options = [
+        ...detected.map((tool) => ({
+          value: tool.name,
+          label: tool.displayName,
+          hint: tool.version ? `v${tool.version}` : undefined,
+        })),
+        {
+          value: "manual",
+          label: "Manual (copy to clipboard)",
+          hint: "Use with VS Code, Cursor, Windsurf, etc.",
+        },
+      ];
 
-        if (typeof shouldUse !== "symbol" && shouldUse) {
-          this.savePreference(tool);
-          aiAgentConfigured = true;
-        }
-      } else {
-        // Multiple tools detected, show selection menu
-        const selected = await select({
-          message: "Which AI agent would you like to use?",
-          options: detected.map((tool) => ({
-            value: tool.name,
-            label: tool.displayName,
-            hint: tool.version ? `v${tool.version}` : undefined,
-          })),
-        });
+      const selected = await select({
+        message: "How would you like to work with AI?",
+        options,
+      });
 
-        if (typeof selected !== "symbol") {
+      if (typeof selected !== "symbol") {
+        if (selected === "manual") {
+          // User chose manual mode - save this preference
+          preferences.saveAIAgent({
+            provider: "none",
+            cli_path: "",
+            updated_at: new Date().toISOString(),
+          });
+
+          context.output(
+            chalk.cyan(
+              `\n${figures.info} Manual mode configured! Mission brief will be copied to clipboard after execution.`
+            )
+          );
+          context.output(
+            chalk.gray(
+              `${figures.pointer} You can paste it into VS Code Copilot, Cursor, Windsurf, or any AI assistant.\n`
+            )
+          );
+          aiAgentConfigured = true; // We did save a preference (manual mode)
+        } else {
           const tool = detected.find((t) => t.name === selected);
           if (tool) {
             this.savePreference(tool);
@@ -224,12 +250,22 @@ export class PreferencesCommand extends Command {
     context.output(chalk.cyan.bold("\n📋 Current Preferences\n"));
 
     // Show AI Agent
-    if (!agent || agent.provider === "none") {
+    if (!agent) {
       context.output(
         chalk.yellow(
           `${figures.warning} No AI agent configured.\n\nRun: ${chalk.cyan("hacksmith preferences setup")} to set up`
         )
       );
+    } else if (agent.provider === "none") {
+      // Manual mode
+      context.output(chalk.bold("AI Agent:"));
+      context.output(`${chalk.green(figures.tick)} Mode: ${chalk.bold("Manual (clipboard)")}`);
+      context.output(
+        `${chalk.gray(figures.pointer)} Mission briefs will be copied to clipboard for use in any AI assistant`
+      );
+      const updatedAt = new Date(agent.updated_at);
+      const timeAgo = this.getTimeAgo(updatedAt);
+      context.output(`${chalk.green(figures.tick)} Configured: ${timeAgo}\n`);
     } else {
       const updatedAt = new Date(agent.updated_at);
       const timeAgo = this.getTimeAgo(updatedAt);
@@ -305,11 +341,31 @@ export class PreferencesCommand extends Command {
       context.output(chalk.gray(preview));
       context.output(chalk.gray("\n..."));
 
-      outro(
-        chalk.cyan(
-          `\n${figures.info} You can now pass this brief to your AI agent for integration assistance.`
-        )
-      );
+      // Offer to copy to clipboard
+      const shouldCopy = await confirm({
+        message: "Copy mission brief to clipboard?",
+        initialValue: true,
+      });
+
+      if (typeof shouldCopy !== "symbol" && shouldCopy) {
+        try {
+          await clipboardy.write(briefContent);
+          outro(
+            chalk.green(
+              `\n${figures.tick} Mission brief copied to clipboard! Paste it into your AI assistant.`
+            )
+          );
+        } catch (error) {
+          context.output(
+            chalk.yellow(
+              `\n${figures.warning} Could not copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
+            )
+          );
+          outro(chalk.cyan(`\n${figures.info} Mission brief is ready at: ${briefPath}`));
+        }
+      } else {
+        outro(chalk.cyan(`\n${figures.info} Mission brief is ready at: ${briefPath}`));
+      }
     } catch (error) {
       context.error(
         `Failed to save mission brief: ${error instanceof Error ? error.message : String(error)}`
