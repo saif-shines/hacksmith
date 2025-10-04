@@ -1,6 +1,45 @@
 # Hacksmith
 
-A simple CLI tool. This repository also contains the docs website built with Astro Starlight under `apps/website`.
+A simple CLI tool for running blueprint-based workflows. This repository also contains the docs website built with Astro Starlight under `apps/website`.
+
+## Installation
+
+### Option 1: One-line Install (No Node.js required)
+
+Install Hacksmith CLI without Node.js using the standalone binary installer:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
+```
+
+This will download and install the appropriate binary for your platform (macOS, Linux, or Windows).
+
+### Option 2: Using npx (Requires Node.js)
+
+If you have Node.js installed, you can run Hacksmith without installation:
+
+```bash
+npx hacksmith plan -b https://github.com/saif-shines/hacksmith-blueprints/blob/main/example.blueprint.toml
+```
+
+### Option 3: Install via npm (Requires Node.js)
+
+```bash
+npm install -g hacksmith
+```
+
+## Usage
+
+```bash
+# Run a blueprint plan
+hacksmith plan -b <blueprint-url>
+
+# Run with environment variables
+hacksmith plan -b <blueprint-url> -e
+
+# Show help
+hacksmith --help
+```
 
 ## Website
 

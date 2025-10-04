@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9.0.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+      - run: pnpm install
+      - run: pnpm --filter hacksmith build
+      - run: pnpm --filter hacksmith publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_KEY }}
+
+  build-binaries:
+    needs: publish-npm
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            target: darwin-arm64
+          - os: macos-13 # Intel Mac
+            target: darwin-x64
+          - os: ubuntu-latest
+            target: linux-x64
+          - os: ubuntu-latest
+            target: linux-arm64
+          - os: windows-latest
+            target: windows-x64
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Build binary
+        working-directory: packages/hacksmith
+        run: |
+          if [ "${{ matrix.target }}" = "windows-x64" ]; then
+            bun build ./src/run.ts --compile --target=bun-${{ matrix.target }} --outfile hacksmith-${{ matrix.target }}.exe
+          else
+            bun build ./src/run.ts --compile --target=bun-${{ matrix.target }} --outfile hacksmith-${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            packages/hacksmith/hacksmith-${{ matrix.target }}*
+        env:
+          GITHUB_TOKEN: ${{ secrets.HACKSMITH_GITHUB_TOKEN }}

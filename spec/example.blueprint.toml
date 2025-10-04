@@ -13,7 +13,6 @@ description = "Example blueprint for onboarding a user to Scalekit for SSO"
 enabled = true
 title = "Onboard to Scalekit for SSO"
 estimated_time = "60s"
-
 steps = [
   "Create account or login",
   "Capture identifiers and API credentials",
