@@ -35,7 +35,7 @@ export interface StepTypeDefinition {
   /**
    * Execute the step
    */
-  execute(step: FlowStep, context: VariableContext): Promise<StepResult>;
+  execute(step: FlowStep, context: VariableContext, devMode?: boolean): Promise<StepResult>;
 }
 
 /**
@@ -77,5 +77,9 @@ export abstract class BaseStepType implements StepTypeDefinition {
     return [];
   }
 
-  abstract execute(step: FlowStep, context: VariableContext): Promise<StepResult>;
+  abstract execute(
+    step: FlowStep,
+    context: VariableContext,
+    devMode?: boolean
+  ): Promise<StepResult>;
 }

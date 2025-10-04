@@ -1,4 +1,5 @@
 import { text } from "@clack/prompts";
+import chalk from "chalk";
 import type { FlowStep, FlowInput } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -26,13 +27,23 @@ export class InputStepType extends BaseStepType {
     return errors;
   }
 
-  async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
+  async execute(step: FlowStep, context: VariableContext, devMode = false): Promise<StepResult> {
     const interpolated = TemplateEngine.interpolateObject(step, context);
     const variables: VariableContext = {};
 
     // Handle multi-input steps
     if (interpolated.inputs && interpolated.inputs.length > 0) {
       for (const input of interpolated.inputs) {
+        // Use default value or empty string in dev mode
+        if (devMode) {
+          const defaultValue = input.placeholder || "";
+          console.log(
+            chalk.gray(`[DEV MODE] Using default value for ${input.name}: "${defaultValue}"`)
+          );
+          variables[input.name] = defaultValue;
+          continue;
+        }
+
         const value = await this.promptForInput(input);
 
         if (typeof value === "symbol") {
@@ -47,6 +58,18 @@ export class InputStepType extends BaseStepType {
 
     // Handle single input step
     if (interpolated.save_to) {
+      // Use default value or empty string in dev mode
+      if (devMode) {
+        const defaultValue = interpolated.placeholder || "";
+        console.log(
+          chalk.gray(
+            `[DEV MODE] Using default value for ${interpolated.save_to}: "${defaultValue}"`
+          )
+        );
+        variables[interpolated.save_to] = defaultValue;
+        return { success: true, variables };
+      }
+
       const value = await text({
         message: step.title || "Enter value",
         placeholder: interpolated.placeholder,

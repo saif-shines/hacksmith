@@ -15,6 +15,11 @@ export interface FlowExecutionResult {
 
 export class FlowExecutor {
   private context: VariableContext = {};
+  private devMode: boolean;
+
+  constructor(devMode = false) {
+    this.devMode = devMode;
+  }
 
   /**
    * Execute a single flow from a blueprint
@@ -104,7 +109,7 @@ export class FlowExecutor {
     cancelled?: boolean;
     error?: string;
   }> {
-    return await stepRegistry.execute(step, this.context);
+    return await stepRegistry.execute(step, this.context, this.devMode);
   }
 
   /**

@@ -35,7 +35,8 @@
     "figures": "^6.1.0",
     "ora": "^8.0.1",
     "smol-toml": "^1.4.2",
-    "terminal-kit": "^3.1.1"
+    "terminal-kit": "^3.1.1",
+    "terminal-link": "^5.0.0"
   },
   "devDependencies": {
     "tsc-alias": "^1.8.16",

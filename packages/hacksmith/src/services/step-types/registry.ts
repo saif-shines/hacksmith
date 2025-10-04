@@ -67,7 +67,7 @@ export class StepTypeRegistry {
   /**
    * Execute a step using its registered definition
    */
-  async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
+  async execute(step: FlowStep, context: VariableContext, devMode = false): Promise<StepResult> {
     const definition = this.types.get(step.type);
 
     if (!definition) {
@@ -77,7 +77,7 @@ export class StepTypeRegistry {
       };
     }
 
-    return definition.execute(step, context);
+    return definition.execute(step, context, devMode);
   }
 }
 

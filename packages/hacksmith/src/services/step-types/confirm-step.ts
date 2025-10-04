@@ -1,4 +1,5 @@
 import { confirm } from "@clack/prompts";
+import chalk from "chalk";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -12,8 +13,14 @@ export class ConfirmStepType extends BaseStepType {
   requiredFields = [];
   optionalFields = ["title", "message", "when"];
 
-  async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
+  async execute(step: FlowStep, context: VariableContext, devMode = false): Promise<StepResult> {
     const interpolated = TemplateEngine.interpolateObject(step, context);
+
+    // Auto-confirm in dev mode
+    if (devMode) {
+      console.log(chalk.gray("[DEV MODE] Auto-confirming"));
+      return { success: true };
+    }
 
     const result = await confirm({
       message: interpolated.message || step.title || "Continue?",

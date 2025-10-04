@@ -98,7 +98,7 @@ export type FlowStepType =
   | "ai_prompt";
 
 export interface FlowStep {
-  id: string;
+  id?: string;
   type: FlowStepType;
   title?: string;
   when?: string;

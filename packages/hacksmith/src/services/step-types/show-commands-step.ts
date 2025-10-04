@@ -13,7 +13,7 @@ export class ShowCommandsStepType extends BaseStepType {
   requiredFields = ["commands"];
   optionalFields = ["title", "when"];
 
-  async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
+  async execute(step: FlowStep, context: VariableContext, devMode = false): Promise<StepResult> {
     const interpolated = TemplateEngine.interpolateObject(step, context);
     const commands = interpolated.commands || [];
 
@@ -23,6 +23,12 @@ export class ShowCommandsStepType extends BaseStepType {
     });
 
     note(message.trim(), step.title || "Run Commands");
+
+    // Skip confirmation in dev mode
+    if (devMode) {
+      console.log(chalk.gray("[DEV MODE] Auto-confirming"));
+      return { success: true };
+    }
 
     // Wait for user confirmation
     const shouldContinue = await confirm({

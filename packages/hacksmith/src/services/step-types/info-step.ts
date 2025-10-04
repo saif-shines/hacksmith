@@ -3,6 +3,7 @@ import chalk from "chalk";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
+import { MarkdownRenderer } from "@/utils/markdown-renderer.js";
 import { BaseStepType, type StepResult } from "./base-step.js";
 
 /**
@@ -16,12 +17,13 @@ export class InfoStepType extends BaseStepType {
   async execute(step: FlowStep, context: VariableContext): Promise<StepResult> {
     const interpolated = TemplateEngine.interpolateObject(step, context);
     const content = interpolated.markdown || "";
+    const renderedContent = MarkdownRenderer.render(content);
 
     if (step.title) {
       intro(chalk.cyan.bold(step.title));
     }
 
-    note(content, step.title || "Info");
+    note(renderedContent, step.title || "Info");
 
     return { success: true };
   }
