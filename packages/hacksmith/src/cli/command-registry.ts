@@ -35,6 +35,11 @@ export class CommandRegistry {
   private addCommandToProgram(program: CommanderCommand, command: Command): void {
     const cmd = program.command(command.name).description(command.description);
 
+    // Add aliases
+    if (command.aliases && command.aliases.length > 0) {
+      cmd.aliases(command.aliases);
+    }
+
     // Add options based on command type
     // This could be made more dynamic by adding option definitions to Command interface
     if (command.name === "plan") {
@@ -45,6 +50,10 @@ export class CommandRegistry {
         .option("-d, --dev", "Development mode - skip interactive prompts")
         .option("-j, --json", "Output only JSON format")
         .option("-h, --help", "Show help");
+    }
+
+    if (command.name === "preferences") {
+      cmd.argument("[subcommand]", "Subcommand (show, reset, or setup)", "setup");
     }
 
     cmd.action(async (options) => {
