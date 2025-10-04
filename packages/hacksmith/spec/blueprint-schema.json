@@ -1,0 +1,233 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hacksmith.dev/schemas/blueprint-v0.1.json",
+  "title": "Hacksmith Blueprint Schema",
+  "description": "Schema for Hacksmith blueprint TOML files",
+  "type": "object",
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Blueprint schema version",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "smith": {
+      "type": "string",
+      "description": "Blueprint author/repository (e.g., 'owner/repo')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Blueprint description"
+    },
+    "preview": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "estimated_time": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "variables": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["user_input", "extracted", "callback_data"]
+          },
+          "required": { "type": "boolean" },
+          "sensitive": { "type": "boolean" },
+          "format": { "type": "string" },
+          "validation": { "type": "string" },
+          "css_selector": { "type": "string" }
+        }
+      }
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "steps"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique flow identifier"
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable flow title"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique step identifier (auto-generated from title if not provided)"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "info",
+                    "navigate",
+                    "input",
+                    "choice",
+                    "confirm",
+                    "show_commands",
+                    "ai_prompt"
+                  ],
+                  "description": "Step type"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Step title"
+                },
+                "when": {
+                  "type": "string",
+                  "description": "Conditional expression (e.g., 'sdk.language == \"node\"')"
+                },
+                "markdown": {
+                  "type": "string",
+                  "description": "Markdown content for info steps"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message for confirm steps"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL for navigate steps"
+                },
+                "instructions": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "List of instructions for navigate steps"
+                },
+                "save_to": {
+                  "type": "string",
+                  "description": "Variable name to save input to"
+                },
+                "placeholder": {
+                  "type": "string",
+                  "description": "Placeholder text for input steps"
+                },
+                "validate": {
+                  "type": "object",
+                  "properties": {
+                    "pattern": {
+                      "type": "string",
+                      "description": "Regex pattern for validation"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Error message on validation failure"
+                    }
+                  }
+                },
+                "options": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Options for choice steps"
+                },
+                "inputs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Variable name"
+                      },
+                      "label": {
+                        "type": "string",
+                        "description": "Input label"
+                      },
+                      "sensitive": {
+                        "type": "boolean",
+                        "description": "Whether input is sensitive (password-style)"
+                      },
+                      "placeholder": {
+                        "type": "string",
+                        "description": "Placeholder text"
+                      }
+                    }
+                  },
+                  "description": "Multiple inputs for a single step"
+                },
+                "commands": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "description": "Commands to display for show_commands steps"
+                },
+                "provider": {
+                  "type": "string",
+                  "description": "AI provider for ai_prompt steps"
+                },
+                "model": {
+                  "type": "string",
+                  "description": "AI model for ai_prompt steps"
+                },
+                "prompt_template": {
+                  "type": "string",
+                  "description": "Prompt template for ai_prompt steps"
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": { "type": { "const": "info" } }
+                  },
+                  "then": {
+                    "required": ["markdown"]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": { "type": { "const": "navigate" } }
+                  },
+                  "then": {
+                    "required": ["url"]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": { "type": { "const": "input" } }
+                  },
+                  "then": {
+                    "anyOf": [{ "required": ["save_to"] }, { "required": ["inputs"] }]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": { "type": { "const": "choice" } }
+                  },
+                  "then": {
+                    "required": ["options", "save_to"]
+                  }
+                },
+                {
+                  "if": {
+                    "properties": { "type": { "const": "show_commands" } }
+                  },
+                  "then": {
+                    "required": ["commands"]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

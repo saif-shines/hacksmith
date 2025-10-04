@@ -18,7 +18,7 @@
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
     "build:watch": "tsc -p tsconfig.json -w",
     "test": "pnpm build && bun test",
-    "prepack": "pnpm build",
+    "prepack": "mkdir -p spec && cp ../../spec/blueprint-schema.json spec/ && pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
     "publish:np": "pnpm dlx np"
