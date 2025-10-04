@@ -53,7 +53,7 @@ export class CommandRegistry {
     }
 
     if (command.name === "preferences") {
-      cmd.argument("[subcommand]", "Subcommand (show, reset, setup, or scan)", "setup");
+      cmd.argument("[subcommand]", "Subcommand (show, reset, setup, scan, or brief)", "setup");
     }
 
     cmd.action(async (subcommandOrOptions, maybeOptions) => {

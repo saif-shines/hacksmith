@@ -1,10 +1,13 @@
-import { select, confirm, outro } from "@clack/prompts";
+import { select, confirm, outro, text } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
+import { writeFileSync } from "fs";
+import { join } from "path";
 import { Command, CommandContext } from "../types/command.js";
 import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "../utils/ai-cli-detector.js";
 import { preferences } from "../utils/preferences-storage.js";
 import { TechStackDetector } from "../utils/tech-stack-detector.js";
+import { MissionBriefGenerator } from "../utils/mission-brief-generator.js";
 
 export class PreferencesCommand extends Command {
   name = "preferences";
@@ -24,13 +27,23 @@ export class PreferencesCommand extends Command {
       case "scan":
         await this.scanTechStack(context);
         break;
+      case "brief":
+        await this.generateMissionBrief(context);
+        break;
       case undefined:
       case "setup":
         await this.setupPreferences(context);
         break;
       default:
         context.error(`Unknown subcommand: ${subcommand}`);
-        context.output("Usage: hacksmith preferences [show|reset|setup|scan]");
+        context.output("Usage: hacksmith preferences [show|reset|setup|scan|brief]");
+        context.output("");
+        context.output("Subcommands:");
+        context.output("  show   - Display current preferences");
+        context.output("  setup  - Interactive setup for AI agent and tech stack");
+        context.output("  scan   - Scan and save project tech stack");
+        context.output("  brief  - Generate mission brief for AI agent");
+        context.output("  reset  - Reset all preferences");
     }
   }
 
@@ -245,6 +258,62 @@ export class PreferencesCommand extends Command {
       context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
       context.output(`\n${chalk.green(figures.tick)} Scanned: ${timeAgo}`);
       context.output(`${chalk.green(figures.tick)} Path: ${techStack.projectPath}\n`);
+    }
+  }
+
+  /**
+   * Generate mission brief
+   */
+  private async generateMissionBrief(context: CommandContext): Promise<void> {
+    const techStack = preferences.getTechStack();
+
+    if (!techStack) {
+      context.output(
+        chalk.yellow(
+          `\n${figures.warning} No tech stack scanned.\n\nRun: ${chalk.cyan("hacksmith preferences scan")} first`
+        )
+      );
+      return;
+    }
+
+    context.output(chalk.cyan.bold("\n📝 Generating Mission Brief...\n"));
+
+    // Ask for integration goal (optional)
+    const goal = await text({
+      message: "What is your integration goal? (optional, press Enter to skip)",
+      placeholder: "e.g., Integrate payment processing with Stripe",
+    });
+
+    const integrationGoal = typeof goal === "string" && goal.trim() ? goal.trim() : undefined;
+
+    // Generate the brief
+    const briefContent = MissionBriefGenerator.generate({
+      integrationGoal,
+    });
+
+    // Save to ~/.hacksmith/mission-brief.md
+    const briefPath = join(preferences.getPath(), "..", "mission-brief.md");
+
+    try {
+      writeFileSync(briefPath, briefContent, "utf-8");
+      context.output(chalk.green(`\n${figures.tick} Mission brief generated successfully!`));
+      context.output(chalk.gray(`\nLocation: ${briefPath}`));
+
+      // Show a preview
+      context.output(chalk.bold("\n📋 Preview:\n"));
+      const preview = briefContent.split("\n").slice(0, 15).join("\n");
+      context.output(chalk.gray(preview));
+      context.output(chalk.gray("\n..."));
+
+      outro(
+        chalk.cyan(
+          `\n${figures.info} You can now pass this brief to your AI agent for integration assistance.`
+        )
+      );
+    } catch (error) {
+      context.error(
+        `Failed to save mission brief: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
