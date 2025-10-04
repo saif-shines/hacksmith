@@ -1,6 +1,5 @@
 import { note, confirm } from "@clack/prompts";
 import chalk from "chalk";
-import figures from "figures";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -24,8 +23,8 @@ export class NavigateStepType extends BaseStepType {
 
     if (instructions.length > 0) {
       message += "\n\n" + chalk.yellow("Instructions:");
-      instructions.forEach((instruction: string) => {
-        message += `\n  ${figures.pointer} ${instruction}`;
+      instructions.forEach((instruction: string, index: number) => {
+        message += `\n  ${index + 1}. ${instruction}`;
       });
     }
 
