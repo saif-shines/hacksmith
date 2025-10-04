@@ -125,11 +125,30 @@ markdown = """
 You are going to get ready to use Scalekit for integrating SSO into your applications.
 """
 
-
+[[flows.steps]]
+type = "choice"
+title = "Do you have Scalekit account?"
+markdown = """
+Also, make sure you are signed in to Scalekit in your current browser session.
+"""
+save_to = "has_scalekit_account"
+options = ["Yes", "No, Sign me up!"]
 
 [[flows.steps]]
 type = "navigate"
-title = "Open login page"
+title = "Sign up for Scalekit"
+when = "has_scalekit_account == 'No, Sign me up!'"
+url = "{{ slugs.static.signup }}"
+instructions = [
+  "Complete the signup form",
+  "Verify your email",
+  "Log in to access your dashboard"
+]
+
+[[flows.steps]]
+type = "navigate"
+title = "Log in to Scalekit"
+when = "has_scalekit_account == 'Yes'"
 url = "{{ slugs.static.login }}"
 instructions = [
   "Enter your email",
