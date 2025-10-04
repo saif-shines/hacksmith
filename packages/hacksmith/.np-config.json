@@ -1,6 +1,6 @@
 {
   "branch": "main",
-  "cleanup": true,
+  "cleanup": false,
   "tests": false,
   "yarn": false,
   "releaseDraft": false
