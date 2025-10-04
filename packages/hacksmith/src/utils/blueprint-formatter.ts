@@ -125,6 +125,6 @@ export class BlueprintFormatter {
     // Print JSON
     logger("");
     logger("📄 Full Blueprint JSON:");
-    console.log(formatted.json);
+    formatted.json.split("\n").forEach((line) => logger(line));
   }
 }

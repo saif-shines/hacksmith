@@ -1,7 +1,6 @@
 import { intro, outro, text } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
-// @ts-expect-error - terminal-kit doesn't have proper types
 import terminal from "terminal-kit";
 import { Command } from "../types/command.js";
 import { createInteractiveContext } from "./context-factory.js";

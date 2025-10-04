@@ -17,7 +17,6 @@ export class GitHubSource extends BaseBlueprintSource {
     // Handle GitHub blob URLs - convert to raw URLs
     if (GitHubUrlUtils.isGitHubBlobUrl(input)) {
       const rawUrl = GitHubUrlUtils.convertBlobToRaw(input);
-      // eslint-disable-next-line no-undef
       const response = await fetch(rawUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch blueprint from ${rawUrl}: ${response.statusText}`);
@@ -55,7 +54,6 @@ export class GitHubSource extends BaseBlueprintSource {
   private async listTomlFiles(repoInfo: GitHubRepoInfo): Promise<BlueprintOption[]> {
     try {
       const apiUrl = GitHubUrlUtils.buildApiUrl(repoInfo.owner, repoInfo.repo);
-      // eslint-disable-next-line no-undef
       const response = await fetch(apiUrl);
 
       if (!response.ok) {

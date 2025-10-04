@@ -114,6 +114,9 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
     devDependencies:
+      '@types/node':
+        specifier: ^24.3.0
+        version: 24.3.0
       '@types/semver':
         specifier: ^7.7.1
         version: 7.7.1
