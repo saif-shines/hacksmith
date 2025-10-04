@@ -4,12 +4,25 @@ export class TemplateEngine {
   /**
    * Interpolate template strings with variables
    * Example: "Hello {{ name }}" with {name: "World"} => "Hello World"
+   * Supports nested interpolation (recursively interpolates until no more templates found)
    */
   static interpolate(template: string, context: VariableContext): string {
-    return template.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, path) => {
-      const value = this.getNestedValue(context, path.trim());
-      return value !== undefined ? String(value) : match;
-    });
+    let result = template;
+    let previousResult = "";
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
+
+    // Keep interpolating until no more changes or max iterations reached
+    while (result !== previousResult && iterations < maxIterations) {
+      previousResult = result;
+      result = result.replace(/\{\{\s*([^}]+)\s*\}\}/g, (match, path) => {
+        const value = this.getNestedValue(context, path.trim());
+        return value !== undefined ? String(value) : match;
+      });
+      iterations++;
+    }
+
+    return result;
   }
 
   /**

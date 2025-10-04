@@ -44,8 +44,8 @@ required = true
 sensitive = true
 
 # Optional: Persist outputs to files if/when the CLI supports it
-# [output]
-# storage_path = "~/.config/hacksmith"
+[output]
+storage_path = "~/.hacksmith/config"
 # config_filename = "onboarding.config.json"
 # credentials_filename = "credentials.secrets.json"
 # mission_brief_filename = "mission-brief.txt"
@@ -114,7 +114,7 @@ Include redirect config for {{ auth.callback_path }} if relevant.
 # --- structure but may not yet execute steps. It is safe to leave here.
 
 [[flows]]
-id = "onboarding"
+id = "scalekit"
 title = "Onboard onto Scalekit"
 
 # 1) Welcome / overview
@@ -160,14 +160,17 @@ instructions = [
 [[flows.steps]]
 type = "navigate"
 title = "Open dashboard"
-url = "{{ slugs.base_url }}{{ slugs.dynamic.dashboard }}"
+url = "{{ slugs.base_url }}"
 instructions = [
-  "Locate your Environment ID on the dashboard (e.g., env_123...)"
+  "Locate your Environment ID on the dashboard in browser, and copy it (e.g., env_123...)"
 ]
 
 [[flows.steps]]
 type = "input"
 title = "Paste Environment ID"
+markdown = """
+Paste the Environment ID you copied from the dashboard
+"""
 save_to = "environment_id"
 validate.pattern = "^env_[0-9]+$"
 validate.message = "Must look like env_123456..."
