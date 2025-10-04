@@ -76,8 +76,8 @@ dashboard = "/ws/environments/{{ environment_id }}/quick-start"
 api_credentials = "/ws/environments/{{ environment_id }}/settings/api-credentials"
 auth_redirects = "/ws/environments/{{ environment_id }}/authentication/redirects"
 
-# Optional: general-purpose prompt template building block
-[contextifact]
+# AI agent configuration for generating mission brief
+[agent]
 prompt_template = """
 You are helping integrate the Example product without a prebuilt SDK.
 Inputs:

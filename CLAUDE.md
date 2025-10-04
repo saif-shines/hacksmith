@@ -1,5 +1,9 @@
 # Claude CLI Development Guidelines
 
+## What is Hacksmith?
+
+Hacksmith is a standards-driven CLI framework that accelerates developer onboarding and product integration by eliminating repetitive manual steps, enabling users to get working code and integrations live in minutes instead of hours. It guides developers interactively (or via flags/env for scripting) through product-specific setup, opening browser pages, securely gathering secrets, generating tailored config/code, verifying integrations, and emitting structured "contextifacts" ready for AI assistants (like Claude or Gemini) to automate the next steps. Product creators define everything—use cases, steps, browser flows, code templates, APIs, and validation logic—in a versioned "integration pack" (YAML/JSON). The CLI fetches, validates, and applies these packs, ensuring deterministic, auditable automation. Distribution is cross-platform (Node and Bun supported) with strong security (redacted secrets, OS keychain, strict schema validation), high DX (clig.dev-standard UX, composable subcommands, --json outputs, predictable errors), and extensibility (new products, packs, and flows are easy to add). Hacksmith is designed as both an onboarding accelerant and a context assembler, bridging setup and AI-driven integration, while keeping first API call time under ten minutes and providing a clear plan and next steps for developers.
+
 ## CLI Design Principles
 
 This project follows the [Command Line Interface Guidelines](https://github.com/cli-guidelines/cli-guidelines) for creating consistent, user-friendly CLI tools.

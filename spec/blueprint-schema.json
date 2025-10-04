@@ -228,6 +228,30 @@
           }
         }
       }
+    },
+    "agent": {
+      "type": "object",
+      "description": "AI agent configuration for generating mission brief",
+      "properties": {
+        "prompt_template": {
+          "type": "string",
+          "description": "Template for AI agent prompt (supports variable interpolation)"
+        },
+        "model": {
+          "type": "string",
+          "description": "AI model to use (e.g., 'claude-3-7-sonnet')"
+        },
+        "provider": {
+          "type": "string",
+          "description": "AI provider (e.g., 'anthropic', 'openai')"
+        },
+        "temperature": {
+          "type": "number",
+          "description": "Temperature for AI generation (0.0 to 1.0)",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
     }
   }
 }
