@@ -25,6 +25,7 @@
     "cli:link": "pnpm --filter hacksmith link:global",
     "cli:unlink": "pnpm --filter hacksmith unlink:global",
     "cli:publish": "pnpm --filter hacksmith publish:np",
+    "build:binaries": "bash scripts/build-binaries.sh",
     "test:all": "turbo run test",
     "build:all": "turbo run build",
     "prepare": "husky"
