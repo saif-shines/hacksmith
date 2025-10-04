@@ -1,12 +1,14 @@
 import { writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { preferences } from "./preferences-storage.js";
+import { storage } from "./storage.js";
 
 export interface MissionBriefContext {
   projectName?: string;
   integrationGoal?: string;
   additionalContext?: string;
   blueprintName?: string;
+  blueprintId?: string;
   flowsExecuted?: string[];
   executionSummary?: string;
   agentPrompt?: string; // The blueprint's agent.prompt_template
@@ -81,6 +83,27 @@ export class MissionBriefGenerator {
         sections.push(context.executionSummary);
       }
       sections.push("");
+    }
+
+    // Blueprint Variables (from contextifact)
+    if (context?.blueprintId) {
+      const blueprintData = storage.getBlueprintData(context.blueprintId);
+      if (blueprintData && Object.keys(blueprintData.variables).length > 0) {
+        sections.push("## Blueprint Variables");
+        sections.push("");
+        sections.push(
+          "The following variables were collected during blueprint execution and are available for integration:"
+        );
+        sections.push("");
+        sections.push("```json");
+        sections.push(JSON.stringify(blueprintData.variables, null, 2));
+        sections.push("```");
+        sections.push("");
+        sections.push(
+          `*Saved at: ${new Date(blueprintData.saved_at).toLocaleString()} (Schema v${blueprintData.schema_version})*`
+        );
+        sections.push("");
+      }
     }
 
     // Tech Stack (Contextifact)

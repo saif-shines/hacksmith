@@ -11,6 +11,7 @@ import { PLAN_COMMAND_DEFINITION } from "../types/command-options.js";
 import { MissionBriefGenerator } from "../utils/mission-brief-generator.js";
 import { AIAgentInvoker } from "../utils/ai-agent-invoker.js";
 import { preferences } from "../utils/preferences-storage.js";
+import { getBlueprintId } from "../utils/storage.js";
 import chalk from "chalk";
 import figures from "figures";
 
@@ -168,10 +169,12 @@ export class PlanCommand extends Command {
         try {
           const flowNames = blueprint.flows.map((flow) => flow.title);
           const blueprintName = blueprint.name || "Unknown Blueprint";
+          const blueprintId = getBlueprintId(blueprint);
           const agentPrompt = blueprint.agent?.prompt_template;
 
           const briefPath = MissionBriefGenerator.save({
             blueprintName,
+            blueprintId,
             flowsExecuted: flowNames,
             executionSummary: `Successfully executed ${flowNames.length} flow(s) from ${blueprintName} blueprint.`,
             agentPrompt,
