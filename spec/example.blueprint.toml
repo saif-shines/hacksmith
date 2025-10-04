@@ -130,7 +130,7 @@ You are going to get ready to use Scalekit for SSO.
 id = "open-login"
 type = "navigate"
 title = "Open login page"
-url = "{{ auth.login_url }}"
+url = "{{ slugs.static.login }}"
 instructions = [
   "Enter your email",
   "Complete OTP/magic link/OAuth",
