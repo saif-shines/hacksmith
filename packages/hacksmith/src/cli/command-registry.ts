@@ -35,6 +35,11 @@ export class CommandRegistry {
   private addCommandToProgram(program: CommanderCommand, command: Command): void {
     const cmd = program.command(command.name).description(command.description);
 
+    // Add aliases
+    if (command.aliases && command.aliases.length > 0) {
+      cmd.aliases(command.aliases);
+    }
+
     // Add options based on command type
     // This could be made more dynamic by adding option definitions to Command interface
     if (command.name === "plan") {
@@ -47,12 +52,36 @@ export class CommandRegistry {
         .option("-h, --help", "Show help");
     }
 
-    cmd.action(async (options) => {
+    if (command.name === "preferences") {
+      cmd.argument("[subcommand]", "Subcommand (show, reset, setup, scan, or brief)", "setup");
+    }
+
+    cmd.action(async (subcommandOrOptions, maybeOptions) => {
       const { createNonInteractiveContext } = await import("./context-factory.js");
       const context = createNonInteractiveContext();
 
-      // Convert commander options to args array format expected by command
-      const args = this.convertOptionsToArgs(options);
+      // Handle subcommand arguments
+      let args: string[] = [];
+      let options: Record<string, unknown> = {};
+
+      if (command.name === "preferences") {
+        // First argument is the subcommand
+        if (typeof subcommandOrOptions === "string") {
+          args = [subcommandOrOptions];
+          options = maybeOptions || {};
+        } else {
+          options = subcommandOrOptions || {};
+        }
+      } else {
+        // For other commands, convert options to args
+        options = subcommandOrOptions || {};
+        args = this.convertOptionsToArgs(options);
+      }
+
+      // Add any additional args from options for non-preferences commands
+      if (command.name !== "preferences") {
+        args = this.convertOptionsToArgs(options);
+      }
 
       try {
         await command.execute(args, context);

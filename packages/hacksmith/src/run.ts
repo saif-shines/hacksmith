@@ -7,6 +7,7 @@ import { Command } from "commander";
 import { InteractiveCLI } from "./cli/interactive.js";
 import { CommandRegistry } from "./cli/command-registry.js";
 import { PlanCommand } from "./commands/plan.js";
+import { PreferencesCommand } from "./commands/preferences.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
@@ -16,6 +17,7 @@ async function main() {
   // Initialize command registry
   const registry = new CommandRegistry();
   registry.register(new PlanCommand());
+  registry.register(new PreferencesCommand());
 
   // If no arguments provided, start interactive mode
   if (process.argv.length <= 2) {

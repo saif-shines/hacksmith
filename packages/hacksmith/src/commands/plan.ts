@@ -1,3 +1,6 @@
+import { confirm } from "@clack/prompts";
+import clipboardy from "clipboardy";
+import { readFileSync } from "fs";
 import { Command, CommandContext } from "../types/command.js";
 import { BlueprintService } from "../services/blueprint-service.js";
 import { UIService } from "../services/ui-service.js";
@@ -5,6 +8,9 @@ import { BlueprintFormatter } from "../utils/blueprint-formatter.js";
 import { FlowExecutor } from "../services/flow-executor.js";
 import { createPlanArgumentParser, PlanArgs } from "../types/arguments.js";
 import { PLAN_COMMAND_DEFINITION } from "../types/command-options.js";
+import { MissionBriefGenerator } from "../utils/mission-brief-generator.js";
+import { AIAgentInvoker } from "../utils/ai-agent-invoker.js";
+import { preferences } from "../utils/preferences-storage.js";
 import chalk from "chalk";
 import figures from "figures";
 
@@ -28,6 +34,30 @@ export class PlanCommand extends Command {
     if (parsed.help || parsed.h) {
       this.showHelp(context);
       return;
+    }
+
+    // Check if preferences are set up (only for --execute mode)
+    if ((parsed.execute || parsed.e) && !preferences.getTechStack()) {
+      context.output(
+        chalk.yellow(
+          `\n${figures.warning} Tech stack not scanned. This helps provide better context to AI agents.\n`
+        )
+      );
+      context.output(
+        chalk.gray(
+          `${figures.pointer} Run ${chalk.cyan("hacksmith preferences")} or ${chalk.cyan("/prefs")} to set up preferences first.\n`
+        )
+      );
+
+      const shouldContinue = await confirm({
+        message: "Continue without preferences setup?",
+        initialValue: false,
+      });
+
+      if (typeof shouldContinue === "symbol" || !shouldContinue) {
+        context.output(chalk.gray("Operation cancelled"));
+        return;
+      }
     }
 
     // Handle GitHub repository processing
@@ -133,6 +163,122 @@ export class PlanCommand extends Command {
 
       if (result.success) {
         executor.displaySummary();
+
+        // Generate mission brief after successful execution
+        try {
+          const flowNames = blueprint.flows.map((flow) => flow.title);
+          const blueprintName = blueprint.name || "Unknown Blueprint";
+          const agentPrompt = blueprint.agent?.prompt_template;
+
+          const briefPath = MissionBriefGenerator.save({
+            blueprintName,
+            flowsExecuted: flowNames,
+            executionSummary: `Successfully executed ${flowNames.length} flow(s) from ${blueprintName} blueprint.`,
+            agentPrompt,
+          });
+
+          context.output(
+            chalk.cyan(`\n${figures.info} Mission brief generated: ${chalk.bold(briefPath)}`)
+          );
+
+          // Check if AI agent is configured and offer to invoke it
+          if (AIAgentInvoker.isConfigured()) {
+            const agentName = AIAgentInvoker.getConfiguredAgentName();
+            const shouldInvoke = await confirm({
+              message: `Launch ${agentName} to continue with integration?`,
+              initialValue: true,
+            });
+
+            if (typeof shouldInvoke !== "symbol" && shouldInvoke) {
+              context.output(
+                chalk.cyan(`\n${figures.pointer} Launching ${agentName} with mission brief...\n`)
+              );
+
+              try {
+                await AIAgentInvoker.invoke({
+                  missionBriefPath: briefPath,
+                  workingDirectory: process.cwd(),
+                });
+              } catch (error) {
+                context.output(
+                  chalk.yellow(
+                    `\n${figures.warning} Could not invoke ${agentName}: ${error instanceof Error ? error.message : String(error)}`
+                  )
+                );
+                context.output(
+                  chalk.gray(
+                    `${figures.pointer} You can manually open the mission brief at: ${briefPath}`
+                  )
+                );
+              }
+            } else {
+              context.output(
+                chalk.gray(`\n${figures.pointer} Mission brief is ready at: ${briefPath}`)
+              );
+            }
+          } else {
+            // No AI agent configured or manual mode - offer to copy to clipboard
+            const aiAgent = preferences.getAIAgent();
+            const isManualMode = aiAgent?.provider === "none";
+
+            if (isManualMode) {
+              context.output(
+                chalk.cyan(
+                  `\n${figures.info} Manual mode: Mission brief ready for your AI assistant.`
+                )
+              );
+            } else {
+              context.output(chalk.yellow(`\n${figures.warning} No AI agent CLI configured.`));
+              context.output(
+                chalk.gray(
+                  `${figures.pointer} You can use VS Code Copilot, Cursor, Windsurf, or other AI assistants.`
+                )
+              );
+            }
+
+            const shouldCopy = await confirm({
+              message: "Copy mission brief to clipboard?",
+              initialValue: true,
+            });
+
+            if (typeof shouldCopy !== "symbol" && shouldCopy) {
+              try {
+                const briefContent = readFileSync(briefPath, "utf-8");
+                await clipboardy.write(briefContent);
+                context.output(
+                  chalk.green(
+                    `\n${figures.tick} Mission brief copied to clipboard! Paste it into your AI assistant.`
+                  )
+                );
+              } catch (error) {
+                context.output(
+                  chalk.yellow(
+                    `\n${figures.warning} Could not copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
+                  )
+                );
+                context.output(chalk.gray(`${figures.pointer} Mission brief is at: ${briefPath}`));
+              }
+            } else {
+              context.output(
+                chalk.gray(`\n${figures.pointer} Mission brief is ready at: ${briefPath}`)
+              );
+              if (!isManualMode) {
+                context.output(
+                  chalk.gray(
+                    `${figures.pointer} Run ${chalk.cyan("hacksmith preferences setup")} to configure an AI CLI.`
+                  )
+                );
+              }
+            }
+          }
+        } catch (error) {
+          // Non-fatal error - log but don't fail
+          context.output(
+            chalk.yellow(
+              `\n${figures.warning} Could not generate mission brief: ${error instanceof Error ? error.message : String(error)}`
+            )
+          );
+        }
       } else if (result.cancelled) {
         context.output(chalk.yellow("\nFlow execution cancelled"));
       } else {

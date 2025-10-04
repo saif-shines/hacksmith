@@ -152,9 +152,11 @@ export interface BlueprintConfig {
     static?: Record<string, string>;
     dynamic?: Record<string, string>;
   };
-  contextifact?: {
+  agent?: {
     prompt_template?: string;
-    user_profile?: Record<string, unknown>;
+    model?: string;
+    provider?: string;
+    temperature?: number;
   };
   flows?: Flow[];
   [key: string]: unknown;
