@@ -31,7 +31,6 @@ export class BlueprintFetcher {
       );
     }
 
-    // eslint-disable-next-line no-undef
     const response = await fetch(fetchUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch blueprint from ${fetchUrl}: ${response.statusText}`);

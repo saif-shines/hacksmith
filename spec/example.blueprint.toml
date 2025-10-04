@@ -4,7 +4,7 @@
 # - You can safely remove sections you don't need. Unknown keys are ignored by older CLIs.
 # - Multi-line instructional text supports TOML multi-line strings (""" ... """).
 
-schema_version = "0.1"
+schema_version = "0.1.0"
 smith="saif-shines/hacksmith-blueprints"
 description = "Example blueprint for onboarding a user to Scalekit for SSO"
 
@@ -42,20 +42,6 @@ description = "Client Secret from API credentials"
 required = true
 sensitive = true
 
-# Optional: Persist outputs to files if/when the CLI supports it
-[output]
-storage_path = "~/.hacksmith/config"
-# config_filename = "onboarding.config.json"
-# credentials_filename = "credentials.secrets.json"
-# mission_brief_filename = "mission-brief.txt"
-# contextifact_filename = "contextifact.txt"
-
-# Optional security knobs
-# [security]
-# encrypt_credentials = false
-# credential_expiry_days = 0
-# require_confirmation_for_sensitive = true
-
 # Product context and references (docs, samples, API specs)
 [context.documentation]
 primary_docs = "https://docs.example.com"
@@ -76,11 +62,6 @@ sample_apps = ["https://github.com/example/sample-app-1"]
 api_spec_url = "https://api.example.com/openapi.json"
 interactive_docs = "https://api.example.com/docs"
 postman_collection = "https://api.example.com/postman.json"
-
-[sdk]
-preferred_language = "node"
-package_manager = "npm"
-framework_hints = ["node", "python", "go", "nextjs"]
 
 # Reusable URL pieces for templating
 [slugs]
@@ -210,62 +191,3 @@ instructions = [
   "Enter the chosen redirect URL for your app (e.g., http://localhost:3000{{ auth.callback_path }})",
   "Click Add to register it"
 ]
-
-# 6) Choose stack
-[[flows.steps]]
-type = "choice"
-title = "Pick your stack"
-save_to = "sdk.language"
-options = ["node", "python", "go", "nextjs", "no_sdk"]
-
-# 7) SDK-specific guidance
-[[flows.steps]]
-type = "show_commands"
-title = "Install Node.js SDK"
-when = "sdk.language == 'node'"
-commands = [
-  "npm i @vendor/sdk",
-  "npx vendor init"
-]
-
-[[flows.steps]]
-type = "show_commands"
-title = "Install Python SDK"
-when = "sdk.language == 'python'"
-commands = [
-  "pip install vendor-sdk"
-]
-
-[[flows.steps]]
-type = "show_commands"
-title = "Install Go SDK"
-when = "sdk.language == 'go'"
-commands = [
-  "go get github.com/vendor/sdk"
-]
-
-[[flows.steps]]
-type = "show_commands"
-title = "Install Next.js SDK"
-when = "sdk.language == 'nextjs'"
-commands = [
-  "npm i @vendor/sdk",
-  "npx vendor init --framework nextjs"
-]
-
-# 8) No SDK path — generate integration prompt
-[[flows.steps]]
-type = "ai_prompt"
-title = "Generate integration guide"
-when = "sdk.language == 'no_sdk'"
-provider = "claude"
-model = "claude-3-7-sonnet"
-prompt_template = """
-Using:
-- Env ID: {{ environment_id }}
-- Env URL: {{ environment_url }}
-- Client ID: {{ client_id }}
-- Client Secret: {{ client_secret }}
-Describe minimal API calls and code changes to authenticate and fetch a resource.
-Include curl and a language-agnostic outline. Mask secrets in output.
-"""

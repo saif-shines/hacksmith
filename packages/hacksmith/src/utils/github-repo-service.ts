@@ -17,7 +17,6 @@ export class GitHubRepoService {
   static async listTomlFiles(repoInfo: GitHubRepoInfo): Promise<BlueprintFile[]> {
     try {
       const apiUrl = GitHubUrlUtils.buildApiUrl(repoInfo.owner, repoInfo.repo);
-      // eslint-disable-next-line no-undef
       const response = await fetch(apiUrl);
 
       if (!response.ok) {

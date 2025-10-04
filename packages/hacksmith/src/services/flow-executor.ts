@@ -3,6 +3,7 @@ import type { Flow, FlowStep, BlueprintConfig } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
 import { stepRegistry } from "./step-types/index.js";
+import { storage, getBlueprintId } from "@/utils/storage.js";
 import chalk from "chalk";
 import figures from "figures";
 
@@ -16,6 +17,7 @@ export interface FlowExecutionResult {
 export class FlowExecutor {
   private context: VariableContext = {};
   private devMode: boolean;
+  private blueprint?: BlueprintConfig;
 
   constructor(devMode = false) {
     this.devMode = devMode;
@@ -25,7 +27,10 @@ export class FlowExecutor {
    * Execute a single flow from a blueprint
    */
   async executeFlow(flow: Flow, blueprint: BlueprintConfig): Promise<FlowExecutionResult> {
-    // Initialize context with blueprint data
+    // Store blueprint reference
+    this.blueprint = blueprint;
+
+    // Initialize context with blueprint data and load saved variables
     this.context = this.initializeContext(blueprint);
 
     console.log(chalk.cyan.bold(`\n${figures.pointer} ${flow.title}\n`));
@@ -58,6 +63,11 @@ export class FlowExecutor {
       // Merge step variables into context
       if (result.variables) {
         this.context = { ...this.context, ...result.variables };
+
+        // Save variables to storage after each step
+        if (this.blueprint) {
+          this.saveVariablesToStorage();
+        }
       }
     }
 
@@ -133,17 +143,53 @@ export class FlowExecutor {
       context.auth = blueprint.auth;
     }
 
-    // Add SDK config
-    if (blueprint.sdk) {
-      context.sdk = blueprint.sdk;
-    }
-
     // Add variables with default values
     if (blueprint.variables) {
       context.variables = blueprint.variables;
     }
 
+    // Load and validate saved variables from storage
+    const blueprintId = getBlueprintId(blueprint);
+    const schemaVersion = blueprint.schema_version || "0.1.0";
+
+    const savedVariables = storage.getValidatedVariables(
+      blueprintId,
+      schemaVersion,
+      blueprint.variables
+    );
+
+    if (savedVariables) {
+      Object.assign(context, savedVariables);
+    }
+
     return context;
+  }
+
+  /**
+   * Save variables to storage with version metadata
+   */
+  private saveVariablesToStorage(): void {
+    if (!this.blueprint) return;
+
+    const blueprintId = getBlueprintId(this.blueprint);
+    const schemaVersion = this.blueprint.schema_version || "0.1.0";
+
+    // Save user data and interpolated slugs, exclude blueprint config
+    const variablesToSave: Record<string, unknown> = {};
+    const configKeysToExclude = ["auth", "variables", "schema_version"];
+
+    Object.entries(this.context).forEach(([key, value]) => {
+      if (!configKeysToExclude.includes(key)) {
+        // Interpolate slugs before saving
+        if (key === "slugs" && typeof value === "object" && value !== null) {
+          variablesToSave[key] = TemplateEngine.interpolateObject(value, this.context);
+        } else {
+          variablesToSave[key] = value;
+        }
+      }
+    });
+
+    storage.saveBlueprint(blueprintId, schemaVersion, variablesToSave);
   }
 
   /**

@@ -64,7 +64,13 @@ export class NavigateStepType extends BaseStepType {
       return { success: false, cancelled: true };
     }
 
-    return { success: true };
+    // Return the constructed URL to be saved in context
+    const variables: Record<string, unknown> = {};
+    if (step.save_to) {
+      variables[step.save_to] = url;
+    }
+
+    return { success: true, variables };
   }
 
   /**

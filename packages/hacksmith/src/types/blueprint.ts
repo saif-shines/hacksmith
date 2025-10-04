@@ -56,12 +56,6 @@ export interface ContextConfig {
   };
 }
 
-export interface SdkConfig {
-  preferred_language?: string;
-  package_manager?: string;
-  framework_hints?: string[];
-}
-
 export interface OutputConfig {
   storage_path?: string;
   config_filename?: string;
@@ -151,7 +145,6 @@ export interface BlueprintConfig {
   preview?: PreviewConfig;
   variables?: Record<string, VariableConfig>;
   context?: ContextConfig;
-  sdk?: SdkConfig;
   output?: OutputConfig;
   security?: SecurityConfig;
   slugs?: {

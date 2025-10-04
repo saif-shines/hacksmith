@@ -1,7 +1,6 @@
 import { spinner } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
-// @ts-expect-error - terminal-kit doesn't have proper types
 import terminal from "terminal-kit";
 import { CommandContext } from "../types/command.js";
 

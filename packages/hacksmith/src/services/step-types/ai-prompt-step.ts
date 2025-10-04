@@ -21,7 +21,13 @@ export class AiPromptStepType extends BaseStepType {
 
     note(message, step.title || "AI Prompt");
 
-    return { success: true };
+    // Save prompt template if save_to is specified
+    const variables: Record<string, unknown> = {};
+    if (step.save_to) {
+      variables[step.save_to] = promptTemplate;
+    }
+
+    return { success: true, variables };
   }
 }
 

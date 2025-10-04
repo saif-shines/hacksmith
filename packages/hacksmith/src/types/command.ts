@@ -1,5 +1,7 @@
+import type { Terminal } from "terminal-kit";
+
 export interface CommandContext {
-  terminal: unknown;
+  terminal: Terminal | null;
   output: (message: string) => void;
   error: (message: string) => void;
   spinner: {

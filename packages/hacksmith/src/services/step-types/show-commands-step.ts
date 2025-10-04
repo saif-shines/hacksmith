@@ -40,7 +40,13 @@ export class ShowCommandsStepType extends BaseStepType {
       return { success: false, cancelled: true };
     }
 
-    return { success: true };
+    // Save commands if save_to is specified
+    const variables: Record<string, unknown> = {};
+    if (step.save_to) {
+      variables[step.save_to] = commands;
+    }
+
+    return { success: true, variables };
   }
 }
 

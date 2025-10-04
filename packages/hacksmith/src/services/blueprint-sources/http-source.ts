@@ -11,7 +11,6 @@ export class HttpSource extends BaseBlueprintSource {
   }
 
   async fetchContent(url: string): Promise<string> {
-    // eslint-disable-next-line no-undef
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Failed to fetch blueprint from ${url}: ${response.statusText}`);
