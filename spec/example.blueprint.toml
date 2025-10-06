@@ -215,6 +215,7 @@ options = ["Yes", "No", "Continue"]
 type = "navigate"
 title = "Sign up for Scalekit"
 when = "has_scalekit_account == 'No'"
+captures = "environment_id"
 url = "{{ slugs.static.signup }}"
 instructions = [
   "Complete the signup form",
@@ -226,6 +227,7 @@ instructions = [
 type = "navigate"
 title = "Log in to Scalekit"
 when = "has_scalekit_account == 'Yes'"
+captures = "environment_id"
 url = "{{ slugs.static.login }}"
 instructions = [
   "Enter your email",
@@ -247,6 +249,7 @@ validate.message = "Must look like env_123456..."
 [[flows.steps]]
 type = "navigate"
 title = "Open API credentials"
+captures = ["client_id", "client_secret", "environment_url"]
 url = "{{ slugs.base_url }}{{ slugs.dynamic.api_credentials }}"
 instructions = [
   "Copy Client ID, Client Secret, and Environment URL"
@@ -280,9 +283,10 @@ Hacksmith will help you implement it based on your current project, we let you d
 [[flows.steps]]
 type = "navigate"
 title = "Open Authentication Redirects"
+captures = "redirect_url"
 url = "{{ slugs.base_url }}{{ slugs.dynamic.auth_redirects }}"
 instructions = [
-  "Enter the chosen redirect URL for your app (e.g., http://localhost:3000{{ auth.callback_path }})",
+  "Enter the chosen redirect URL for your app (e.g., http://localhost:3000/auth/callback)",
   "Click Add to register it"
 ]
 

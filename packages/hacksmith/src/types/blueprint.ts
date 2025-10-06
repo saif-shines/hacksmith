@@ -103,6 +103,7 @@ export interface FlowStep {
   // navigate step
   url?: string;
   instructions?: string[];
+  captures?: string | string[]; // Variables this navigation helps capture
 
   // input step
   save_to?: string;

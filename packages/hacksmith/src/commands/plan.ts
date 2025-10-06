@@ -37,30 +37,6 @@ export class PlanCommand extends Command {
       return;
     }
 
-    // Check if preferences are set up (only for --execute mode)
-    if ((parsed.execute || parsed.e) && !preferences.getTechStack()) {
-      context.output(
-        chalk.yellow(
-          `\n${figures.warning} Tech stack not scanned. This helps provide better context to AI agents.\n`
-        )
-      );
-      context.output(
-        chalk.gray(
-          `${figures.pointer} Run ${chalk.cyan("hacksmith preferences")} or ${chalk.cyan("/prefs")} to set up preferences first.\n`
-        )
-      );
-
-      const shouldContinue = await confirm({
-        message: "Continue without preferences setup?",
-        initialValue: false,
-      });
-
-      if (typeof shouldContinue === "symbol" || !shouldContinue) {
-        context.output(chalk.gray("Operation cancelled"));
-        return;
-      }
-    }
-
     // Handle GitHub repository processing
     const githubRepo = this.getGitHubRepo(parsed);
     if (githubRepo) {

@@ -112,6 +112,13 @@ class PreferencesStorage {
   getPath(): string {
     return this.config.path;
   }
+
+  /**
+   * Check if any preferences are configured
+   */
+  hasAnyPreferences(): boolean {
+    return this.getAIAgent() !== undefined || this.getTechStack() !== undefined;
+  }
 }
 
 // Singleton instance
