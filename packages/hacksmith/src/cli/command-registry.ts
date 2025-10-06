@@ -1,5 +1,5 @@
 import { Command as CommanderCommand } from "commander";
-import { Command } from "../types/command.js";
+import { Command } from "@/types/command.js";
 
 export class CommandRegistry {
   private commands = new Map<string, Command>();

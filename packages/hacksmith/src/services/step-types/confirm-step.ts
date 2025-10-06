@@ -3,6 +3,7 @@ import chalk from "chalk";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
+import { isCancelled } from "@/utils/type-guards.js";
 import { BaseStepType, type StepResult } from "./base-step.js";
 
 /**
@@ -27,7 +28,7 @@ export class ConfirmStepType extends BaseStepType {
       initialValue: true,
     });
 
-    if (typeof result === "symbol" || !result) {
+    if (isCancelled(result) || !result) {
       return { success: false, cancelled: true };
     }
 

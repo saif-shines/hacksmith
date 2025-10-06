@@ -1,8 +1,9 @@
-import { text } from "@clack/prompts";
+import { text, password } from "@clack/prompts";
 import chalk from "chalk";
 import type { FlowStep, FlowInput } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
+import { isCancelled } from "@/utils/type-guards.js";
 import { BaseStepType, type StepResult, type ValidationError } from "./base-step.js";
 
 /**
@@ -46,7 +47,7 @@ export class InputStepType extends BaseStepType {
 
         const value = await this.promptForInput(input);
 
-        if (typeof value === "symbol") {
+        if (isCancelled(value)) {
           return { success: false, cancelled: true };
         }
 
@@ -78,7 +79,7 @@ export class InputStepType extends BaseStepType {
           : undefined,
       });
 
-      if (typeof value === "symbol") {
+      if (isCancelled(value)) {
         return { success: false, cancelled: true };
       }
 
@@ -93,10 +94,21 @@ export class InputStepType extends BaseStepType {
    * Helper method to prompt for a single input
    */
   private async promptForInput(input: FlowInput): Promise<string | symbol> {
+    // Support password masking for sensitive inputs
+    const isSensitive =
+      input.name.toLowerCase().includes("password") ||
+      input.name.toLowerCase().includes("secret") ||
+      input.name.toLowerCase().includes("token");
+
+    if (isSensitive) {
+      return await password({
+        message: input.label || input.name,
+      });
+    }
+
     return await text({
       message: input.label || input.name,
       placeholder: input.placeholder,
-      // TODO: Add password masking support for sensitive inputs
     });
   }
 
@@ -114,10 +126,15 @@ export class InputStepType extends BaseStepType {
     try {
       const regex = new RegExp(validation.pattern);
       if (!regex.test(value)) {
-        return validation.message || `Value does not match pattern: ${validation.pattern}`;
+        // More user-friendly validation message (per clig.dev guidelines)
+        if (validation.message) {
+          return validation.message;
+        }
+        // Provide helpful context instead of showing raw regex
+        return `Please check your input format and try again`;
       }
     } catch {
-      return "Invalid validation pattern";
+      return "Invalid validation pattern configured";
     }
 
     return undefined;

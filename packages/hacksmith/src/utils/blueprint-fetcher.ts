@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { parse } from "smol-toml";
-import type { BlueprintConfig } from "../types/blueprint.js";
+import type { BlueprintConfig } from "@/types/blueprint.js";
 import { GitHubUrlUtils } from "./github-url-utils.js";
 import { GitHubRepoService, type BlueprintFile } from "./github-repo-service.js";
 import { generateUniqueId } from "./slugify.js";

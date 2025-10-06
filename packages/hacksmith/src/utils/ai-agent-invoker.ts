@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import { preferences } from "./preferences-storage.js";
-import type { AIAgentPreference } from "../types/preferences.js";
+import type { AIAgentPreference } from "@/types/preferences.js";
 
 export interface AIAgentInvokeOptions {
   missionBriefPath: string;

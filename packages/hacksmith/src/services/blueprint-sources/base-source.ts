@@ -1,5 +1,5 @@
 import { parse } from "smol-toml";
-import type { BlueprintConfig } from "../../types/blueprint.js";
+import type { BlueprintConfig } from "@/types/blueprint.js";
 
 export interface BlueprintSource {
   name: string;

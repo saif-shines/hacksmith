@@ -1,4 +1,4 @@
-import type { BlueprintConfig } from "../types/blueprint.js";
+import type { BlueprintConfig } from "@/types/blueprint.js";
 
 export interface FormattedOutput {
   header: string[];

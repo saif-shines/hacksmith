@@ -1,4 +1,4 @@
-import type { BlueprintConfig } from "../types/blueprint.js";
+import type { BlueprintConfig } from "@/types/blueprint.js";
 import type { BlueprintSource, BlueprintOption } from "./blueprint-sources/base-source.js";
 import { FileSource } from "./blueprint-sources/file-source.js";
 import { HttpSource } from "./blueprint-sources/http-source.js";

@@ -1,7 +1,7 @@
 import Conf from "conf";
 import { homedir } from "os";
 import { join } from "path";
-import type { PreferencesSchema, AIAgentPreference } from "../types/preferences.js";
+import type { PreferencesSchema, AIAgentPreference } from "@/types/preferences.js";
 import type { TechStack } from "./tech-stack-detector.js";
 
 class PreferencesStorage {
