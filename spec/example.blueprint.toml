@@ -42,6 +42,12 @@ description = "Client Secret from API credentials"
 required = true
 sensitive = true
 
+[variables.redirect_url]
+description = "Redirect/callback URL registered in the dashboard"
+required = true
+sensitive = false
+validation = "^https?://.+"
+
 # Product context and references (docs, samples, API specs)
 [context.documentation]
 primary_docs = "https://docs.example.com"
@@ -279,3 +285,14 @@ instructions = [
   "Enter the chosen redirect URL for your app (e.g., http://localhost:3000{{ auth.callback_path }})",
   "Click Add to register it"
 ]
+
+[[flows.steps]]
+type = "input"
+title = "Confirm Redirect URL"
+markdown = """
+Enter the redirect URL you just registered in the Scalekit dashboard.
+"""
+save_to = "redirect_url"
+placeholder = "http://localhost:3000/auth/callback"
+validate.pattern = "^https?://.+"
+validate.message = "Must be a valid HTTP or HTTPS URL"
