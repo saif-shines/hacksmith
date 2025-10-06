@@ -1,4 +1,4 @@
-import { outro, cancel } from "@clack/prompts";
+import { outro, cancel, confirm } from "@clack/prompts";
 import type { Flow, FlowStep, BlueprintConfig } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -89,6 +89,19 @@ export class FlowExecutor {
         error: "No flows found in blueprint",
         variables: {},
       };
+    }
+
+    // Display overview if enabled
+    if (blueprint.overview?.enabled) {
+      const shouldContinue = await this.displayOverview(blueprint);
+      if (!shouldContinue) {
+        cancel("Flow cancelled");
+        return {
+          success: false,
+          cancelled: true,
+          variables: {},
+        };
+      }
     }
 
     // For now, execute flows sequentially
@@ -222,5 +235,66 @@ export class FlowExecutor {
     });
 
     console.log();
+  }
+
+  /**
+   * Display overview and get user confirmation
+   */
+  private async displayOverview(blueprint: BlueprintConfig): Promise<boolean> {
+    const overview = blueprint.overview;
+    if (!overview) return true;
+
+    console.log();
+
+    // Create box top
+    const title = overview.title || "Blueprint Overview";
+    const boxWidth = Math.max(title.length + 4, 60);
+    const leftPadding = Math.floor((boxWidth - title.length) / 2);
+    const rightPadding = boxWidth - title.length - leftPadding;
+
+    console.log(chalk.blue("┌" + "─".repeat(boxWidth) + "┐"));
+    console.log(
+      chalk.blue("│") +
+        " ".repeat(leftPadding) +
+        chalk.bold.white(title) +
+        " ".repeat(rightPadding) +
+        chalk.blue("│")
+    );
+    console.log(chalk.blue("├" + "─".repeat(boxWidth) + "┤"));
+
+    // Estimated time
+    if (overview.estimated_time) {
+      const timeText = `Estimated time: ${overview.estimated_time}`;
+      const timePadding = " ".repeat(boxWidth - timeText.length - 1);
+      console.log(chalk.blue("│") + " " + chalk.yellow(timeText) + timePadding + chalk.blue("│"));
+      console.log(chalk.blue("│") + " ".repeat(boxWidth) + chalk.blue("│"));
+    }
+
+    // Steps
+    if (overview.steps && overview.steps.length > 0) {
+      const stepsHeader = "This will guide you through:";
+      const headerPadding = " ".repeat(boxWidth - stepsHeader.length - 1);
+      console.log(
+        chalk.blue("│") + " " + chalk.white(stepsHeader) + headerPadding + chalk.blue("│")
+      );
+
+      overview.steps.forEach((step, index) => {
+        const stepText = `  ${index + 1}. ${step}`;
+        const stepPadding = " ".repeat(Math.max(0, boxWidth - stepText.length - 1));
+        console.log(chalk.blue("│") + " " + stepText + stepPadding + chalk.blue("│"));
+      });
+    }
+
+    // Box bottom
+    console.log(chalk.blue("└" + "─".repeat(boxWidth) + "┘"));
+    console.log();
+
+    // Confirm to proceed
+    const response = await confirm({
+      message: "Ready to begin?",
+      initialValue: true,
+    });
+
+    return typeof response === "boolean" && response;
   }
 }

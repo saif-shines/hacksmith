@@ -7,7 +7,7 @@ export interface AuthConfig {
   callback_path?: string;
 }
 
-export interface PreviewConfig {
+export interface OverviewConfig {
   enabled?: boolean;
   title?: string;
   description?: string;
@@ -142,7 +142,7 @@ export interface BlueprintConfig {
   description?: string;
   provider?: string;
   auth?: AuthConfig;
-  preview?: PreviewConfig;
+  overview?: OverviewConfig;
   variables?: Record<string, VariableConfig>;
   context?: ContextConfig;
   output?: OutputConfig;

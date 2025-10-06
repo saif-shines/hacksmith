@@ -8,8 +8,8 @@ schema_version = "0.1.0"
 smith="saif-shines/hacksmith-blueprints"
 description = "Example blueprint for onboarding a user to Scalekit for SSO"
 
-# Optional preview for human-friendly summary
-[preview]
+# Optional overview for human-friendly summary
+[overview]
 enabled = true
 title = "Onboard to Scalekit for SSO"
 estimated_time = "60s"
