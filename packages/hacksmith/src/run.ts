@@ -47,6 +47,17 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("Fatal error:", error);
+  // More helpful error message (per clig.dev guidelines)
+  console.error("\n❌ Something went wrong:");
+  console.error(`   ${error instanceof Error ? error.message : String(error)}\n`);
+
+  if (process.env.DEBUG) {
+    console.error("Stack trace:");
+    console.error(error instanceof Error ? error.stack : error);
+  } else {
+    console.error("💡 Run with DEBUG=1 for more details");
+  }
+
+  console.error("\n📝 Need help? https://github.com/saif-shines/hacksmith/issues\n");
   process.exit(1);
 });

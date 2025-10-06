@@ -2,7 +2,7 @@ import { intro, outro, text } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
 import terminal from "terminal-kit";
-import { Command } from "../types/command.js";
+import { Command } from "@/types/command.js";
 import { createInteractiveContext } from "./context-factory.js";
 
 export class InteractiveCLI {
@@ -82,11 +82,17 @@ export class InteractiveCLI {
     // User-defined commands
     const command = this.commands.get(commandName);
     if (!command) {
-      console.log(
-        chalk.red(
-          `${figures.cross} Command '${commandName}' not found. Type /help for available commands.`
-        )
-      );
+      // More helpful error with suggestions (per clig.dev guidelines)
+      const availableCommands = Array.from(this.commands.entries())
+        .filter(([name, cmd]) => name === cmd.name)
+        .map(([name]) => name);
+      const suggestion = this.findClosestCommand(commandName, availableCommands);
+
+      console.log(chalk.red(`${figures.cross} Command '${commandName}' not found.`));
+      if (suggestion) {
+        console.log(chalk.yellow(`\nDid you mean '${suggestion}'?`));
+      }
+      console.log(chalk.gray("\nType /help to see available commands."));
       return;
     }
 
@@ -197,5 +203,53 @@ export class InteractiveCLI {
       this.isRunning = false;
       process.exit(0);
     }
+  }
+
+  /**
+   * Find closest command name using simple Levenshtein distance
+   */
+  private findClosestCommand(input: string, commands: string[]): string | null {
+    if (commands.length === 0) return null;
+
+    const distances = commands.map((cmd) => ({
+      command: cmd,
+      distance: this.levenshteinDistance(input.toLowerCase(), cmd.toLowerCase()),
+    }));
+
+    const closest = distances.reduce((min, curr) => (curr.distance < min.distance ? curr : min));
+
+    // Only suggest if distance is reasonable (less than half the command length)
+    return closest.distance <= Math.max(3, input.length / 2) ? closest.command : null;
+  }
+
+  /**
+   * Calculate Levenshtein distance between two strings
+   */
+  private levenshteinDistance(a: string, b: string): number {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
+      }
+    }
+
+    return matrix[b.length][a.length];
   }
 }

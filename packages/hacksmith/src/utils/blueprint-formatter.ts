@@ -1,4 +1,4 @@
-import type { BlueprintConfig } from "../types/blueprint.js";
+import type { BlueprintConfig } from "@/types/blueprint.js";
 
 export interface FormattedOutput {
   header: string[];
@@ -32,22 +32,22 @@ export class BlueprintFormatter {
 
     sections.push({ title: "Basic Information", content: basicInfo });
 
-    // Preview section
-    if (blueprint.preview?.enabled) {
-      const previewContent = [
-        `   Title: ${blueprint.preview.title}`,
-        `   Description: ${blueprint.preview.description}`,
-        `   Estimated Time: ${blueprint.preview.estimated_time}`,
+    // Overview section
+    if (blueprint.overview?.enabled) {
+      const overviewContent = [
+        `   Title: ${blueprint.overview.title}`,
+        `   Description: ${blueprint.overview.description}`,
+        `   Estimated Time: ${blueprint.overview.estimated_time}`,
       ];
 
-      if (blueprint.preview.steps && blueprint.preview.steps.length > 0) {
-        previewContent.push("   Steps:");
-        blueprint.preview.steps.forEach((step, index) => {
-          previewContent.push(`     ${index + 1}. ${step}`);
+      if (blueprint.overview.steps && blueprint.overview.steps.length > 0) {
+        overviewContent.push("   Steps:");
+        blueprint.overview.steps.forEach((step, index) => {
+          overviewContent.push(`     ${index + 1}. ${step}`);
         });
       }
 
-      sections.push({ title: "🔍 Preview Configuration", content: previewContent });
+      sections.push({ title: "📋 Overview Configuration", content: overviewContent });
     }
 
     // Authentication section

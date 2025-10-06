@@ -1,4 +1,4 @@
-import { GitHubUrlUtils, type GitHubRepoInfo } from "../../utils/github-url-utils.js";
+import { GitHubUrlUtils, type GitHubRepoInfo } from "@/utils/github-url-utils.js";
 import { BaseBlueprintSource, type BlueprintOption } from "./base-source.js";
 
 export class GitHubSource extends BaseBlueprintSource {

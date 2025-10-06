@@ -3,6 +3,7 @@ import chalk from "chalk";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
+import { isCancelled } from "@/utils/type-guards.js";
 import { BaseStepType, type StepResult } from "./base-step.js";
 
 /**
@@ -42,7 +43,7 @@ export class ChoiceStepType extends BaseStepType {
       })),
     });
 
-    if (typeof selected === "symbol") {
+    if (isCancelled(selected)) {
       return { success: false, cancelled: true };
     }
 

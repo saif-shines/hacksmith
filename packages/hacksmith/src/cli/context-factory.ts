@@ -2,7 +2,7 @@ import { spinner } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
 import terminal from "terminal-kit";
-import { CommandContext } from "../types/command.js";
+import { CommandContext } from "@/types/command.js";
 
 export type ContextMode = "interactive" | "non-interactive";
 

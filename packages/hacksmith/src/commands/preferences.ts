@@ -4,11 +4,13 @@ import figures from "figures";
 import { writeFileSync } from "fs";
 import { join } from "path";
 import clipboardy from "clipboardy";
-import { Command, CommandContext } from "../types/command.js";
-import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "../utils/ai-cli-detector.js";
-import { preferences } from "../utils/preferences-storage.js";
-import { TechStackDetector } from "../utils/tech-stack-detector.js";
-import { MissionBriefGenerator } from "../utils/mission-brief-generator.js";
+import { Command, CommandContext } from "@/types/command.js";
+import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "@/utils/ai-cli-detector.js";
+import { preferences } from "@/utils/preferences-storage.js";
+import { TechStackDetector } from "@/utils/tech-stack-detector.js";
+import { MissionBriefGenerator } from "@/utils/mission-brief-generator.js";
+import { isCancelled, isNotCancelled } from "@/utils/type-guards.js";
+import { MISSION_BRIEF_FILENAME } from "@/constants/files.js";
 
 export class PreferencesCommand extends Command {
   name = "preferences";
@@ -36,15 +38,19 @@ export class PreferencesCommand extends Command {
         await this.setupPreferences(context);
         break;
       default:
-        context.error(`Unknown subcommand: ${subcommand}`);
-        context.output("Usage: hacksmith preferences [show|reset|setup|scan|brief]");
+        // More helpful error (per clig.dev guidelines)
+        context.error(`Unknown subcommand: '${subcommand}'`);
         context.output("");
-        context.output("Subcommands:");
-        context.output("  show   - Display current preferences");
-        context.output("  setup  - Interactive setup for AI agent and tech stack");
-        context.output("  scan   - Scan and save project tech stack");
-        context.output("  brief  - Generate mission brief for AI agent");
-        context.output("  reset  - Reset all preferences");
+        context.output("Available subcommands:");
+        context.output("  " + chalk.cyan("show") + "   - Display current preferences");
+        context.output(
+          "  " + chalk.cyan("setup") + "  - Interactive setup for AI agent and tech stack"
+        );
+        context.output("  " + chalk.cyan("scan") + "   - Scan and save project tech stack");
+        context.output("  " + chalk.cyan("brief") + "  - Generate mission brief for AI agent");
+        context.output("  " + chalk.cyan("reset") + "  - Reset all preferences");
+        context.output("");
+        context.output(chalk.gray("Example: ") + chalk.white("hacksmith preferences setup"));
     }
   }
 
@@ -112,7 +118,7 @@ export class PreferencesCommand extends Command {
         options,
       });
 
-      if (typeof selected !== "symbol") {
+      if (isNotCancelled(selected)) {
         if (selected === "manual") {
           // User chose manual mode - save this preference
           preferences.saveAIAgent({
@@ -150,7 +156,7 @@ export class PreferencesCommand extends Command {
       initialValue: true,
     });
 
-    if (typeof shouldScanTechStack !== "symbol" && shouldScanTechStack) {
+    if (isNotCancelled(shouldScanTechStack) && shouldScanTechStack) {
       context.output("");
       s.start("Analyzing project structure and dependencies...");
 
@@ -224,7 +230,7 @@ export class PreferencesCommand extends Command {
         initialValue: true,
       });
 
-      if (typeof shouldSave === "symbol" || !shouldSave) {
+      if (isCancelled(shouldSave) || !shouldSave) {
         context.output(chalk.gray("\nScan cancelled"));
         return;
       }
@@ -328,7 +334,7 @@ export class PreferencesCommand extends Command {
     });
 
     // Save to ~/.hacksmith/mission-brief.md
-    const briefPath = join(preferences.getPath(), "..", "mission-brief.md");
+    const briefPath = join(preferences.getPath(), "..", MISSION_BRIEF_FILENAME);
 
     try {
       writeFileSync(briefPath, briefContent, "utf-8");
@@ -347,7 +353,7 @@ export class PreferencesCommand extends Command {
         initialValue: true,
       });
 
-      if (typeof shouldCopy !== "symbol" && shouldCopy) {
+      if (isNotCancelled(shouldCopy) && shouldCopy) {
         try {
           await clipboardy.write(briefContent);
           outro(
@@ -382,7 +388,7 @@ export class PreferencesCommand extends Command {
       initialValue: false,
     });
 
-    if (typeof shouldReset === "symbol" || !shouldReset) {
+    if (isCancelled(shouldReset) || !shouldReset) {
       context.output(chalk.gray("Reset cancelled"));
       return;
     }

@@ -2,7 +2,7 @@ import Conf from "conf";
 import semver from "semver";
 import { homedir } from "os";
 import { join } from "path";
-import type { BlueprintConfig, VariableConfig } from "../types/blueprint.js";
+import type { BlueprintConfig, VariableConfig } from "@/types/blueprint.js";
 
 interface BlueprintStorageData {
   schema_version: string;

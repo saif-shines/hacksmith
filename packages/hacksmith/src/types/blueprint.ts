@@ -7,7 +7,7 @@ export interface AuthConfig {
   callback_path?: string;
 }
 
-export interface PreviewConfig {
+export interface OverviewConfig {
   enabled?: boolean;
   title?: string;
   description?: string;
@@ -103,6 +103,7 @@ export interface FlowStep {
   // navigate step
   url?: string;
   instructions?: string[];
+  captures?: string | string[]; // Variables this navigation helps capture
 
   // input step
   save_to?: string;
@@ -142,7 +143,7 @@ export interface BlueprintConfig {
   description?: string;
   provider?: string;
   auth?: AuthConfig;
-  preview?: PreviewConfig;
+  overview?: OverviewConfig;
   variables?: Record<string, VariableConfig>;
   context?: ContextConfig;
   output?: OutputConfig;
