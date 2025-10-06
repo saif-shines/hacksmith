@@ -1,6 +1,6 @@
 {
   "name": "hacksmith",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": false,
   "type": "module",
   "bin": {
@@ -21,7 +21,7 @@
     "prepack": "mkdir -p spec && cp ../../spec/blueprint-schema.json spec/ && pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
-    "publish:np": "pnpm dlx np --no-2fa && git push origin --tags && git push origin main"
+    "publish:np": "./scripts/publish.sh"
   },
   "engines": {
     "node": ">=18",
