@@ -19,7 +19,7 @@
       "type": "string",
       "description": "Blueprint description"
     },
-    "preview": {
+    "overview": {
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean" },
@@ -111,6 +111,16 @@
                   "type": "array",
                   "items": { "type": "string" },
                   "description": "List of instructions for navigate steps"
+                },
+                "captures": {
+                  "oneOf": [
+                    { "type": "string" },
+                    {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  ],
+                  "description": "Variable name(s) that this navigate step helps capture (for smart skip logic)"
                 },
                 "save_to": {
                   "type": "string",
