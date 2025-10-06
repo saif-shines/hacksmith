@@ -21,7 +21,7 @@
     "prepack": "mkdir -p spec && cp ../../spec/blueprint-schema.json spec/ && pnpm build",
     "link:global": "npm link",
     "unlink:global": "npm unlink -g hacksmith",
-    "publish:np": "HUSKY=0 pnpm dlx np --message 'chore(release): %s'"
+    "publish:np": "pnpm dlx np"
   },
   "engines": {
     "node": ">=18",
