@@ -1,6 +1,10 @@
 ---
 title: Installation
 description: How to install Hacksmith CLI on your system
+sidebar:
+  badge:
+    text: WIP
+    variant: caution
 ---
 
 Hacksmith CLI can be installed in multiple ways depending on your needs and environment.
