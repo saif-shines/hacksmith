@@ -5,6 +5,9 @@ import starlightThemeGalaxy from "starlight-theme-galaxy";
 
 export default defineConfig({
   site: "https://thehacksmith.dev",
+  redirects: {
+    '/': '/get-started/',
+  },
   image: {
     service: passthroughImageService(),
   },
