@@ -1,33 +1,5 @@
 /* Custom styles for hacksmith documentation site */
 
-:root {
-  /* Prefer self-host name 'Adelle Sans' then Adobe kit 'adelle-sans' */
-  --sl-font: 'Adelle Sans', 'adelle-sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif;
-}
-
-/* Use Regular (400) for better readability */
-body { font-weight: 400; }
-
-/* Ensure site title inherits the primary UI font */
-.site-title { font-family: inherit; }
-
-/* Demote all heading sizes by one step */
-:root {
-  --sl-text-h1: var(--sl-text-3xl);
-  --sl-text-h2: var(--sl-text-2xl);
-  --sl-text-h3: var(--sl-text-xl);
-  --sl-text-h4: var(--sl-text-lg);
-  --sl-text-h5: var(--sl-text-base);
-  --sl-text-h6: var(--sl-text-sm);
-}
-
-@media (min-width: 50em) {
-  :root {
-    --sl-text-h1: var(--sl-text-4xl);
-    --sl-text-h2: var(--sl-text-3xl);
-    --sl-text-h3: var(--sl-text-2xl);
-    --sl-text-h4: var(--sl-text-xl);
-    --sl-text-h5: var(--sl-text-base);
-    --sl-text-h6: var(--sl-text-sm);
-  }
+.site-title {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
