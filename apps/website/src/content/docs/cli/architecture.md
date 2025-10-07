@@ -1,5 +1,6 @@
 ---
 title: Architecture
+tableOfContents: false
 ---
 
 ```d2
@@ -31,9 +32,3 @@ terminal -> hacksmith
 hacksmith.contextifact -> "mission-brief.md"
 blueprint -> hacksmith.contextifact: "execute CLI flows"
 ```
-
-## Related Pages
-
-- [CLI Usage](/cli/usage/) - How to use the CLI
-- [Blueprint Feature](/cli/blueprint/) - Generate project scaffolding
-- [Getting Started](/get-started/) - Installation and setup

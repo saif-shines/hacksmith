@@ -1,5 +1,5 @@
 ---
-title: Testing Releases
+title: Testing binaries
 description: How to test binary builds and GitHub Actions releases locally
 ---
 
@@ -226,9 +226,3 @@ To reduce size:
 - [ ] Test install script: `curl -fsSL ... | bash`
 - [ ] Update documentation
 - [ ] Announce release
-
-## Related
-
-- [Installation Guide](/cli/installation)
-- [Contributing Guide](/cli/contribute)
-- [GitHub Actions Workflow](https://github.com/saif-shines/hacksmith/blob/main/.github/workflows/release.yml)
