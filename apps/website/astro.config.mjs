@@ -26,7 +26,7 @@ export default defineConfig({
       // },
       plugins: [
         starlightThemeObsidian({
-          graph: false,
+          graph: true,
         }),
       ],
       title: "hacksmith",
