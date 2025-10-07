@@ -1,11 +1,12 @@
 /* Custom styles for hacksmith documentation site */
 
-/* Apply monospaced font to site title */
-.site-title {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', Consolas, 'Ubuntu Mono', monospace;
+:root {
+  /* Prefer self-host name 'Adelle Sans' then Adobe kit 'adelle-sans' */
+  --sl-font: 'Adelle Sans', 'adelle-sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif;
 }
 
-/* Ensure the site title maintains readability with the monospace font */
-.site-title a {
-  font-family: inherit;
-}
+/* Use Light weight by default for UI text */
+body { font-weight: 300; }
+
+/* Ensure site title inherits the primary UI font */
+.site-title { font-family: inherit; }

@@ -3,6 +3,9 @@ import astroD2 from "astro-d2";
 import starlight from "@astrojs/starlight";
 import starlightThemeObsidian from "starlight-theme-obsidian";
 
+// Allow optional Adobe Fonts (Typekit) stylesheet URL via environment variable
+const adobeFontsCssUrl = process.env.ADOBE_FONTS_CSS_URL;
+
 export default defineConfig({
   site: "https://thehacksmith.dev",
   image: {
@@ -28,6 +31,12 @@ export default defineConfig({
       ],
       title: "hacksmith",
       description: "Documentation for the Hacksmith CLI",
+      head: adobeFontsCssUrl
+        ? [
+            { tag: "link", attrs: { rel: "preconnect", href: "https://use.typekit.net" } },
+            { tag: "link", attrs: { rel: "stylesheet", href: adobeFontsCssUrl } },
+          ]
+        : [],
       customCss: ["./src/styles/custom.css"],
       sidebar: [
         {
