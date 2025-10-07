@@ -6,7 +6,7 @@ import starlightThemeGalaxy from "starlight-theme-galaxy";
 export default defineConfig({
   site: "https://thehacksmith.dev",
   redirects: {
-    '/': '/get-started/',
+    "/": "/get-started/",
   },
   image: {
     service: passthroughImageService(),
@@ -24,10 +24,8 @@ export default defineConfig({
       // dark: "./src/assets/logos/hammer-icon-red-light.png",
       // replacesTitle: false,
       // },
-      plugins: [
-        starlightThemeGalaxy(),
-      ],
-      title: "hacksmith",
+      plugins: [starlightThemeGalaxy()],
+      title: "⚒︎ hacksmith",
       description: "Documentation for the Hacksmith CLI",
       customCss: ["./src/styles/custom.css"],
       sidebar: [
@@ -36,8 +34,8 @@ export default defineConfig({
           autogenerate: { directory: "get-started" },
         },
         {
-          label: "Coming soon",
-          autogenerate: { directory: "cli" },
+          label: "Handbooks",
+          autogenerate: { directory: "handbooks" },
         },
       ],
     }),
