@@ -1,0 +1,74 @@
+{
+  "/": {
+    "external": false,
+    "exists": true,
+    "title": "hacksmith",
+    "links": ["get-started/", "cli/usage/", "cli/architecture/", "cli/blueprint/"],
+    "backlinks": []
+  },
+  "cli/testing-releases/": {
+    "external": false,
+    "exists": true,
+    "title": "Testing Releases",
+    "links": ["cli/installation/", "cli/contribute/"],
+    "backlinks": ["cli/installation/"]
+  },
+  "cli/architecture/": {
+    "external": false,
+    "exists": true,
+    "title": "Architecture",
+    "links": ["cli/usage/", "cli/blueprint/", "get-started/"],
+    "backlinks": ["/", "cli/blueprint/"]
+  },
+  "cli/blueprint/": {
+    "external": false,
+    "exists": true,
+    "title": "Blueprint",
+    "links": ["cli/usage/", "cli/architecture/", "get-started/"],
+    "backlinks": ["/", "cli/architecture/", "cli/installation/"]
+  },
+  "cli/contribute/": {
+    "external": false,
+    "exists": true,
+    "title": "Contributor's guide",
+    "backlinks": ["cli/testing-releases/", "cli/installation/"]
+  },
+  "cli/installation/": {
+    "external": false,
+    "exists": true,
+    "title": "Installation",
+    "links": [
+      "get-started/",
+      "cli/blueprint/",
+      "cli/commands/",
+      "cli/testing-releases/",
+      "cli/contribute/"
+    ],
+    "backlinks": ["cli/testing-releases/"]
+  },
+  "get-started/": {
+    "external": false,
+    "exists": true,
+    "title": "What is hacksmith?",
+    "links": ["vids/hacksmith-in-60smp4/"],
+    "backlinks": ["/", "cli/architecture/", "cli/blueprint/", "cli/installation/"]
+  },
+  "cli/usage/": {
+    "external": false,
+    "exists": false,
+    "title": "CLI Usage",
+    "backlinks": ["/", "cli/architecture/", "cli/blueprint/"]
+  },
+  "cli/commands/": {
+    "external": false,
+    "exists": false,
+    "title": "Command Reference",
+    "backlinks": ["cli/installation/"]
+  },
+  "vids/hacksmith-in-60smp4/": {
+    "external": false,
+    "exists": false,
+    "title": "download the video here",
+    "backlinks": ["get-started/"]
+  }
+}

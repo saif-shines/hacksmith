@@ -1,11 +1,5 @@
 /* Custom styles for hacksmith documentation site */
 
-/* Apply monospaced font to site title */
 .site-title {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', Consolas, 'Ubuntu Mono', monospace;
-}
-
-/* Ensure the site title maintains readability with the monospace font */
-.site-title a {
-  font-family: inherit;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }

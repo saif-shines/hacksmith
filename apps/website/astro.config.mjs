@@ -1,10 +1,13 @@
 import { defineConfig, passthroughImageService } from "astro/config";
 import astroD2 from "astro-d2";
 import starlight from "@astrojs/starlight";
-import starlightThemeObsidian from "starlight-theme-obsidian";
+import starlightThemeGalaxy from "starlight-theme-galaxy";
 
 export default defineConfig({
   site: "https://thehacksmith.dev",
+  redirects: {
+    '/': '/get-started/',
+  },
   image: {
     service: passthroughImageService(),
   },
@@ -22,9 +25,7 @@ export default defineConfig({
       // replacesTitle: false,
       // },
       plugins: [
-        starlightThemeObsidian({
-          graph: false,
-        }),
+        starlightThemeGalaxy(),
       ],
       title: "hacksmith",
       description: "Documentation for the Hacksmith CLI",
