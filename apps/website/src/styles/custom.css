@@ -5,8 +5,8 @@
   --sl-font: 'Adelle Sans', 'adelle-sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, system-ui, sans-serif;
 }
 
-/* Use Light weight by default for UI text */
-body { font-weight: 300; }
+/* Use Regular (400) for better readability */
+body { font-weight: 400; }
 
 /* Ensure site title inherits the primary UI font */
 .site-title { font-family: inherit; }
