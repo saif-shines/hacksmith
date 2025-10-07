@@ -1,16 +1,30 @@
 ---
-title: What is hacksmith?
+title: What is Hacksmith?
 sidebar:
   label: What is _hacksmith?
 ---
 
-Hacksmith is a CLI that helps engineering teams to both onboard and implement a new product or service into their existing projects. Engineers switch between study and work modes in seconds.
+Hacksmith is a command-line tool that helps engineering teams onboard new team members and implement new products or services into existing projects. **Engineers switch between study and work modes in seconds.**
 
-**Users** would run a command like `hacksmith plan --b ./my-blueprint.toml -e` to trigger a CLI flow that guides them through the process of onboarding and implementing a new product or service into their existing projects.
+## How Hacksmith works
 
-**Quicksmiths** are the people who author the blueprints that guide the users through the process of onboarding and implementing a new or existing product or service into their existing projects.
+Hacksmith uses guided workflows called "blueprints" to automate complex setup and integration tasks. Here's the process:
 
-#### Watch: Hacksmith in 60 seconds
+```d2
+direction: right
+
+Users -> Terminal: "npx hacksmith"
+Terminal -> Hacksmith
+Blueprint Authors -> Blueprints: "Publish"
+Blueprints -> Hacksmith: "Reads and executes"
+Hacksmith -> "Successfully guided": Users
+```
+
+**Users** run commands like `hacksmith plan --blueprint ./my-blueprint.toml` to start guided workflows that handle complex onboarding and implementation tasks.
+
+**Blueprint authors** create these workflows that guide users through processes like setting up accounts, getting credentials, and integrating services into projects.
+
+## Watch: Hacksmith in 60 seconds
 
 <video
   controls
@@ -23,29 +37,49 @@ Hacksmith is a CLI that helps engineering teams to both onboard and implement a 
   <a href="/vids/hacksmith-in-60s.mp4">download the video here</a>.
 </video>
 
-#### Use cases
+## Common use cases
 
-1. A developer who is tasked to integrate stripe payments into their product, would simply run `npx hacksmith /path/to/integrate-stripe.toml`. The CLI will take the user through sign up for an account, login, get credentials, curate the prompt and trigger an AI agent that will work the project to start integrating payments.
-2. A new engineer who joined the team would run `npx hacksmith your-repo/onboarding.toml` to start getting access various tools and services that they would need to start working on the project.
+### Integrate payment processing
 
-#### How does hacksmith work?
+A developer needs to add Stripe payments to their product. They run:
 
-```d2
-direction: right
-
-Users -> Terminal: "npx hacksmith"
-Terminal -> Hacksmith
-Quicksmiths -> Blueprints: "Publish"
-Blueprints -> Hacksmith: "Reads and executes"
-Hacksmith -> "successfully guided": Users
+```bash
+npx hacksmith /path/to/integrate-stripe.toml
 ```
 
-Checkout the architecture overview for more details.
+The tool guides them through:
 
-- [Architecture Overview](/cli/architecture/)
+- Creating a Stripe account
+- Logging into the dashboard
+- Getting API credentials
+- Setting up payment integration
 
-## Related Pages
+### Onboard new team members
 
-- [CLI Usage](/cli/usage/) - How to use the CLI
-- [Blueprint Feature](/cli/blueprint/) - Generate project scaffolding
-- [Getting Started](/get-started/) - Installation and setup
+A new engineer joins the team. They run:
+
+```bash
+npx hacksmith your-repo/onboarding.toml
+```
+
+The tool helps them get access to:
+
+- Development tools and services
+- Team documentation
+- Code repositories
+- Communication platforms
+
+## Key benefits
+
+- **Reduces context switching** between learning and implementing
+- **Standardizes complex workflows** across team members
+- **Automates repetitive setup tasks** like credential management
+- **Provides guided assistance** for both new and existing integrations
+
+## Next steps
+
+Learn more about Hacksmith's design:
+
+- [Architecture Overview](/cli/architecture/) - How Hacksmith works internally
+- [Installation Guide](/cli/installation/) - Set up Hacksmith on your system
+- [Blueprint Authoring](/cli/blueprint/) - Create your own guided workflows
