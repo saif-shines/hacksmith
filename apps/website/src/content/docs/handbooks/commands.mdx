@@ -2,4 +2,300 @@
 title: Commands reference
 ---
 
-Hey
+Hacksmith provides a powerful CLI to help you manage integration blueprints, configure preferences, and automate onboarding workflows. This reference covers all available commands and their options.
+
+## Interactive Mode
+
+Run `hacksmith` without any arguments to enter interactive mode:
+
+```bash
+hacksmith
+```
+
+In interactive mode, you can use slash commands like `/plan` and `/preferences` with the same options described below.
+
+## Global Options
+
+All commands support these global options:
+
+- `--version` - Display the version number
+- `--help` - Display help information
+
+---
+
+## `plan` Command
+
+The `plan` command loads, validates, and executes integration blueprints. Blueprints define product-specific setup flows, code generation, and integration steps.
+
+### Usage
+
+```bash
+hacksmith plan [options]
+```
+
+### Options
+
+| Option               | Alias | Description                                          |
+| -------------------- | ----- | ---------------------------------------------------- |
+| `--blueprint <path>` | `-b`  | Path to blueprint TOML file (local path or HTTP URL) |
+| `--github <repo>`    | `-g`  | GitHub repository in `owner/repo` format             |
+| `--execute`          | `-e`  | Execute blueprint flows interactively                |
+| `--json`             | `-j`  | Output blueprint as JSON                             |
+| `--dev`              | `-d`  | Enable development mode for flow execution           |
+| `--help`             | `-h`  | Show help for the plan command                       |
+
+### Examples
+
+**Load a local blueprint:**
+
+```bash
+hacksmith plan --blueprint ./path/to/blueprint.toml
+```
+
+**Load and execute a blueprint:**
+
+```bash
+hacksmith plan -b ./blueprint.toml --execute
+```
+
+**Load blueprint from URL:**
+
+```bash
+hacksmith plan -b https://example.com/blueprint.toml
+```
+
+**List blueprints from GitHub repository:**
+
+```bash
+hacksmith plan --github saif-shines/hacksmith-blueprints
+```
+
+**Output blueprint as JSON:**
+
+```bash
+hacksmith plan -b ./blueprint.toml --json
+```
+
+**Interactive mode:**
+
+```bash
+# Start hacksmith and use slash command
+hacksmith
+> /plan --blueprint ./blueprint.toml
+> /plan -b ./blueprint.toml --execute
+```
+
+### What Happens During Execution
+
+When you use the `--execute` flag, Hacksmith will:
+
+1. **Load and validate** the blueprint
+2. **Execute flows** interactively, guiding you through each step:
+   - Browser actions (opening URLs, waiting for user confirmation)
+   - Input prompts (gathering configuration, secrets, etc.)
+   - API calls (verifying integrations)
+   - File operations (generating config files, code templates)
+3. **Generate a mission brief** with contextifacts (execution summary, tech stack, integration details)
+4. **Offer to launch AI agent** (if configured) or copy the mission brief to clipboard
+
+### Dev Mode
+
+Use `--dev` or `-d` to enable development mode during execution:
+
+```bash
+hacksmith plan -b ./blueprint.toml --execute --dev
+```
+
+Dev mode provides additional debugging information and verbose output during flow execution.
+
+---
+
+## `preferences` Command
+
+The `preferences` command manages Hacksmith configuration, including AI agent setup and tech stack scanning.
+
+### Usage
+
+```bash
+hacksmith preferences [subcommand]
+```
+
+### Aliases
+
+- `prefs`
+
+### Subcommands
+
+#### `setup`
+
+Interactive setup wizard for configuring AI agent and tech stack.
+
+```bash
+hacksmith preferences setup
+```
+
+**What it does:**
+
+1. **AI Agent Configuration:**
+   - Scans for installed AI CLIs (Claude Code, GitHub Copilot, etc.)
+   - Lets you choose which AI agent to use
+   - Supports "Manual mode" for copy-to-clipboard workflow with VS Code Copilot, Cursor, Windsurf, etc.
+
+2. **Tech Stack Scanning:**
+   - Analyzes your project structure and dependencies
+   - Detects languages, frameworks, package managers, databases, and more
+   - Saves tech stack to preferences for use in mission briefs
+
+**Example:**
+
+```bash
+hacksmith preferences setup
+```
+
+#### `show`
+
+Display current preferences including configured AI agent and saved tech stack.
+
+```bash
+hacksmith preferences show
+```
+
+**Output includes:**
+
+- AI agent provider and CLI path
+- AI agent version and last update time
+- Tech stack summary (languages, frameworks, etc.)
+- Tech stack scan time and project path
+
+**Example:**
+
+```bash
+hacksmith preferences show
+```
+
+#### `scan`
+
+Scan and save your project's tech stack to preferences.
+
+```bash
+hacksmith preferences scan
+```
+
+**What it detects:**
+
+- **Languages:** JavaScript, TypeScript, Python, Go, Rust, Java, etc.
+- **Frameworks:** React, Next.js, Vue, Astro, Express, FastAPI, etc.
+- **Package Managers:** npm, pnpm, yarn, bun, pip, cargo, etc.
+- **Databases:** PostgreSQL, MySQL, MongoDB, Redis, etc.
+- **Tools:** Docker, Terraform, GitHub Actions, etc.
+
+**Example:**
+
+```bash
+hacksmith preferences scan
+```
+
+#### `brief`
+
+Generate a mission brief for your AI agent without executing a blueprint.
+
+```bash
+hacksmith preferences brief
+```
+
+**What it does:**
+
+1. Prompts for an optional integration goal
+2. Generates a mission brief with tech stack context
+3. Saves the brief to `~/.hacksmith/mission-brief.md`
+4. Offers to copy the brief to clipboard
+
+**Example:**
+
+```bash
+hacksmith preferences brief
+```
+
+You'll be prompted:
+
+```
+What is your integration goal? (optional, press Enter to skip)
+> Integrate payment processing with Stripe
+```
+
+#### `reset`
+
+Reset all preferences (AI agent configuration and tech stack).
+
+```bash
+hacksmith preferences reset
+```
+
+**Confirmation required.** This will clear all saved preferences.
+
+**Example:**
+
+```bash
+hacksmith preferences reset
+```
+
+---
+
+## AI Agent Integration
+
+Hacksmith integrates with AI CLIs to automate the next steps after executing a blueprint.
+
+### Supported AI Agents
+
+- **Claude Code** - https://claude.com/claude-code
+- **GitHub Copilot** - Install via `gh extension install copilot`
+- **Manual mode** - Copy mission brief to clipboard for use with VS Code Copilot, Cursor, Windsurf, or any AI assistant
+
+### How It Works
+
+1. Run `hacksmith preferences setup` to configure your AI agent
+2. Execute a blueprint with `hacksmith plan -b blueprint.toml --execute`
+3. After successful execution, Hacksmith generates a mission brief
+4. Choose to:
+   - **Launch AI agent automatically** (if CLI is configured)
+   - **Copy to clipboard** (for manual mode)
+   - **Skip** and access the brief later at `~/.hacksmith/mission-brief.md`
+
+### Mission Brief Format
+
+The mission brief is a structured markdown file containing:
+
+- **Blueprint name and ID**
+- **Executed flows summary**
+- **Tech stack details** (languages, frameworks, dependencies)
+- **Integration goal** (if provided)
+- **Next steps** (guided by blueprint's agent prompt template)
+
+---
+
+## Environment Variables
+
+Hacksmith respects these environment variables:
+
+- `DEBUG=1` - Enable debug mode with verbose error output
+- `NO_COLOR` - Disable colored output
+
+---
+
+## Exit Codes
+
+Hacksmith uses these exit codes:
+
+- `0` - Success
+- `1` - General error
+- `2` - Invalid arguments or configuration
+
+---
+
+## Getting Help
+
+For more help:
+
+- Run `hacksmith --help` or `hacksmith <command> --help`
+- Visit the documentation: https://hacksmith.saifshines.com
+- Report issues: https://github.com/saif-shines/hacksmith/issues

@@ -1,81 +1,211 @@
 ---
-title: What is Hacksmith?
+title: Hacksmith
+
 sidebar:
-  label: What is Hacksmith?
+  label: Overview
 ---
 
 import { VideoPlayer } from "starlight-videos/components";
 
-Hacksmith is a command-line tool that helps engineering teams onboard new team members and implement new products or services into existing projects. **Engineers switch between study and work modes in seconds.**
+**Hacksmith** accelerates engineering team productivity by automating complex setup and integration tasks through guided workflows called **blueprints**. Teams reduce onboarding time by up to 80% and standardize implementation processes across projects. Engineers switch between learning and building modes in seconds, eliminating context switching overhead.
 
-<video
-  controls
-  preload="metadata"
-  playsinline
-  style="width: 100%; height: auto; border-radius: 8px;"
->
-  <source src="/vids/hacksmith-in-60s.mp4" type="video/mp4" />
-  Your browser does not support the video tag. You can
-  <a href="/vids/hacksmith-in-60s.mp4">download the video here</a>.
-</video>
+## Introduction
 
-### Common use cases
+**Hacksmith** helps engineering teams onboard new members and implement services faster. Teams use **blueprints**—structured workflow definitions—to guide users through complex multi-step processes like setting up payment systems or configuring development environments.
 
-#### Integrate payment processing
+Hacksmith eliminates the friction between learning how to implement features and actually building them. Teams maintain consistency across implementations while reducing the cognitive load of context switching.
 
-A developer needs to add Stripe payments to their product. They run:
+## Core Concepts
 
-```bash
-npx hacksmith /path/to/integrate-stripe.toml
-```
+**Blueprints** define guided workflows that automate multi-step engineering tasks. Each blueprint contains a sequence of steps that can include user prompts, automated commands, and validation checks.
 
-The tool guides them through:
+**Workflows** execute these blueprints interactively, adapting based on user input and system state. Users provide responses to prompts while the tool handles the repetitive, error-prone parts of implementation.
 
-1. Creating a Stripe account
-2. Logging into the dashboard
-3. Getting API credentials
-4. Setting up payment integration
+**Templates** within blueprints allow customization for different environments, projects, or user preferences. Teams create reusable blueprint templates that adapt to specific use cases.
 
-#### Onboard new team members
+## Installation and Setup
 
-A new engineer joins the team. They run:
+Install Hacksmith globally to access it from any project directory.
 
 ```bash
-npx hacksmith your-repo/onboarding.toml
+npm install -g hacksmith
 ```
 
-The tool helps them get access to:
+Verify the installation works correctly.
 
-1. Development tools and services
-2. Team documentation
-3. Code repositories
-4. Communication platforms
-
-## How Hacksmith works
-
-Hacksmith uses guided workflows called "blueprints" to automate complex setup and integration tasks. Here's the process:
-
-```d2
-shape: sequence_diagram
-
-Users
-Terminal
-Hacksmith
-Blueprints
-
-Users -> Terminal: "npx hacksmith"
-Terminal -> Hacksmith: Launch
-Blueprints -> Hacksmith: "Reads and executes"
-Hacksmith -> Users: "Successfully guides users"
+```bash
+hacksmith --version
 ```
 
-**Users** run commands like `hacksmith plan --blueprint ./my-blueprint.toml` to start guided workflows that handle complex onboarding and implementation tasks.
+Hacksmith requires Node.js version 16 or later. The tool works on macOS, Linux, and Windows systems with standard terminal environments.
 
-**Blueprint authors** create these workflows that guide users through processes like setting up accounts, getting credentials, and integrating services into projects.
+## Basic Usage
 
-## Key benefits
+Start Hacksmith with a blueprint file to begin a guided workflow.
 
-- **Reduces context switching** between learning and implementing
-- **Standardizes complex workflows** across team members
-- **Automates repetitive setup tasks** like credential management
-- **Provides guided assistance** for both new and existing integrations
+```bash
+hacksmith plan --blueprint ./path/to/blueprint.toml
+```
+
+List available blueprints in the current directory.
+
+```bash
+hacksmith list
+```
+
+Get help for any command or option.
+
+```bash
+hacksmith --help
+```
+
+## Use Cases
+
+### Integrate Payment Processing
+
+Add Stripe payments to a product by following guided setup steps.
+
+**Blueprint authors** create workflows that handle account creation, credential management, and integration setup automatically.
+
+**Users** run the blueprint and follow prompts for project-specific configuration:
+
+```bash
+hacksmith plan --blueprint ./stripe-integration.toml
+```
+
+The workflow guides users through each step while handling the complex parts automatically.
+
+### Onboard New Team Members
+
+Set up new engineers with development tools, documentation access, and project context.
+
+**Teams** create onboarding blueprints that standardize the setup process across all new hires.
+
+**New engineers** run the blueprint to get immediate access to:
+
+- Development tools and services
+- Team documentation and processes
+- Code repositories and permissions
+- Communication platforms and channels
+
+```bash
+hacksmith plan --blueprint ./team-onboarding.toml
+```
+
+### Set Up Development Environments
+
+Configure local development environments with consistent tooling and dependencies.
+
+**DevOps teams** maintain environment blueprints that ensure all developers use identical setups.
+
+**Developers** run the blueprint to get a fully configured development environment:
+
+```bash
+hacksmith plan --blueprint ./dev-environment.toml
+```
+
+### Implement Authentication Systems
+
+Add user authentication and authorization to applications using providers like Auth0 or Firebase.
+
+**Security teams** create authentication blueprints that enforce security best practices.
+
+**Developers** follow guided workflows that implement proper authentication flows:
+
+```bash
+hacksmith plan --blueprint ./auth-implementation.toml
+```
+
+## Architecture Overview
+
+Hacksmith operates through a three-layer architecture that separates concerns and enables flexibility.
+
+**Command Layer** handles user input and output, providing a consistent CLI experience across platforms.
+
+**Engine Layer** processes blueprint definitions, evaluates conditions, and executes workflow steps.
+
+**Service Layer** manages external integrations, file operations, and system interactions.
+
+```
+User Input → Command Layer → Engine Layer → Service Layer → System Output
+```
+
+Blueprints define the workflow logic in TOML format, specifying steps, conditions, and templates. The engine interprets these definitions at runtime, adapting execution based on user responses and system state.
+
+## Best Practices
+
+### Blueprint Design
+
+Structure blueprints with clear, single-purpose steps. Group related actions into logical phases that users can understand and follow.
+
+Write step descriptions that explain both what happens and why it matters. Users make better decisions when they understand the context of each action.
+
+Include validation checks at critical points to catch errors early. Users appreciate workflows that fail fast with clear error messages.
+
+### Team Adoption
+
+Start with high-impact, repetitive processes like onboarding or common integrations. Teams see immediate value and become advocates for broader adoption.
+
+Establish blueprint ownership within teams. Domain experts maintain the blueprints for their areas, ensuring accuracy and relevance.
+
+Review blueprints regularly to incorporate feedback and improve user experience. Successful blueprints evolve based on real usage patterns.
+
+### Security Considerations
+
+Never store sensitive credentials in blueprint files. Use environment variables or secure prompts for API keys and passwords.
+
+Implement proper error handling for external service failures. Users need clear guidance when integrations fail due to network issues or service outages.
+
+## Troubleshooting
+
+### Common Installation Issues
+
+**Problem:** `hacksmith: command not found` after installation.
+
+**Solution:** Restart your terminal or source your shell profile. The PATH update requires a new shell session.
+
+**Problem:** Permission errors during global installation.
+
+**Solution:** Use a Node version manager like nvm, or install with `sudo npm install -g hacksmith` (not recommended for security).
+
+### Blueprint Execution Problems
+
+**Problem:** Blueprint fails with "template not found" errors.
+
+**Solution:** Verify the blueprint file path and ensure all referenced templates exist in the blueprint directory.
+
+**Problem:** Interactive prompts don't appear in non-interactive environments.
+
+**Solution:** Use the `--non-interactive` flag with environment variables for CI/CD environments:
+
+```bash
+hacksmith plan --blueprint ./blueprint.toml --non-interactive
+```
+
+### Performance Issues
+
+**Problem:** Blueprints run slowly with large codebases.
+
+**Solution:** Use the `--parallel` flag when steps can run independently, and ensure your system meets the minimum requirements.
+
+## Glossary
+
+**Blueprint**: A TOML file that defines a complete workflow with steps, conditions, and templates for automating engineering tasks.
+
+**Template**: Reusable configuration blocks within blueprints that customize behavior based on user input or environment variables.
+
+**Workflow**: The runtime execution of a blueprint, handling user interactions and step execution.
+
+**Step**: An individual action within a blueprint, such as running a command, prompting for input, or validating a condition.
+
+**Engine**: The core processing component that interprets blueprints and manages workflow execution.
+
+## Next Steps
+
+Explore the blueprint format specification to create custom workflows for your team.
+
+Check the CLI reference for advanced usage patterns and configuration options.
+
+Review example blueprints in the project repository to understand common patterns and best practices.
+
+Start with a simple use case that your team repeats frequently, then expand to more complex workflows as you gain experience.
