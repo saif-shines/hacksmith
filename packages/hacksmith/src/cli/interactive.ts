@@ -1,9 +1,10 @@
-import { intro, outro, text } from "@clack/prompts";
+import { intro, outro } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
 import terminal from "terminal-kit";
 import { Command } from "@/types/command.js";
 import { createInteractiveContext } from "./context-factory.js";
+import { showCommandPalette } from "./components/CommandPalette.js";
 
 export class InteractiveCLI {
   private commands = new Map<string, Command>();
@@ -40,7 +41,7 @@ export class InteractiveCLI {
   private showWelcome() {
     console.log();
     console.log(chalk.cyan.bold(`${figures.smiley} Be that _hacksmith`));
-    console.log(chalk.gray("Type /help to see available commands or /exit to quit"));
+    console.log(chalk.gray("Use arrow keys to navigate • Press Enter to select • Ctrl+C to exit"));
     console.log();
   }
 
@@ -147,16 +148,6 @@ export class InteractiveCLI {
     console.log();
   }
 
-  private getCommandHint(): string {
-    const builtInCommands = ["/help", "/clear", "/history", "/exit"];
-    const userCommands = Array.from(this.commands.entries())
-      .filter(([name, command]) => name === command.name)
-      .map(([name]) => `/${name}`);
-
-    const allCommands = [...userCommands, ...builtInCommands];
-    return chalk.gray(`Available: ${allCommands.join(", ")}`);
-  }
-
   async start() {
     this.isRunning = true;
 
@@ -165,30 +156,16 @@ export class InteractiveCLI {
 
     while (this.isRunning) {
       try {
-        console.log(this.getCommandHint());
-        const input = await text({
-          message: chalk.green("hacksmith>"),
-          placeholder: "Enter a slash command",
-        });
+        // Show command palette using Ink
+        const selectedCommand = await showCommandPalette(this.commands);
 
-        if (typeof input === "string" && input.trim()) {
-          const trimmedInput = input.trim();
-
-          if (trimmedInput.startsWith("/")) {
-            this.history.push(trimmedInput);
-            console.log(); // Add spacing before command output
-            await this.handleSlashCommand(trimmedInput);
-            console.log(); // Add spacing after command output
-          } else {
-            console.log(
-              chalk.yellow(
-                `${figures.info} Commands must start with '/'. Try /help for available commands.`
-              )
-            );
-          }
-        }
+        // Add to history and execute
+        this.history.push(selectedCommand);
+        console.log(); // Add spacing before command output
+        await this.handleSlashCommand(selectedCommand);
+        console.log(); // Add spacing after command output
       } catch {
-        // User cancelled (Ctrl+C)
+        // User cancelled (Ctrl+C) or error occurred
         break;
       }
     }
