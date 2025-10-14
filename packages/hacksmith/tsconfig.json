@@ -13,7 +13,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["node"]
+    "types": ["node"],
+    "jsx": "react",
+    "skipLibCheck": true
   },
   "include": ["src/**/*"]
 }
