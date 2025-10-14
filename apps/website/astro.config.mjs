@@ -25,7 +25,7 @@ export default defineConfig({
       // replacesTitle: false,
       // },
       plugins: [starlightThemeGalaxy()],
-      title: "⚒︎ hacksmith",
+      title: "_hacksmith",
       description: "Documentation for the Hacksmith CLI",
       customCss: ["./src/styles/custom.css"],
       sidebar: [
