@@ -4,27 +4,9 @@ sidebar:
   label: What is Hacksmith?
 ---
 
+import { VideoPlayer } from "starlight-videos/components";
+
 Hacksmith is a command-line tool that helps engineering teams onboard new team members and implement new products or services into existing projects. **Engineers switch between study and work modes in seconds.**
-
-## How Hacksmith works
-
-Hacksmith uses guided workflows called "blueprints" to automate complex setup and integration tasks. Here's the process:
-
-```d2
-direction: right
-
-Users -> Terminal: "npx hacksmith"
-Terminal -> Hacksmith
-Blueprint Authors -> Blueprints: "Publish"
-Blueprints -> Hacksmith: "Reads and executes"
-Hacksmith -> "Successfully guided": Users
-```
-
-**Users** run commands like `hacksmith plan --blueprint ./my-blueprint.toml` to start guided workflows that handle complex onboarding and implementation tasks.
-
-**Blueprint authors** create these workflows that guide users through processes like setting up accounts, getting credentials, and integrating services into projects.
-
-## Watch: Hacksmith in 60 seconds
 
 <video
   controls
@@ -37,9 +19,9 @@ Hacksmith -> "Successfully guided": Users
   <a href="/vids/hacksmith-in-60s.mp4">download the video here</a>.
 </video>
 
-## Common use cases
+### Common use cases
 
-### Integrate payment processing
+#### Integrate payment processing
 
 A developer needs to add Stripe payments to their product. They run:
 
@@ -54,7 +36,7 @@ The tool guides them through:
 3. Getting API credentials
 4. Setting up payment integration
 
-### Onboard new team members
+#### Onboard new team members
 
 A new engineer joins the team. They run:
 
@@ -69,17 +51,31 @@ The tool helps them get access to:
 3. Code repositories
 4. Communication platforms
 
+## How Hacksmith works
+
+Hacksmith uses guided workflows called "blueprints" to automate complex setup and integration tasks. Here's the process:
+
+```d2
+shape: sequence_diagram
+
+Users
+Terminal
+Hacksmith
+Blueprints
+
+Users -> Terminal: "npx hacksmith"
+Terminal -> Hacksmith: Launch
+Blueprints -> Hacksmith: "Reads and executes"
+Hacksmith -> Users: "Successfully guides users"
+```
+
+**Users** run commands like `hacksmith plan --blueprint ./my-blueprint.toml` to start guided workflows that handle complex onboarding and implementation tasks.
+
+**Blueprint authors** create these workflows that guide users through processes like setting up accounts, getting credentials, and integrating services into projects.
+
 ## Key benefits
 
 - **Reduces context switching** between learning and implementing
 - **Standardizes complex workflows** across team members
 - **Automates repetitive setup tasks** like credential management
 - **Provides guided assistance** for both new and existing integrations
-
-## Next steps
-
-Learn more about Hacksmith's design:
-
-- [Architecture Overview](/cli/architecture/) - How Hacksmith works internally
-- [Installation Guide](/cli/installation/) - Set up Hacksmith on your system
-- [Blueprint Authoring](/cli/blueprint/) - Create your own guided workflows
