@@ -1,0 +1,365 @@
+---
+title: Blueprint Spec
+sidebar:
+  label: Review the Blueprint Spec
+description: Complete reference for the Hacksmith blueprint specification
+---
+
+import { Aside, Card, CardGrid } from "@astrojs/starlight/components";
+
+## What is a Blueprint?
+
+A Hacksmith blueprint is a TOML configuration file that defines an interactive onboarding flow for integrating **your product or service** into a developer's project. Blueprints eliminate repetitive manual steps by:
+
+- Guiding developers through account creation and authentication
+- Capturing API credentials and configuration values securely
+- Generating tailored integration code based on the developer's tech stack
+- Providing context to AI assistants for automated implementation
+
+<Aside type="tip">
+  As a blueprint author, you're creating an onboarding experience **for your specific product**
+  (e.g., Scalekit, Stripe, Auth0). The blueprint format is flexible enough to adapt to different
+  developer environments, but it's all about integrating YOUR product.
+</Aside>
+
+## Blueprint Structure
+
+Blueprints follow a standardized schema with seven key sections:
+
+<CardGrid>
+  <Card title="Metadata" icon="information">
+    Basic information about your blueprint
+  </Card>
+  <Card title="Overview" icon="open-book">
+    User-friendly summary of the onboarding flow
+  </Card>
+  <Card title="Variables" icon="setting">
+    Data to collect (API keys, credentials, etc.)
+  </Card>
+  <Card title="Context" icon="document">
+    Documentation and resources for AI agents
+  </Card>
+  <Card title="Slugs" icon="external">
+    URL templates for your product's dashboard
+  </Card>
+  <Card title="Agent" icon="rocket">
+    AI prompt for generating integration code
+  </Card>
+  <Card title="Flows" icon="list-format">
+    Step-by-step interactive experience
+  </Card>
+</CardGrid>
+
+### 1. Metadata
+
+Basic information about your blueprint:
+
+```toml
+schema_version = "0.1.0"
+smith = "saif-shines/hacksmith-blueprints"
+description = "Example blueprint for onboarding a user to Scalekit for SSO"
+```
+
+**Fields:**
+
+- **schema_version**: The blueprint specification version (currently `0.1.0`)
+- **smith**: Repository identifier where the blueprint is published
+- **description**: Human-readable summary of what **your product's** blueprint does
+
+### 2. Overview (Optional)
+
+Provides a user-friendly summary displayed before starting the flow:
+
+```toml
+[overview]
+enabled = true
+title = "Onboard to Scalekit for SSO"
+estimated_time = "60s"
+steps = [
+  "Create account or login",
+  "Capture identifiers and API credentials",
+  "Configure redirect/callback",
+  "Install SDK or generate integration prompt"
+]
+```
+
+**Fields:**
+
+- **enabled**: Whether to show the overview
+- **title**: Display title for the onboarding flow
+- **estimated_time**: Expected completion time
+- **steps**: Array of high-level steps shown to users
+
+### 3. Variables
+
+Define all data points that will be collected during the onboarding flow for **your product**:
+
+```toml
+[variables.environment_id]
+description = "Environment identifier from dashboard (e.g., env_123456)"
+required = true
+sensitive = false
+validation = "^env_[0-9]+$"
+
+[variables.client_secret]
+description = "Client Secret from API credentials"
+required = true
+sensitive = true  # Marks as secret - will be redacted in logs
+```
+
+**Variable Properties:**
+
+- **description**: Explains what the variable is and where to find it in YOUR product's dashboard
+- **required**: Whether the variable must be captured
+- **sensitive**: If `true`, value is treated as a secret (redacted, stored securely)
+- **validation**: Optional regex pattern for input validation
+
+<Aside type="caution">
+  Always mark API secrets, tokens, and passwords as `sensitive = true`. These values will be
+  redacted from logs and stored securely in the OS keychain.
+</Aside>
+
+### 4. Context
+
+Provide comprehensive reference materials about **your product** that AI agents will use when generating integration code:
+
+```toml
+[context.documentation]
+primary_docs = "https://docs.example.com"
+quickstart_guide = "https://docs.example.com/quickstart"
+api_reference = "https://docs.example.com/api"
+sso_guide = "https://docs.example.com/sso"
+
+[context.community]
+discord = "https://discord.gg/example"
+support_email = "support@example.com"
+
+[context.github_samples]
+main_repo = "https://github.com/example/product"
+examples_repo = "https://github.com/example/examples"
+sample_apps = ["https://github.com/example/sample-app-1"]
+
+[context.swagger_spec]
+api_spec_url = "https://api.example.com/openapi.json"
+interactive_docs = "https://api.example.com/docs"
+postman_collection = "https://api.example.com/postman.json"
+```
+
+**Context Sections:**
+
+- **documentation**: Links to official docs, guides, and API references
+- **community**: Support channels and contact information
+- **github_samples**: Code repositories and sample applications
+- **swagger_spec**: OpenAPI specifications and API documentation
+
+<Aside type="tip">
+  The more comprehensive your context, the better the AI agent can generate accurate,
+  production-ready integration code. Include YOUR product's official docs, working examples, and API
+  specifications.
+</Aside>
+
+This context helps AI assistants:
+
+- Find accurate documentation about **your product**
+- Reference working code examples for **your SDKs**
+- Understand **your API** specifications
+- Generate integration code that follows **your product's** best practices
+
+### 5. Slugs (URL Templates)
+
+Define reusable URL components for **your product's** dashboard and authentication pages:
+
+```toml
+[slugs]
+base_url = "https://app.scalekit.cloud"
+
+[slugs.static]
+login = "https://auth.scalekit.cloud/a/auth/login"
+signup = "https://auth.scalekit.cloud/a/auth/signup"
+
+[slugs.dynamic]
+dashboard = "/ws/environments/{{ environment_id }}/quick-start"
+api_credentials = "/ws/environments/{{ environment_id }}/settings/api-credentials"
+auth_redirects = "/ws/environments/{{ environment_id }}/authentication/redirects"
+```
+
+**Slug Types:**
+
+- **base_url**: The base URL for your product
+- **static**: Fixed URLs that don't change per user
+- **dynamic**: URL templates that use captured variables
+
+<Aside>
+  **Dynamic slugs** use `{{ variable_name }}` syntax to interpolate variables captured during the
+  flow. This allows you to construct personalized URLs that navigate to the user's specific
+  environment or project in YOUR product's dashboard.
+</Aside>
+
+### 6. Agent Configuration
+
+This is the most critical section! Define how the AI agent should help developers integrate **your product** into their codebase:
+
+```toml
+[agent]
+prompt_template = """
+You are an expert developer assistant specializing in seamless integration
+of [YOUR PRODUCT] across diverse backend environments.
+
+### Core Responsibilities
+- Thoroughly analyze the existing codebase
+- Request clarifications proactively
+- Generate complete backend implementation code for [YOUR PRODUCT]
+- Tailor code to fit existing project conventions
+- Enforce robust security practices
+
+### Integration Workflow
+1. Initial Codebase Analysis
+2. SDK Language and Framework Clarification
+3. Present SDK Installation Instructions for [YOUR PRODUCT]
+4. Detail Required Environment Variables
+5. Generate Implementation Code
+6. Provide Testing Instructions
+7. Outline Next Steps
+
+[... detailed prompt continues ...]
+"""
+```
+
+<Aside type="note" title="Writing Effective Agent Prompts">
+  Your agent prompt is where you teach the AI how to integrate **your specific product**. Be
+  explicit about: - **Your product's** SDK installation steps - **Your API's** authentication
+  patterns - Security best practices for **your product** - Common integration patterns developers
+  should follow - Testing and verification steps specific to **your product**
+</Aside>
+
+**The agent prompt should:**
+
+- Define the agent's role as an expert in **YOUR product**
+- Specify what to analyze in the developer's existing codebase
+- List clarifying questions about the developer's tech stack
+- Describe the expected output format (code, config, next steps)
+- Include security best practices for **YOUR product**
+- Reference **YOUR product's** documentation
+
+### 7. Flows
+
+Define the interactive step-by-step onboarding experience for **your product**:
+
+```toml
+[[flows]]
+id = "your-product"
+title = "Onboard onto [Your Product]"
+```
+
+#### Flow Step Types
+
+Hacksmith provides 5 different step types to build your onboarding flow:
+
+**Info Step** - Display informational content:
+
+```toml
+[[flows.steps]]
+type = "info"
+title = "Welcome to [Your Product]!"
+markdown = """
+You are going to get ready to integrate [Your Product] into your application.
+"""
+```
+
+**Choice Step** - Present options to the user:
+
+```toml
+[[flows.steps]]
+type = "choice"
+title = "Do you have a [Your Product] account?"
+markdown = """
+Make sure you are signed in to [Your Product] in your browser.
+- Yes: Takes you to login page
+- No: Takes you to signup page
+- Continue: Skip to dashboard
+"""
+save_to = "has_account"
+options = ["Yes", "No", "Continue"]
+```
+
+**Navigate Step** - Open a browser page to your product's dashboard:
+
+```toml
+[[flows.steps]]
+type = "navigate"
+title = "Sign up for [Your Product]"
+when = "has_account == 'No'"  # Conditional execution
+url = "{{ slugs.static.signup }}"
+instructions = [
+  "Complete the signup form",
+  "Verify your email",
+  "Access your dashboard"
+]
+```
+
+<Aside type="tip">
+  Use the `when` field to conditionally show steps based on previous user choices.
+</Aside>
+
+**Input Step (Single)** - Collect a single value:
+
+```toml
+[[flows.steps]]
+type = "input"
+title = "Paste Project ID"
+markdown = """
+Locate your Project ID in the dashboard settings
+"""
+save_to = "project_id"
+validate.pattern = "^proj_[a-zA-Z0-9]+$"
+validate.message = "Must start with 'proj_'"
+```
+
+**Input Step (Multiple)** - Collect multiple related values:
+
+```toml
+[[flows.steps]]
+type = "input"
+title = "Paste API credentials"
+
+[[flows.steps.inputs]]
+name = "client_id"
+sensitive = false
+
+[[flows.steps.inputs]]
+name = "client_secret"
+sensitive = true
+
+[[flows.steps.inputs]]
+name = "api_endpoint"
+sensitive = false
+```
+
+## Complete Example
+
+<Aside type="note">
+  See the full example blueprint at
+  [`spec/example.blueprint.toml`](https://github.com/saif-shines/hacksmith/blob/main/spec/example.blueprint.toml)
+  in the Hacksmith repository. It's a production-ready blueprint for Scalekit SSO that demonstrates
+  all the concepts in this guide.
+</Aside>
+
+The example shows:
+
+- Complete metadata, variables, and context configuration
+- Comprehensive AI agent prompt for SSO integration
+- Full interactive flow with conditional steps
+- Proper variable validation and sensitive data handling
+- URL templating for dashboard navigation
+
+## Next Steps
+
+Ready to start authoring? Check out the [Blueprint Best Practices](/get-started/blueprint-best-practices) guide for practical tips, templates, and step-by-step instructions.
+
+## Schema Reference
+
+For the complete schema definition and all available field options:
+
+- [Blueprint Schema Documentation](https://github.com/saif-shines/hacksmith) in the Hacksmith repository
+- Review `spec/example.blueprint.toml` for a comprehensive example
+- See the [CLI Reference](/cli-reference) for running blueprints
