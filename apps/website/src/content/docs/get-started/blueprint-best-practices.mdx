@@ -1,0 +1,428 @@
+---
+title: Blueprint Best Practices
+sidebar:
+  label: Blueprint Best Practices
+description: Practical guide for authoring effective Hacksmith blueprints
+---
+
+import { Aside, Card, CardGrid, Steps, Tabs, TabItem } from "@astrojs/starlight/components";
+
+<Aside type="note">
+  Before diving into best practices, make sure you're familiar with the [Blueprint
+  Spec](/get-started/author-blueprint) to understand the structure and available fields.
+</Aside>
+
+## Overview
+
+You're writing a blueprint **for YOUR product**, but it should be flexible enough to work with developers using different tech stacks (Node.js, Python, Go, Django, Express, FastAPI, etc.).
+
+**Key Principle:** Your blueprint guides developers through YOUR product's onboarding while adapting to THEIR development environment.
+
+## 10 Best Practices
+
+### 1. Keep Implementation Flexible
+
+Your blueprint is for **YOUR specific product**, but write instructions and agent prompts that adapt to different developer environments:
+
+<Tabs>
+  <TabItem label="Good">
+    ```toml
+    # Adaptable to any backend framework
+    description = "Configure authentication redirect endpoint for [Your Product]"
+
+    # Agent prompt that adapts
+    prompt_template = """
+    Analyze the developer's backend framework (Express, FastAPI, Django, etc.)
+    and generate appropriate code to integrate [Your Product]...
+    """
+    ```
+
+  </TabItem>
+
+  <TabItem label="Avoid">
+    ```toml
+    # Too rigid - assumes specific tech stack
+    description = "Add Express.js route at /auth/callback"
+
+    # Agent prompt that's too narrow
+    prompt_template = """
+    Add this Express.js code to integrate [Your Product]...
+    """
+    ```
+
+  </TabItem>
+</Tabs>
+
+### 2. Use Clear Variable Names
+
+Choose variable names that developers will understand immediately:
+
+<Tabs>
+  <TabItem label="Good">
+    ```toml
+    # Clear, self-explanatory names
+    [variables.api_key]
+    [variables.client_id]
+    [variables.project_id]
+    [variables.redirect_url]
+    [variables.webhook_secret]
+    ```
+  </TabItem>
+
+  <TabItem label="Avoid">
+    ```toml
+    # Cryptic abbreviations or internal jargon
+    [variables.sk_key]      # What's "sk"?
+    [variables.pid]         # Project? Process? Product?
+    [variables.wh_sec]      # Unclear abbreviation
+    ```
+  </TabItem>
+</Tabs>
+
+### 3. Provide Validation Patterns
+
+Help users catch mistakes early with regex validation for **YOUR product's** identifier formats:
+
+```toml
+# Validate your product's API key format
+[variables.api_key]
+validation = "^sk_[a-zA-Z0-9]{32}$"
+
+# Validate email addresses
+[variables.email]
+validation = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+
+# Validate URLs
+[variables.webhook_url]
+validation = "^https?://.+"
+```
+
+<Aside type="tip">
+  Use validation patterns that match **YOUR product's** actual identifier formats. This prevents
+  errors before they happen!
+</Aside>
+
+### 4. Write Detailed Agent Prompts
+
+The agent prompt is where you teach the AI how to integrate **YOUR product**. Make it comprehensive:
+
+<Steps>
+  1. **Analyze the codebase** - Detect the developer's tech stack, frameworks, and patterns 2. **Ask
+  clarifying questions** - Get details about their environment if needed 3. **Generate tailored
+  code** - Create integration code for **YOUR product** that fits their project 4. **Include
+  security best practices** - Enforce secure patterns specific to **YOUR product** 5. **Provide
+  testing instructions** - Show how to verify the integration works 6. **Format output clearly** -
+  Use labeled sections for code, config, and next steps
+</Steps>
+
+<Aside type="caution" title="Common Mistake">
+  Don't write generic prompts! Your agent should be an expert specifically in **YOUR product**.
+  Include details about YOUR SDK, YOUR API patterns, YOUR authentication flows.
+</Aside>
+
+### 5. Use Conditional Steps
+
+Streamline flows with conditional logic based on user choices:
+
+```toml
+[[flows.steps]]
+type = "navigate"
+title = "Sign up for [Your Product]"
+when = "has_account == 'No'"  # Only show if user doesn't have account
+url = "{{ slugs.static.signup }}"
+```
+
+### 6. Group Related Inputs
+
+When collecting multiple related values (like API credentials), use multi-input steps:
+
+```toml
+[[flows.steps]]
+type = "input"
+title = "Paste [Your Product] API Credentials"
+
+[[flows.steps.inputs]]
+name = "api_key"
+sensitive = true
+
+[[flows.steps.inputs]]
+name = "api_secret"
+sensitive = true
+
+[[flows.steps.inputs]]
+name = "workspace_id"
+sensitive = false
+```
+
+### 7. Mark Sensitive Data Appropriately
+
+<Aside type="caution">
+  **Always** mark API secrets, tokens, passwords, and private keys as `sensitive = true`. These
+  values will be: - Redacted from terminal output and logs - Stored securely in the OS keychain -
+  Never displayed in plain text
+</Aside>
+
+```toml
+[variables.api_secret]
+sensitive = true
+
+[variables.private_key]
+sensitive = true
+
+[variables.webhook_secret]
+sensitive = true
+```
+
+### 8. Include Comprehensive Context
+
+The more context you provide about **YOUR product**, the better the AI integration:
+
+<CardGrid>
+  <Card title="Documentation" icon="open-book">
+    Link to YOUR official docs, API reference, quickstart guides
+  </Card>
+  <Card title="Code Examples" icon="seti:code">
+    YOUR SDK repositories, sample apps, integration examples
+  </Card>
+  <Card title="API Specs" icon="document">
+    YOUR OpenAPI/Swagger specs, Postman collections
+  </Card>
+  <Card title="Community" icon="github">
+    YOUR Discord, support channels, GitHub discussions
+  </Card>
+</CardGrid>
+
+### 9. Test Your Blueprint
+
+Before publishing, thoroughly test your blueprint:
+
+<Steps>
+1. **Run locally**
+   ```bash
+   hacksmith plan ./your-product-blueprint.toml
+   ```
+
+2. **Verify each step**
+   - Ensure all URLs open correctly to **YOUR product's** pages
+   - Check that variables are captured with proper validation
+   - Confirm conditional logic works as expected
+
+3. **Test the AI agent**
+   - Verify it generates working integration code for **YOUR product**
+   - Test with different developer environments (Node.js, Python, etc.)
+   - Ensure security best practices are followed
+
+4. **Get feedback**
+   - Have a developer who's new to **YOUR product** try the blueprint
+   - Iterate based on their experience
+     </Steps>
+
+### 10. Version Your Changes
+
+Maintain a changelog for your blueprint and version appropriately:
+
+```toml
+schema_version = "0.1.0"  # Update when making breaking changes
+```
+
+## Quick Start Template
+
+Here's a minimal blueprint template to get you started:
+
+```toml
+schema_version = "0.1.0"
+smith = "your-org/your-blueprints"
+description = "Onboard to [Your Product]"
+
+[overview]
+enabled = true
+title = "Get Started with [Your Product]"
+estimated_time = "5 minutes"
+steps = ["Create account", "Get API credentials", "Generate integration code"]
+
+# Define your variables
+[variables.api_key]
+description = "Your API key from the dashboard"
+required = true
+sensitive = true
+
+# Add your product's documentation
+[context.documentation]
+primary_docs = "https://docs.yourproduct.com"
+api_reference = "https://docs.yourproduct.com/api"
+
+# Define your URLs
+[slugs]
+base_url = "https://app.yourproduct.com"
+
+[slugs.static]
+signup = "https://app.yourproduct.com/signup"
+
+# Configure the AI agent
+[agent]
+prompt_template = """
+You are an expert in integrating [Your Product] into applications.
+Analyze the developer's codebase and generate integration code...
+"""
+
+# Create your flow
+[[flows]]
+id = "your-product"
+title = "Onboard to [Your Product]"
+
+[[flows.steps]]
+type = "info"
+title = "Welcome!"
+markdown = "Let's get you set up with [Your Product]..."
+
+# Add more steps...
+```
+
+## Development Workflow
+
+<Steps>
+1. **Create your blueprint**
+   - Copy the template above
+   - Fill in YOUR product's details
+   - Define the variables you need to collect
+
+2. **Write your agent prompt**
+   - Describe how to integrate YOUR product
+   - Include installation instructions for YOUR SDKs
+   - List YOUR API endpoints and patterns
+
+3. **Design your flow**
+   - Map out the user journey through YOUR dashboard
+   - Define what data to collect and when
+   - Add conditional logic for different scenarios
+
+4. **Test thoroughly**
+
+   ```bash
+   hacksmith plan ./your-blueprint.toml
+   ```
+
+5. **Publish and share**
+   - Create a GitHub repository for your blueprints
+   - Tag releases with semantic versioning
+   - Share with your developer community
+     </Steps>
+
+## Publishing Your Blueprint
+
+Once your blueprint is ready:
+
+<CardGrid>
+  <Card title="1. Create Repository" icon="github">
+    Create a GitHub repo like `your-org/hacksmith-blueprints`
+  </Card>
+  <Card title="2. Add Documentation" icon="document">
+    Include a README explaining what YOUR blueprint does
+  </Card>
+  <Card title="3. Version Releases" icon="rocket">
+    Use git tags for versioning (v0.1.0, v0.2.0, etc.)
+  </Card>
+  <Card title="4. Share" icon="star">
+    Announce to YOUR developer community
+  </Card>
+</CardGrid>
+
+### Repository Structure
+
+```
+your-org/hacksmith-blueprints/
+├── README.md
+├── CHANGELOG.md
+├── your-product.toml
+└── examples/
+    ├── nodejs-example.md
+    ├── python-example.md
+    └── go-example.md
+```
+
+### Publishing Checklist
+
+- [ ] Blueprint file is valid TOML
+- [ ] All URLs are correct and accessible
+- [ ] Variables have proper validation patterns
+- [ ] Sensitive data is marked appropriately
+- [ ] Agent prompt is comprehensive
+- [ ] Flows have been tested end-to-end
+- [ ] README documentation is complete
+- [ ] Version tag is created in git
+- [ ] Community has been notified
+
+## Getting Help
+
+<Aside type="tip" title="Need Help?">
+  - Review the [example
+  blueprint](https://github.com/saif-shines/hacksmith/blob/main/spec/example.blueprint.toml) for
+  reference - Check the [Blueprint Spec](/get-started/author-blueprint) for field definitions -
+  Check the [Hacksmith documentation](https://hacksmith.dev) for CLI usage - Join our community
+  discussions for blueprint authoring tips
+</Aside>
+
+## Common Patterns
+
+### OAuth/SSO Integration
+
+For products with OAuth or SSO:
+
+```toml
+[variables.client_id]
+description = "OAuth Client ID from your dashboard"
+required = true
+sensitive = false
+
+[variables.client_secret]
+description = "OAuth Client Secret"
+required = true
+sensitive = true
+
+[variables.redirect_uri]
+description = "OAuth redirect/callback URI"
+required = true
+sensitive = false
+validation = "^https?://.+"
+```
+
+### API Key Authentication
+
+For API key-based products:
+
+```toml
+[variables.api_key]
+description = "API key from your account settings"
+required = true
+sensitive = true
+validation = "^[a-zA-Z0-9_-]{32,}$"
+
+[variables.api_secret]
+description = "API secret (keep this private!)"
+required = true
+sensitive = true
+```
+
+### Webhook Configuration
+
+For products with webhooks:
+
+```toml
+[variables.webhook_url]
+description = "URL where webhooks will be sent"
+required = true
+sensitive = false
+validation = "^https://.+"
+
+[variables.webhook_secret]
+description = "Secret for verifying webhook signatures"
+required = true
+sensitive = true
+```
+
+## Next Steps
+
+- Review the [Blueprint Spec](/get-started/author-blueprint) for complete field reference
+- Explore the [example blueprint](https://github.com/saif-shines/hacksmith/blob/main/spec/example.blueprint.toml)
+- Test your blueprint with `hacksmith plan`
+- Share your blueprint with the community!
