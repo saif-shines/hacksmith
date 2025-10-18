@@ -41,12 +41,32 @@ async function main() {
       // Check if the argument looks like a GitHub repository (owner/repo format)
       const isGitHubRepo = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$/.test(firstArg);
 
+      // Auto-add execute flag if not already present
+      const hasExecuteFlag = remainingArgs.includes("-e") || remainingArgs.includes("--execute");
+      const executeArgs = hasExecuteFlag ? [] : ["-e"];
+
       if (isGitHubRepo) {
-        // Treat as GitHub repository
-        process.argv = [process.argv[0], process.argv[1], "plan", "-g", firstArg, ...remainingArgs];
+        // GitHub repository shorthand with auto-execute
+        process.argv = [
+          process.argv[0],
+          process.argv[1],
+          "plan",
+          "-g",
+          firstArg,
+          ...executeArgs,
+          ...remainingArgs,
+        ];
       } else {
-        // Treat as blueprint path
-        process.argv = [process.argv[0], process.argv[1], "plan", "-b", firstArg, ...remainingArgs];
+        // Blueprint file shorthand with auto-execute
+        process.argv = [
+          process.argv[0],
+          process.argv[1],
+          "plan",
+          "-b",
+          firstArg,
+          ...executeArgs,
+          ...remainingArgs,
+        ];
       }
     }
 
