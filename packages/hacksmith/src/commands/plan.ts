@@ -287,8 +287,12 @@ export class PlanCommand extends Command {
     context.output(chalk.gray("  Command line mode:"));
     context.output("    hacksmith plan --blueprint ./blueprint.toml");
     context.output("    hacksmith plan -b ./blueprint.toml --execute");
+    context.output("    hacksmith ./blueprint.toml --execute   " + chalk.gray("# Shorthand"));
     context.output("    hacksmith plan -b https://example.com/blueprint.toml");
     context.output("    hacksmith plan --github saif-shines/hacksmith-blueprints");
+    context.output(
+      "    hacksmith saif-shines/hacksmith-blueprints   " + chalk.gray("# GitHub shorthand")
+    );
     context.output("");
 
     context.output(chalk.yellow("Options:"));
@@ -315,7 +319,11 @@ export class PlanCommand extends Command {
     context.output(chalk.gray("  Command line mode:"));
     context.output("    hacksmith plan --blueprint ./path/to/blueprint.toml");
     context.output("    hacksmith plan -b ./blueprint.toml --execute");
+    context.output("    hacksmith ./blueprint.toml --execute   " + chalk.gray("# Shorthand"));
     context.output("    hacksmith plan --github saif-shines/hacksmith-blueprints");
+    context.output(
+      "    hacksmith saif-shines/hacksmith-blueprints   " + chalk.gray("# GitHub shorthand")
+    );
     context.output("");
     context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
   }

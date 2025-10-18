@@ -31,6 +31,25 @@ async function main() {
     // Start interactive mode
     await cli.start();
   } else {
+    // Check if first argument is a blueprint path (shorthand syntax)
+    const firstArg = process.argv[2];
+    const knownCommands = ["plan", "preferences", "p"]; // Include aliases
+
+    if (firstArg && !firstArg.startsWith("-") && !knownCommands.includes(firstArg)) {
+      const remainingArgs = process.argv.slice(3);
+
+      // Check if the argument looks like a GitHub repository (owner/repo format)
+      const isGitHubRepo = /^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$/.test(firstArg);
+
+      if (isGitHubRepo) {
+        // Treat as GitHub repository
+        process.argv = [process.argv[0], process.argv[1], "plan", "-g", firstArg, ...remainingArgs];
+      } else {
+        // Treat as blueprint path
+        process.argv = [process.argv[0], process.argv[1], "plan", "-b", firstArg, ...remainingArgs];
+      }
+    }
+
     // Setup commander program for non-interactive mode
     const program = new Command();
     program
@@ -40,6 +59,18 @@ async function main() {
 
     // Setup commands from registry
     registry.setupCommanderProgram(program);
+
+    // Handle unknown commands with helpful error
+    program.on("command:*", function () {
+      const unknownCommand = program.args[0];
+      console.error("\n❌ Unknown command:", unknownCommand);
+      console.error("\n💡 If you meant to load a blueprint, use:");
+      console.error(`   hacksmith plan -b ${unknownCommand}`);
+      console.error("   or simply:");
+      console.error(`   hacksmith ${unknownCommand}\n`);
+      console.error('📝 Type "hacksmith --help" for available commands\n');
+      process.exit(1);
+    });
 
     // Parse command line arguments
     await program.parseAsync(process.argv);
