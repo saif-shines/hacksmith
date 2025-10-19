@@ -127,9 +127,11 @@ export class PlanCommand extends Command {
     executeFlow: boolean,
     devMode: boolean
   ): Promise<void> {
-    context.spinner.start(`Loading blueprint from ${input}...`);
+    context.spinner.start(`Reading blueprints from ${input}...`);
     const blueprint = await BlueprintService.load(input);
-    context.spinner.stop(`${figures.tick} Blueprint ready`);
+    context.spinner.stop(
+      `Ready to guide on the topic: \n ${figures.pointer} ${blueprint.description}`
+    );
 
     if (jsonOnly) {
       context.output(JSON.stringify(blueprint, null, 2));
