@@ -73,8 +73,8 @@ async function main() {
     // Setup commander program for non-interactive mode
     const program = new Command();
     program
-      .name("hacksmith")
-      .description("Hacksmith CLI - Generate and manage integration plans")
+      .name("_hacksmith")
+      .description("From browsing to building, in one command")
       .version(version);
 
     // Setup commands from registry
@@ -83,12 +83,16 @@ async function main() {
     // Handle unknown commands with helpful error
     program.on("command:*", function () {
       const unknownCommand = program.args[0];
-      console.error("\n❌ Unknown command:", unknownCommand);
-      console.error("\n💡 If you meant to load a blueprint, use:");
-      console.error(`   hacksmith plan -b ${unknownCommand}`);
-      console.error("   or simply:");
-      console.error(`   hacksmith ${unknownCommand}\n`);
-      console.error('📝 Type "hacksmith --help" for available commands\n');
+      console.error(`
+      ❌ Unknown command: ${unknownCommand}
+
+      💡 If you meant to load a blueprint, use:
+        hacksmith plan -b ${unknownCommand}
+        or simply:
+        hacksmith ${unknownCommand}
+
+      📝 Type "hacksmith --help" for available commands
+      `);
       process.exit(1);
     });
 

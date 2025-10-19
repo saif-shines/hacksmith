@@ -97,9 +97,9 @@ export class PlanCommand extends Command {
     try {
       // Check if we can list blueprints from this input
       if (allowListing && BlueprintService.canList(input)) {
-        context.spinner.start(`Fetching blueprints from ${input}...`);
+        context.spinner.start(`Reading blueprints from ${input}...`);
         const options = await BlueprintService.listAvailable(input);
-        context.spinner.stop(`${figures.tick} Found ${options.length} blueprint(s)`);
+        context.spinner.stop(`Found ${options.length} blueprint(s)`);
 
         const selectedUrl = await UIService.selectBlueprint(options);
         if (!selectedUrl) {
