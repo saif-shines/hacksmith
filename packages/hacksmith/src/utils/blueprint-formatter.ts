@@ -10,6 +10,7 @@ export interface FormattedOutput {
   json: string;
 }
 
+// TODO: Come back and improve the experience, especially when blueprint is largely empty with just metadata.
 export class BlueprintFormatter {
   static format(blueprint: BlueprintConfig, sourcePath: string): FormattedOutput {
     const header = [
