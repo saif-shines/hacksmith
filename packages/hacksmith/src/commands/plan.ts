@@ -130,7 +130,7 @@ export class PlanCommand extends Command {
     context.spinner.start(`Reading blueprints from ${input}...`);
     const blueprint = await BlueprintService.load(input);
     context.spinner.stop(
-      `Ready to guide on the topic: \n ${figures.pointer} ${blueprint.description}`
+      `Ready to guide on the topic: \n ${figures.pointerSmall} ${blueprint.description}`
     );
 
     if (jsonOnly) {

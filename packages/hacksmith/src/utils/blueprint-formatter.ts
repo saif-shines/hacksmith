@@ -1,4 +1,5 @@
 import type { BlueprintConfig } from "@/types/blueprint.js";
+import figures from "figures";
 
 export interface FormattedOutput {
   header: string[];
@@ -12,9 +13,10 @@ export interface FormattedOutput {
 export class BlueprintFormatter {
   static format(blueprint: BlueprintConfig, sourcePath: string): FormattedOutput {
     const header = [
-      `📋 Loading blueprint from: ${sourcePath}`,
+      `${figures.pointerSmall} Reading the blueprint: ${sourcePath.split("/").pop()}`,
+      `   ${figures.pointerSmall} ${sourcePath}`,
       "",
-      "✅ Successfully parsed blueprint:",
+      `${figures.tick} Ready to walk you through`,
     ];
 
     const sections: Array<{ title: string; content: string[] }> = [];
