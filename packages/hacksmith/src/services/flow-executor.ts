@@ -36,7 +36,7 @@ export class FlowExecutor {
       this.context = this.initializeContext(blueprint);
     }
 
-    console.log(chalk.cyan.bold(`\n${figures.pointer} ${flow.title}\n`));
+    console.log(chalk.cyan.bold(`\n${figures.pointer} ${flow.title || "Untitled Flow"}\n`));
 
     for (let i = 0; i < flow.steps.length; i++) {
       const step = flow.steps[i];
@@ -108,7 +108,7 @@ export class FlowExecutor {
       }
     }
 
-    outro(chalk.green(`${figures.tick} ${flow.title} completed!`));
+    outro(chalk.green(`${figures.tick} ${flow.title || "Flow"} completed!`));
 
     return {
       success: true,

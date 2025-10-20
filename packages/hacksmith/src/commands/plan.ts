@@ -168,7 +168,7 @@ export class PlanCommand extends Command {
 
         // Generate mission brief after successful execution
         try {
-          const flowNames = blueprint.flows.map((flow) => flow.title);
+          const flowNames = blueprint.flows.map((flow) => flow.title || "Untitled Flow");
           const blueprintName = blueprint.name || "Unknown Blueprint";
           const blueprintId = getBlueprintId(blueprint);
           const agentPrompt = blueprint.agent?.prompt_template;

@@ -130,8 +130,8 @@ export interface FlowStep {
 }
 
 export interface Flow {
-  id: string;
-  title: string;
+  id?: string;
+  title?: string;
   steps: FlowStep[];
 }
 

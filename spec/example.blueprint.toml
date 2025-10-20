@@ -188,8 +188,9 @@ Begin by analyzing the current project codebase or requesting any missing detail
 # --- structure but may not yet execute steps. It is safe to leave here.
 
 [[flows]]
-id = "scalekit"
-title = "Onboard onto Scalekit"
+# id and title will be auto-generated from overview section
+# id: "onboard-to-scalekit-for-sso" (auto-generated)
+# title: "Onboard to Scalekit for SSO" (auto-generated)
 
 # 1) Welcome / overview
 [[flows.steps]]
