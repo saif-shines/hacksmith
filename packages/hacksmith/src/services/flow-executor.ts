@@ -1,12 +1,12 @@
-import { outro, cancel, confirm } from "@clack/prompts";
+import { cancel, confirm, log } from "@clack/prompts";
 import type { Flow, FlowStep, BlueprintConfig } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
 import { stepRegistry } from "./step-types/index.js";
 import { storage, getBlueprintId } from "@/utils/storage.js";
 import { preferences } from "@/utils/preferences-storage.js";
+import { MissionBriefGenerator } from "@/utils/mission-brief-generator.js";
 import chalk from "chalk";
-import figures from "figures";
 
 export interface FlowExecutionResult {
   success: boolean;
@@ -36,7 +36,7 @@ export class FlowExecutor {
       this.context = this.initializeContext(blueprint);
     }
 
-    console.log(chalk.cyan.bold(`\n${figures.pointer} ${flow.title || "Untitled Flow"}\n`));
+    log.step(`Let's ${(flow.title || "get started").toLowerCase()}`);
 
     for (let i = 0; i < flow.steps.length; i++) {
       const step = flow.steps[i];
@@ -50,21 +50,19 @@ export class FlowExecutor {
       if (this.shouldSkipNavigate(step, i, flow.steps)) {
         if (this.devMode) {
           // Dev mode: auto-skip
-          console.log(
-            chalk.gray(
-              `${figures.tick} ${step.title || "Navigate"} - skipping (data already exists)\n`
-            )
+          log.info(
+            `${step.title || "Navigation step"} - I found your previous data, so we can skip ahead`
           );
           continue;
         } else {
           // Normal mode: ask user
           const shouldSkip = await confirm({
-            message: `Data already captured. Skip "${step.title}"?`,
+            message: `I notice we already have this data. Would you like me to skip "${step.title}" and move ahead?`,
             initialValue: true,
           });
 
           if (typeof shouldSkip === "boolean" && shouldSkip) {
-            console.log(chalk.gray(`${figures.tick} ${step.title} - skipped\n`));
+            log.info(`${step.title} - Skipped as requested. Moving forward...`);
             continue;
           }
         }
@@ -72,9 +70,7 @@ export class FlowExecutor {
 
       // Check if input step should be skipped (already completed)
       if (this.shouldSkipStep(step)) {
-        console.log(
-          chalk.gray(`${figures.tick} ${step.title || "Step"} - already completed, skipping\n`)
-        );
+        log.info(`${step.title || "This step"} - Already completed! Let's continue.`);
         continue;
       }
 
@@ -90,6 +86,9 @@ export class FlowExecutor {
       }
 
       if (!result.success) {
+        log.error(
+          `Oops! Something went wrong with "${step.title || step.id}". Let me help you fix this.`
+        );
         return {
           success: false,
           error: `Step ${step.id} failed`,
@@ -108,7 +107,9 @@ export class FlowExecutor {
       }
     }
 
-    outro(chalk.green(`${figures.tick} ${flow.title || "Flow"} completed!`));
+    log.success(
+      `Great! You've successfully completed ${flow.title || "this integration"}. Let's move on to the next step.`
+    );
 
     return {
       success: true,
@@ -121,6 +122,9 @@ export class FlowExecutor {
    */
   async executeFlows(blueprint: BlueprintConfig): Promise<FlowExecutionResult> {
     if (!blueprint.flows || blueprint.flows.length === 0) {
+      log.error(
+        "I couldn't find any integration steps in this blueprint. Please check that you're using a valid blueprint file."
+      );
       return {
         success: false,
         error: "No flows found in blueprint",
@@ -161,7 +165,14 @@ export class FlowExecutor {
     }
 
     // Show progress summary after confirmations
-    this.displayProgressSummary();
+    const shouldContinue = await this.displayProgressSummary();
+    if (!shouldContinue) {
+      return {
+        success: false,
+        cancelled: true,
+        variables: {},
+      };
+    }
 
     // For now, execute flows sequentially
     // TODO: Support @clack/prompts group() for parallel flow selection
@@ -175,6 +186,9 @@ export class FlowExecutor {
       // Merge flow variables into main context
       this.context = { ...this.context, ...result.variables };
     }
+
+    // Offer to brief AI agent
+    await this.displayAIAgentBriefing();
 
     return {
       success: true,
@@ -275,14 +289,14 @@ export class FlowExecutor {
    * Display flow summary
    */
   displaySummary(): void {
-    console.log(chalk.cyan.bold("\n📋 Flow Summary\n"));
+    log.step("Let's review what we've put together");
 
     const entries = Object.entries(this.context).filter(
       ([key]) => !["slugs", "auth", "sdk", "variables", "schema_version"].includes(key)
     );
 
     if (entries.length === 0) {
-      console.log(chalk.gray("No variables captured"));
+      log.info("We haven't captured any data yet - that's perfectly fine!");
       return;
     }
 
@@ -290,10 +304,8 @@ export class FlowExecutor {
       const displayValue =
         typeof value === "string" && value.includes("secret") ? "[HIDDEN]" : String(value);
 
-      console.log(`  ${chalk.yellow(key)}: ${displayValue}`);
+      log.message(`${key}: ${displayValue}`);
     });
-
-    console.log();
   }
 
   /**
@@ -351,19 +363,19 @@ export class FlowExecutor {
   }
 
   /**
-   * Display progress summary of already captured variables
+   * Display progress summary of already captured variables and ask about resuming
    */
-  private displayProgressSummary(): void {
+  private async displayProgressSummary(): Promise<boolean> {
     const capturedVars = Object.entries(this.context).filter(
       ([key]) => !["slugs", "auth", "sdk", "variables", "schema_version"].includes(key)
     );
 
     if (capturedVars.length === 0) {
-      return; // No progress to show
+      return true; // No progress to show, continue normally
     }
 
-    console.log(chalk.cyan.bold(`\n${figures.info} Resuming from previous session\n`));
-    console.log(chalk.white("Already captured:"));
+    log.info("Welcome back! I can see you've made progress on this integration.");
+    log.message("Here's what we've worked on so far:");
 
     capturedVars.forEach(([key, value]) => {
       const displayValue =
@@ -378,56 +390,88 @@ export class FlowExecutor {
         key.includes("secret") ||
         key.includes("password") ||
         key.includes("token");
-      const finalValue = isSensitive ? chalk.gray("[HIDDEN]") : chalk.yellow(displayValue);
+      const finalValue = isSensitive ? "[HIDDEN]" : displayValue;
 
-      console.log(`  ${chalk.green(figures.tick)} ${chalk.white(key)}: ${finalValue}`);
+      log.message(`${key}: ${finalValue}`, { symbol: chalk.green("✓") });
     });
 
-    console.log();
+    const shouldResume = await confirm({
+      message: "Continue from where you left off?",
+      initialValue: true,
+    });
+
+    if (typeof shouldResume === "boolean" && !shouldResume) {
+      // Clear both the context and stored data to truly start fresh
+      const blueprintId = getBlueprintId(this.blueprint!);
+      storage.deleteBlueprint(blueprintId);
+      this.context = this.initializeContext(this.blueprint!);
+      log.info("Starting fresh! I've cleared your previous progress.");
+      return true;
+    }
+
+    return true;
   }
 
   /**
    * Display preferences prompt and get user confirmation
    */
   private async displayPreferencesPrompt(): Promise<boolean> {
-    console.log();
-    console.log(chalk.yellow.bold(`${figures.warning} Preferences Not Configured`));
-    console.log();
-    console.log(
-      chalk.white("Setting up preferences helps Hacksmith provide better integration support:")
-    );
-    console.log();
-    console.log(
-      chalk.gray("  • ") +
-        chalk.white("Tech Stack Scanning") +
-        chalk.gray(" - Analyzes your project to provide context-aware code")
-    );
-    console.log(
-      chalk.gray("    generation that matches your frameworks, languages, and dependencies")
-    );
-    console.log();
-    console.log(
-      chalk.gray("  • ") +
-        chalk.white("AI Agent Configuration") +
-        chalk.gray(" - Enables seamless handoff to your preferred")
-    );
-    console.log(
-      chalk.gray("    AI assistant (Claude Code, GitHub Copilot, etc.) for automated integration")
-    );
-    console.log();
-    console.log(
-      chalk.cyan(
-        `${figures.pointer} Run: ${chalk.bold("hacksmith preferences")} or ${chalk.bold("/preferences")} to set up`
-      )
-    );
-    console.log();
+    log.warn("I'd like to help you even better! Let's set up your preferences first.");
+    log.message("This quick setup will help me:");
+    log.message("• Understand your tech stack to provide better code examples");
+    log.message("• Connect with your preferred AI assistant for seamless handoffs");
+    log.info("Run 'hacksmith preferences' when you're ready to configure these settings");
 
     const response = await confirm({
-      message: "Continue without preferences setup?",
+      message: "Would you like to continue without setting up preferences for now?",
       initialValue: false,
     });
 
     return typeof response === "boolean" && response;
+  }
+
+  /**
+   * Display AI agent briefing prompt
+   */
+  private async displayAIAgentBriefing(): Promise<void> {
+    log.info("Perfect! I'm ready to brief your AI agent to start executing the integration code.");
+
+    const shouldBrief = await confirm({
+      message: "Shall I go ahead and prepare the briefing for your AI assistant?",
+      initialValue: true,
+    });
+
+    if (typeof shouldBrief === "boolean" && shouldBrief) {
+      try {
+        // Generate mission brief
+        const flowNames = this.blueprint?.flows?.map((flow) => flow.title || "Untitled Flow") || [];
+        const blueprintName = this.blueprint?.name || "Unknown Blueprint";
+        const blueprintId = getBlueprintId(this.blueprint!);
+        const agentPrompt = this.blueprint?.agent?.prompt_template;
+
+        const briefPath = MissionBriefGenerator.save({
+          blueprintName,
+          blueprintId,
+          flowsExecuted: flowNames,
+          executionSummary: `Successfully executed ${flowNames.length} flow(s) from ${blueprintName} blueprint.`,
+          agentPrompt,
+        });
+
+        log.success("Great! I've prepared your mission brief.");
+        log.info(
+          "Your " +
+            `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\` +
+            " contains all the integration details, captured data, and next steps."
+        );
+      } catch (error) {
+        log.warn(
+          `I couldn't generate the mission brief: ${error instanceof Error ? error.message : String(error)}`
+        );
+        log.info("But I've still prepared all the context for your AI assistant.");
+      }
+    } else {
+      log.info("No problem! You can always run this integration again when you're ready.");
+    }
   }
 
   /**
@@ -442,7 +486,7 @@ export class FlowExecutor {
 
     // Confirm to proceed
     const response = await confirm({
-      message: "Ready to begin?",
+      message: "Are you ready to get started with this integration?",
       initialValue: true,
     });
 
