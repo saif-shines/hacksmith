@@ -1,4 +1,4 @@
-import { intro, outro } from "@clack/prompts";
+import { intro, outro, log } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
 import terminal from "terminal-kit";
@@ -40,8 +40,8 @@ export class InteractiveCLI {
 
   private showWelcome() {
     console.log();
-    console.log(chalk.cyan.bold(`${figures.smiley} Be that _hacksmith`));
-    console.log(chalk.gray("Use arrow keys to navigate • Press Enter to select • Ctrl+C to exit"));
+    log.message(`Be that _hacksmith`, { symbol: chalk.cyan(figures.smiley) });
+    log.message("Use arrow keys to navigate • Press Enter to select • Ctrl+C to exit");
     console.log();
   }
 
@@ -54,7 +54,7 @@ export class InteractiveCLI {
     const [commandName, ...args] = trimmed.split(" ").filter((arg) => arg.length > 0);
 
     if (!commandName) {
-      console.log(chalk.yellow("Please specify a command. Type /help for available commands."));
+      log.warn("Please specify a command. Type /help for available commands.");
       return;
     }
 
@@ -89,11 +89,11 @@ export class InteractiveCLI {
         .map(([name]) => name);
       const suggestion = this.findClosestCommand(commandName, availableCommands);
 
-      console.log(chalk.red(`${figures.cross} Command '${commandName}' not found.`));
+      log.error(`Command '${commandName}' not found.`);
       if (suggestion) {
-        console.log(chalk.yellow(`\nDid you mean '${suggestion}'?`));
+        log.warn(`Did you mean '${suggestion}'?`);
       }
-      console.log(chalk.gray("\nType /help to see available commands."));
+      log.message("Type /help to see available commands.");
       return;
     }
 
@@ -102,19 +102,19 @@ export class InteractiveCLI {
       await command.execute(args, context);
     } catch (error) {
       const err = error as Error;
-      console.log(chalk.red(`${figures.cross} Error executing command: ${err.message}`));
+      log.error(`Error executing command: ${err.message}`);
       if (process.env.NODE_ENV === "development") {
-        console.log(chalk.gray(err.stack));
+        log.error(err.stack || "");
       }
     }
   }
 
   private showHelp() {
-    console.log(chalk.cyan.bold("Available Commands:"));
+    log.info("Available Commands:");
     console.log();
 
     // Built-in commands
-    console.log(chalk.yellow("Built-in:"));
+    log.message("Built-in:", { symbol: "📋" });
     console.log(`  ${chalk.green("/help")}     - Show this help message`);
     console.log(`  ${chalk.green("/clear")}    - Clear the screen`);
     console.log(`  ${chalk.green("/history")}  - Show command history`);
@@ -123,7 +123,7 @@ export class InteractiveCLI {
 
     // User commands
     if (this.commands.size > 0) {
-      console.log(chalk.yellow("Commands:"));
+      log.message("Commands:", { symbol: "⚡" });
       for (const [name, command] of this.commands) {
         if (name === command.name) {
           // Only show primary name, not aliases
@@ -137,11 +137,11 @@ export class InteractiveCLI {
 
   private showHistory() {
     if (this.history.length === 0) {
-      console.log(chalk.gray("No command history yet."));
+      log.message("No command history yet.");
       return;
     }
 
-    console.log(chalk.cyan.bold("Command History:"));
+    log.info("Command History:");
     this.history.forEach((cmd, index) => {
       console.log(`  ${chalk.gray(`${index + 1}.`)} ${cmd}`);
     });

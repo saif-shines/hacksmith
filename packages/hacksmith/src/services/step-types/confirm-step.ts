@@ -1,5 +1,4 @@
-import { confirm } from "@clack/prompts";
-import chalk from "chalk";
+import { confirm, log } from "@clack/prompts";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -19,7 +18,7 @@ export class ConfirmStepType extends BaseStepType {
 
     // Auto-confirm in dev mode
     if (devMode) {
-      console.log(chalk.gray("[DEV MODE] Auto-confirming"));
+      log.message("[DEV MODE] Auto-confirming");
       return { success: true };
     }
 

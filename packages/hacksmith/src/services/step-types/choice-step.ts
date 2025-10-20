@@ -1,5 +1,4 @@
-import { select } from "@clack/prompts";
-import chalk from "chalk";
+import { select, log } from "@clack/prompts";
 import type { FlowStep } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -26,9 +25,7 @@ export class ChoiceStepType extends BaseStepType {
     // Auto-select first option in dev mode
     if (devMode) {
       const firstOption = options[0] || "";
-      console.log(
-        chalk.gray(`[DEV MODE] Auto-selecting first option for ${saveTo}: "${firstOption}"`)
-      );
+      log.message(`[DEV MODE] Auto-selecting first option for ${saveTo}: "${firstOption}"`);
       return {
         success: true,
         variables: { [saveTo]: firstOption },
