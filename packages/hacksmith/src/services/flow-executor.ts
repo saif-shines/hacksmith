@@ -437,50 +437,8 @@ export class FlowExecutor {
     const overview = blueprint.overview;
     if (!overview) return true;
 
-    console.log();
-
-    // Create box top
-    const title = overview.title || "Blueprint Overview";
-    const boxWidth = Math.max(title.length + 4, 60);
-    const leftPadding = Math.floor((boxWidth - title.length) / 2);
-    const rightPadding = boxWidth - title.length - leftPadding;
-
-    console.log(chalk.blue("┌" + "─".repeat(boxWidth) + "┐"));
-    console.log(
-      chalk.blue("│") +
-        " ".repeat(leftPadding) +
-        chalk.bold.white(title) +
-        " ".repeat(rightPadding) +
-        chalk.blue("│")
-    );
-    console.log(chalk.blue("├" + "─".repeat(boxWidth) + "┤"));
-
-    // Estimated time
-    if (overview.estimated_time) {
-      const timeText = `Estimated time: ${overview.estimated_time}`;
-      const timePadding = " ".repeat(boxWidth - timeText.length - 1);
-      console.log(chalk.blue("│") + " " + chalk.yellow(timeText) + timePadding + chalk.blue("│"));
-      console.log(chalk.blue("│") + " ".repeat(boxWidth) + chalk.blue("│"));
-    }
-
-    // Steps
-    if (overview.steps && overview.steps.length > 0) {
-      const stepsHeader = "This will guide you through:";
-      const headerPadding = " ".repeat(boxWidth - stepsHeader.length - 1);
-      console.log(
-        chalk.blue("│") + " " + chalk.white(stepsHeader) + headerPadding + chalk.blue("│")
-      );
-
-      overview.steps.forEach((step, index) => {
-        const stepText = `  ${index + 1}. ${step}`;
-        const stepPadding = " ".repeat(Math.max(0, boxWidth - stepText.length - 1));
-        console.log(chalk.blue("│") + " " + stepText + stepPadding + chalk.blue("│"));
-      });
-    }
-
-    // Box bottom
-    console.log(chalk.blue("└" + "─".repeat(boxWidth) + "┘"));
-    console.log();
+    // Use the static method for rendering the card
+    FlowExecutor.renderOverviewCard(blueprint, console.log);
 
     // Confirm to proceed
     const response = await confirm({
@@ -489,5 +447,53 @@ export class FlowExecutor {
     });
 
     return typeof response === "boolean" && response;
+  }
+
+  static renderOverviewCard(blueprint: BlueprintConfig, outputFn: (message: string) => void): void {
+    const overview = blueprint.overview;
+    if (!overview) return;
+
+    outputFn("");
+
+    // Create box top
+    const title = overview.title || "Blueprint Overview";
+    const boxWidth = Math.max(title.length + 4, 60);
+    const leftPadding = Math.floor((boxWidth - title.length) / 2);
+    const rightPadding = boxWidth - title.length - leftPadding;
+
+    outputFn(chalk.blue("┌" + "─".repeat(boxWidth) + "┐"));
+    outputFn(
+      chalk.blue("│") +
+        " ".repeat(leftPadding) +
+        chalk.bold.white(title) +
+        " ".repeat(rightPadding) +
+        chalk.blue("│")
+    );
+    outputFn(chalk.blue("├" + "─".repeat(boxWidth) + "┤"));
+
+    // Estimated time
+    if (overview.estimated_time) {
+      const timeText = `Estimated time: ${overview.estimated_time}`;
+      const timePadding = " ".repeat(boxWidth - timeText.length - 1);
+      outputFn(chalk.blue("│") + " " + chalk.yellow(timeText) + timePadding + chalk.blue("│"));
+      outputFn(chalk.blue("│") + " ".repeat(boxWidth) + chalk.blue("│"));
+    }
+
+    // Steps
+    if (overview.steps && overview.steps.length > 0) {
+      const stepsHeader = "This will guide you through:";
+      const headerPadding = " ".repeat(boxWidth - stepsHeader.length - 1);
+      outputFn(chalk.blue("│") + " " + chalk.white(stepsHeader) + headerPadding + chalk.blue("│"));
+
+      overview.steps.forEach((step, index) => {
+        const stepText = `  ${index + 1}. ${step}`;
+        const stepPadding = " ".repeat(Math.max(0, boxWidth - stepText.length - 1));
+        outputFn(chalk.blue("│") + " " + stepText + stepPadding + chalk.blue("│"));
+      });
+    }
+
+    // Box bottom
+    outputFn(chalk.blue("└" + "─".repeat(boxWidth) + "┘"));
+    outputFn("");
   }
 }

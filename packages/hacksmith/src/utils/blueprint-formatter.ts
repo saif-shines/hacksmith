@@ -8,6 +8,7 @@ export interface FormattedOutput {
     content: string[];
   }>;
   json: string;
+  showJson: boolean;
 }
 
 export class BlueprintFormatter {
@@ -21,16 +22,19 @@ export class BlueprintFormatter {
         header: [`${figures.warning} Looks like the smith is still authoring the blueprint..`],
         sections: [],
         json: JSON.stringify(blueprint, null, 2),
+        showJson: false,
       };
     }
 
     const header: string[] = [];
     const sections: Array<{ title: string; content: string[] }> = [];
 
-    // Only show detailed sections if there are flows OR if in dev mode
-    const showDetailedSections = hasFlows || devMode;
+    // Show full details if there are flows OR dev mode
+    const showFullDetails = hasFlows || devMode;
+    // Show at least overview if there are overview steps
+    const showOverview = hasFlows || hasOverviewSteps || devMode;
 
-    if (showDetailedSections) {
+    if (showFullDetails) {
       // Basic info section
       const basicInfo = [
         `   Name: ${blueprint.name || "Unnamed"}`,
@@ -41,7 +45,7 @@ export class BlueprintFormatter {
       sections.push({ title: "Basic Information", content: basicInfo });
     }
 
-    if (showDetailedSections) {
+    if (showOverview) {
       // Overview section (now always present since it's required)
       const overviewContent = [];
 
@@ -66,7 +70,9 @@ export class BlueprintFormatter {
       if (blueprint.overview.enabled !== false) {
         sections.push({ title: "📋 Overview Configuration", content: overviewContent });
       }
+    }
 
+    if (showFullDetails) {
       // Authentication section
       if (blueprint.auth) {
         const authContent: string[] = [];
@@ -108,6 +114,7 @@ export class BlueprintFormatter {
       header,
       sections,
       json: JSON.stringify(blueprint, null, 2),
+      showJson: showFullDetails,
     };
   }
 
@@ -122,8 +129,8 @@ export class BlueprintFormatter {
       section.content.forEach((line) => logger(line));
     });
 
-    // Only print JSON if there are sections (i.e., not an empty blueprint)
-    if (formatted.sections.length > 0) {
+    // Only print JSON if showJson flag is true
+    if (formatted.showJson) {
       logger("");
       logger("📄 Full Blueprint JSON:");
       formatted.json.split("\n").forEach((line) => logger(line));

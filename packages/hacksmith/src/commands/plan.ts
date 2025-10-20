@@ -134,14 +134,27 @@ export class PlanCommand extends Command {
     log.step(`Blueprint: ${input.split("/").pop()}`);
     log.step(`Topic: ${blueprint.overview?.description || "No description available"}`);
 
-    // Check if there are no executable flows
+    // Check if there are no executable flows and no overview steps
     const hasFlows = blueprint.flows && blueprint.flows.length > 0;
-    if (!hasFlows) {
-      this.showNoFlowsWarning(input);
-    }
+    const hasOverviewSteps = blueprint.overview?.steps && blueprint.overview.steps.length > 0;
 
     if (jsonOnly) {
       context.output(JSON.stringify(blueprint, null, 2));
+      return;
+    }
+
+    // Special handling for blueprints with overview steps but no flows
+    if (hasOverviewSteps && !hasFlows) {
+      FlowExecutor.renderOverviewCard(blueprint, context.output);
+      this.showNoFlowsWarning(input);
+      return;
+    }
+
+    // Handle completely empty blueprints
+    if (!hasFlows && !hasOverviewSteps) {
+      this.showNoFlowsWarning(input);
+      const formatted = BlueprintFormatter.format(blueprint, input, devMode);
+      BlueprintFormatter.print(formatted, context.output);
       return;
     }
 
