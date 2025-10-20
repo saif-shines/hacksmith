@@ -1,6 +1,7 @@
 import { select, confirm, log } from "@clack/prompts";
 import chalk from "chalk";
 import { existsSync, mkdirSync, copyFileSync } from "fs";
+import { join } from "path";
 import { Command, CommandContext } from "@/types/command.js";
 import { ProjectStorage, type ProjectRegistryEntry } from "@/utils/project-storage.js";
 import { ProjectDetector } from "@/utils/project-detector.js";
@@ -186,11 +187,11 @@ export class RecoverCommand extends Command {
 
       // Find backup directory by project hash
       const { readFileSync } = await import("fs");
-      const { join } = await import("path");
+      const { join: pathJoin } = await import("path");
       const { homedir } = await import("os");
 
       const allProjects = readFileSync(
-        join(homedir(), ".hacksmith", "project-registry.json"),
+        pathJoin(homedir(), ".hacksmith", "project-registry.json"),
         "utf-8"
       );
       const registry = JSON.parse(allProjects);
@@ -213,7 +214,7 @@ export class RecoverCommand extends Command {
         return;
       }
 
-      const backupDir = join(homedir(), ".hacksmith", "projects", backupHash);
+      const backupDir = pathJoin(homedir(), ".hacksmith", "projects", backupHash);
 
       if (!existsSync(backupDir)) {
         log.error("Backup directory not found");

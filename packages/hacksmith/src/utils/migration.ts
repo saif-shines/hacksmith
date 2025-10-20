@@ -74,7 +74,8 @@ export class Migration {
 
     // For now, migrate the most recently saved blueprint
     // In a more sophisticated migration, we might prompt the user to choose
-    let mostRecentData: unknown = null;
+    let mostRecentData: { schema_version: string; variables: Record<string, unknown> } | null =
+      null;
     let mostRecentTime = 0;
     let mostRecentId = "";
 
