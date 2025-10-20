@@ -1,10 +1,15 @@
-import { intro, outro, log } from "@clack/prompts";
+import { intro, outro, log, text, confirm } from "@clack/prompts";
 import chalk from "chalk";
 import figures from "figures";
 import terminal from "terminal-kit";
-import { Command } from "@/types/command.js";
+import { Command, CommandContext } from "@/types/command.js";
 import { createInteractiveContext } from "./context-factory.js";
-import { showCommandPalette } from "./components/CommandPalette.js";
+import { preferences } from "@/utils/preferences-storage.js";
+import { ProjectStorage } from "@/utils/project-storage.js";
+import { BlueprintService } from "@/services/blueprint-service.js";
+import { UIService } from "@/services/ui-service.js";
+import { FlowExecutor } from "@/services/flow-executor.js";
+import { isCancelled } from "@/utils/type-guards.js";
 
 export class InteractiveCLI {
   private commands = new Map<string, Command>();
@@ -40,8 +45,50 @@ export class InteractiveCLI {
 
   private showWelcome() {
     console.log();
-    log.message(`Be that _hacksmith`, { symbol: chalk.cyan(figures.smiley) });
-    log.message("Use arrow keys to navigate • Press Enter to select • Ctrl+C to exit");
+    log.message(`From Browsing to Building. One Command.`, { symbol: chalk.cyan(figures.smiley) });
+    log.message("Let's get you set up and ready to integrate!");
+    console.log();
+  }
+
+  /**
+   * Check if system-level preferences (AI agent) are configured
+   */
+  private hasSystemPreferences(): boolean {
+    return preferences.hasAIAgent();
+  }
+
+  /**
+   * Check if project-level preferences (tech stack) are configured
+   */
+  private hasProjectPreferences(): boolean {
+    const projectStorage = new ProjectStorage();
+    const techStack = projectStorage.getTechStack();
+    return techStack !== null;
+  }
+
+  /**
+   * Guide user through preference setup
+   */
+  private async setupPreferences(): Promise<void> {
+    const hasSystem = this.hasSystemPreferences();
+    const hasProject = this.hasProjectPreferences();
+
+    if (hasSystem && hasProject) {
+      return; // All preferences are set
+    }
+
+    log.step("First things first - let's set up your preferences");
+    console.log();
+
+    // Run the preferences setup command
+    const preferencesCommand = this.commands.get("preferences");
+    if (preferencesCommand) {
+      const context = this.createCommandContext();
+      await preferencesCommand.execute(["setup"], context);
+    } else {
+      log.warn("Preferences command not found. Continuing without setup.");
+    }
+
     console.log();
   }
 
@@ -49,103 +96,100 @@ export class InteractiveCLI {
     return createInteractiveContext();
   }
 
-  private async handleSlashCommand(input: string): Promise<void> {
-    const trimmed = input.slice(1); // Remove the '/'
-    const [commandName, ...args] = trimmed.split(" ").filter((arg) => arg.length > 0);
+  /**
+   * Prompt user for blueprint input
+   */
+  private async promptForBlueprint(): Promise<string | null> {
+    const blueprintInput = await text({
+      message: "Enter blueprint path, URL, or GitHub repo (owner/repo):",
+      placeholder: "e.g., ./blueprint.toml, https://..., or owner/repo",
+      validate: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Please provide a blueprint path, URL, or GitHub repository";
+        }
+      },
+    });
 
-    if (!commandName) {
-      log.warn("Please specify a command. Type /help for available commands.");
-      return;
+    if (isCancelled(blueprintInput)) {
+      return null;
     }
 
-    // Built-in commands
-    if (commandName === "help") {
-      this.showHelp();
-      return;
-    }
+    return blueprintInput.trim();
+  }
 
-    if (commandName === "exit" || commandName === "quit") {
-      this.shutdown();
-      return;
-    }
-
-    if (commandName === "clear") {
-      this.term.clear();
-      this.showWelcome();
-      return;
-    }
-
-    if (commandName === "history") {
-      this.showHistory();
-      return;
-    }
-
-    // User-defined commands
-    const command = this.commands.get(commandName);
-    if (!command) {
-      // More helpful error with suggestions (per clig.dev guidelines)
-      const availableCommands = Array.from(this.commands.entries())
-        .filter(([name, cmd]) => name === cmd.name)
-        .map(([name]) => name);
-      const suggestion = this.findClosestCommand(commandName, availableCommands);
-
-      log.error(`Command '${commandName}' not found.`);
-      if (suggestion) {
-        log.warn(`Did you mean '${suggestion}'?`);
-      }
-      log.message("Type /help to see available commands.");
-      return;
-    }
+  /**
+   * Process and execute a blueprint
+   */
+  private async processBlueprint(input: string): Promise<boolean> {
+    const context = this.createCommandContext();
 
     try {
-      const context = this.createCommandContext();
-      await command.execute(args, context);
+      // Check if we can list blueprints from this input
+      if (BlueprintService.canList(input)) {
+        context.spinner.start(`Reading blueprints from ${input}...`);
+        const options = await BlueprintService.listAvailable(input);
+        context.spinner.stop(`Found ${options.length} blueprint(s)`);
+
+        const selectedUrl = await UIService.selectBlueprint(options);
+        if (!selectedUrl) {
+          log.info("No blueprint selected");
+          return false;
+        }
+
+        // Load and execute the selected blueprint
+        return await this.loadAndExecuteBlueprint(selectedUrl, context);
+      } else {
+        // Direct blueprint loading
+        return await this.loadAndExecuteBlueprint(input, context);
+      }
+    } catch (error) {
+      context.spinner.stop();
+      const err = error as Error;
+      log.error(`Error loading blueprint: ${err.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Load and execute a blueprint
+   */
+  private async loadAndExecuteBlueprint(input: string, context: CommandContext): Promise<boolean> {
+    try {
+      context.spinner.start(`Loading blueprint from ${input}...`);
+      const blueprint = await BlueprintService.load(input);
+      context.spinner.stop();
+
+      // Show blueprint info
+      log.step(`Blueprint: ${input.split("/").pop()}`);
+      log.step(`Topic: ${blueprint.overview?.description || "No description available"}`);
+      console.log();
+
+      // Check if there are flows to execute
+      const hasFlows = blueprint.flows && blueprint.flows.length > 0;
+      if (!hasFlows) {
+        log.warn("This blueprint doesn't have any executable flows yet.");
+        return false;
+      }
+
+      // Execute the flows
+      const executor = new FlowExecutor(false);
+      const result = await executor.executeFlows(blueprint);
+
+      if (result.success) {
+        executor.displaySummary();
+        return true;
+      } else if (result.cancelled) {
+        log.info("Flow execution cancelled");
+        return false;
+      } else {
+        log.error(`Flow execution failed: ${result.error || "Unknown error"}`);
+        return false;
+      }
     } catch (error) {
       const err = error as Error;
-      log.error(`Error executing command: ${err.message}`);
-      if (process.env.NODE_ENV === "development") {
-        log.error(err.stack || "");
-      }
+      log.error(`Error executing blueprint: ${err.message}`);
+      return false;
     }
-  }
-
-  private showHelp() {
-    log.info("Available Commands:");
-    console.log();
-
-    // Built-in commands
-    log.message("Built-in:", { symbol: "📋" });
-    console.log(`  ${chalk.green("/help")}     - Show this help message`);
-    console.log(`  ${chalk.green("/clear")}    - Clear the screen`);
-    console.log(`  ${chalk.green("/history")}  - Show command history`);
-    console.log(`  ${chalk.green("/exit")}     - Exit the CLI`);
-    console.log();
-
-    // User commands
-    if (this.commands.size > 0) {
-      log.message("Commands:", { symbol: "⚡" });
-      for (const [name, command] of this.commands) {
-        if (name === command.name) {
-          // Only show primary name, not aliases
-          const aliases = command.aliases ? ` (${command.aliases.join(", ")})` : "";
-          console.log(`  ${chalk.green(`/${name}`)}${aliases} - ${command.description}`);
-        }
-      }
-      console.log();
-    }
-  }
-
-  private showHistory() {
-    if (this.history.length === 0) {
-      log.message("No command history yet.");
-      return;
-    }
-
-    log.info("Command History:");
-    this.history.forEach((cmd, index) => {
-      console.log(`  ${chalk.gray(`${index + 1}.`)} ${cmd}`);
-    });
-    console.log();
   }
 
   async start() {
@@ -154,16 +198,41 @@ export class InteractiveCLI {
     intro(chalk.cyan("Welcome to Hacksmith!"));
     this.showWelcome();
 
+    // Step 1: Check and setup preferences
+    await this.setupPreferences();
+
+    // Step 2: Main blueprint execution loop
+    log.step("Ready to help you integrate! Let's select a blueprint.");
+    console.log();
+
     while (this.isRunning) {
       try {
-        // Show command palette using Ink
-        const selectedCommand = await showCommandPalette(this.commands);
+        // Prompt for blueprint
+        const blueprintInput = await this.promptForBlueprint();
+        if (!blueprintInput) {
+          // User cancelled
+          break;
+        }
 
-        // Add to history and execute
-        this.history.push(selectedCommand);
-        console.log(); // Add spacing before command output
-        await this.handleSlashCommand(selectedCommand);
-        console.log(); // Add spacing after command output
+        // Add to history
+        this.history.push(blueprintInput);
+        console.log();
+
+        // Process and execute blueprint
+        await this.processBlueprint(blueprintInput);
+        console.log();
+
+        // Ask if user wants to run another blueprint
+        const continueResponse = await confirm({
+          message: "Would you like to run another blueprint?",
+          initialValue: true,
+        });
+
+        if (isCancelled(continueResponse) || !continueResponse) {
+          break;
+        }
+
+        console.log();
       } catch {
         // User cancelled (Ctrl+C) or error occurred
         break;
@@ -180,53 +249,5 @@ export class InteractiveCLI {
       this.isRunning = false;
       process.exit(0);
     }
-  }
-
-  /**
-   * Find closest command name using simple Levenshtein distance
-   */
-  private findClosestCommand(input: string, commands: string[]): string | null {
-    if (commands.length === 0) return null;
-
-    const distances = commands.map((cmd) => ({
-      command: cmd,
-      distance: this.levenshteinDistance(input.toLowerCase(), cmd.toLowerCase()),
-    }));
-
-    const closest = distances.reduce((min, curr) => (curr.distance < min.distance ? curr : min));
-
-    // Only suggest if distance is reasonable (less than half the command length)
-    return closest.distance <= Math.max(3, input.length / 2) ? closest.command : null;
-  }
-
-  /**
-   * Calculate Levenshtein distance between two strings
-   */
-  private levenshteinDistance(a: string, b: string): number {
-    const matrix: number[][] = [];
-
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-
-    return matrix[b.length][a.length];
   }
 }

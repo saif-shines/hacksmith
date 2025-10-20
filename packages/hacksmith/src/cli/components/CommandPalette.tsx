@@ -83,19 +83,43 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({ commands, onSe
   });
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" paddingX={1}>
       {/* Search input area */}
-      <Box marginBottom={1}>
-        <Text color="cyan">Search: </Text>
+      <Box>
+        <Text color="cyan" bold>
+          Search:{" "}
+        </Text>
         <Text>{searchQuery}</Text>
-        <Text color="gray">█</Text>
+        <Text color="cyan">█</Text>
+        {searchQuery.trim() !== "" && (
+          <Text dimColor>
+            {" "}
+            ({filteredItems.length} {filteredItems.length === 1 ? "match" : "matches"})
+          </Text>
+        )}
       </Box>
+
+      {/* Divider */}
+      <Box marginY={1}>
+        <Text dimColor>{"─".repeat(60)}</Text>
+      </Box>
+
+      {/* Helper text */}
+      {searchQuery.trim() === "" ? (
+        <Box marginBottom={1}>
+          <Text dimColor>💡 Type to filter commands, or use ↑↓ arrows to navigate</Text>
+        </Box>
+      ) : filteredItems.length === 1 ? (
+        <Box marginBottom={1}>
+          <Text color="green">✓ Press Enter to execute this command</Text>
+        </Box>
+      ) : null}
 
       {/* Filtered command list */}
       {filteredItems.length > 0 ? (
         <Box flexDirection="column">
           {filteredItems.map((item, index) => (
-            <Box key={item.value}>
+            <Box key={item.value} marginBottom={index < filteredItems.length - 1 ? 0 : 0}>
               <Text color={index === selectedIndex ? "cyan" : undefined}>
                 {index === selectedIndex ? "❯ " : "  "}
                 {item.label}
@@ -104,7 +128,9 @@ const CommandPaletteComponent: React.FC<CommandPaletteProps> = ({ commands, onSe
           ))}
         </Box>
       ) : (
-        <Text dimColor>No commands found</Text>
+        <Box marginTop={1}>
+          <Text dimColor>No commands found. Try a different search term.</Text>
+        </Box>
       )}
     </Box>
   );
