@@ -6,6 +6,10 @@ import { stepRegistry } from "./step-types/index.js";
 import { storage, getBlueprintId } from "@/utils/storage.js";
 import { preferences } from "@/utils/preferences-storage.js";
 import { MissionBriefGenerator } from "@/utils/mission-brief-generator.js";
+import { AIAgentInvoker } from "@/utils/ai-agent-invoker.js";
+import { SessionManager } from "@/utils/session-manager.js";
+import { ProjectStorage } from "@/utils/project-storage.js";
+import { Migration } from "@/utils/migration.js";
 import chalk from "chalk";
 
 export interface FlowExecutionResult {
@@ -19,9 +23,13 @@ export class FlowExecutor {
   private context: VariableContext = {};
   private devMode: boolean;
   private blueprint?: BlueprintConfig;
+  private sessionManager: SessionManager;
+  private projectStorage: ProjectStorage;
 
   constructor(devMode = false) {
     this.devMode = devMode;
+    this.sessionManager = new SessionManager();
+    this.projectStorage = new ProjectStorage();
   }
 
   /**
@@ -38,7 +46,14 @@ export class FlowExecutor {
 
     log.step(`Let's ${(flow.title || "get started").toLowerCase()}`);
 
-    for (let i = 0; i < flow.steps.length; i++) {
+    // Check if we should skip to a specific step based on session state
+    const currentSession = this.sessionManager.getCurrentSession();
+    let startStepIndex = 0;
+    if (currentSession && currentSession.current_flow === (flow.id || flow.title)) {
+      startStepIndex = this.sessionManager.shouldSkipToStep(currentSession);
+    }
+
+    for (let i = startStepIndex; i < flow.steps.length; i++) {
       const step = flow.steps[i];
 
       // Check if step should be executed (conditional steps)
@@ -104,6 +119,9 @@ export class FlowExecutor {
         if (this.blueprint) {
           this.saveVariablesToStorage();
         }
+
+        // Update session progress after each step
+        this.sessionManager.updateProgress(i, flow.id || flow.title);
       }
     }
 
@@ -132,10 +150,36 @@ export class FlowExecutor {
       };
     }
 
-    // Initialize context early to check for saved progress
-    if (blueprint.flows && blueprint.flows.length > 0) {
-      this.blueprint = blueprint;
-      this.context = this.initializeContext(blueprint);
+    // Store blueprint reference
+    this.blueprint = blueprint;
+
+    // Check for and perform any necessary data migration
+    await Migration.checkAndOfferMigration();
+
+    // Check for existing session and prompt for resume/restart
+    const sessionResult = await this.sessionManager.checkForExistingSession(blueprint);
+    if (sessionResult.cancelled) {
+      return {
+        success: false,
+        cancelled: true,
+        variables: {},
+      };
+    }
+
+    // Initialize context (either fresh or from session)
+    this.context = this.initializeContext(blueprint);
+
+    // If resuming, start from the appropriate flow/step
+    let startFlowIndex = 0;
+    if (sessionResult.shouldResume && sessionResult.sessionState) {
+      // Find the flow to resume from
+      const resumeFlowId = sessionResult.sessionState.current_flow;
+      if (resumeFlowId) {
+        const flowIndex = blueprint.flows.findIndex((f) => (f.id || f.title) === resumeFlowId);
+        if (flowIndex >= 0) {
+          startFlowIndex = flowIndex;
+        }
+      }
     }
 
     // Display overview if enabled (defaults to true)
@@ -174,9 +218,16 @@ export class FlowExecutor {
       };
     }
 
-    // For now, execute flows sequentially
+    // For now, execute flows sequentially starting from the resume point
     // TODO: Support @clack/prompts group() for parallel flow selection
-    for (const flow of blueprint.flows) {
+    for (let i = startFlowIndex; i < blueprint.flows.length; i++) {
+      const flow = blueprint.flows[i];
+
+      // Start new session if not resuming
+      if (i === startFlowIndex && !sessionResult.shouldResume) {
+        this.sessionManager.startSession(blueprint, flow);
+      }
+
       const result = await this.executeFlow(flow, blueprint);
 
       if (!result.success) {
@@ -185,7 +236,13 @@ export class FlowExecutor {
 
       // Merge flow variables into main context
       this.context = { ...this.context, ...result.variables };
+
+      // Update session progress
+      this.sessionManager.updateProgress(i, flow.id || flow.title);
     }
+
+    // Mark session as completed
+    this.sessionManager.completeSession();
 
     // Offer to brief AI agent
     await this.displayAIAgentBriefing();
@@ -234,18 +291,10 @@ export class FlowExecutor {
       context.variables = blueprint.variables;
     }
 
-    // Load and validate saved variables from storage
-    const blueprintId = getBlueprintId(blueprint);
-    const schemaVersion = blueprint.schema_version || "0.1.0";
-
-    const savedVariables = storage.getValidatedVariables(
-      blueprintId,
-      schemaVersion,
-      blueprint.variables
-    );
-
-    if (savedVariables) {
-      Object.assign(context, savedVariables);
+    // Load saved variables from project storage
+    const blueprintData = this.projectStorage.getBlueprintData();
+    if (blueprintData) {
+      Object.assign(context, blueprintData.variables);
     }
 
     return context;
@@ -275,7 +324,7 @@ export class FlowExecutor {
       }
     });
 
-    storage.saveBlueprint(blueprintId, schemaVersion, variablesToSave);
+    this.projectStorage.saveBlueprint(blueprintId, schemaVersion, variablesToSave);
   }
 
   /**
@@ -289,7 +338,7 @@ export class FlowExecutor {
    * Display flow summary
    */
   displaySummary(): void {
-    log.step("Let's review what we've put together");
+    log.success("Done! Here's what we've put together");
 
     const entries = Object.entries(this.context).filter(
       ([key]) => !["slugs", "auth", "sdk", "variables", "schema_version"].includes(key)
@@ -437,7 +486,7 @@ export class FlowExecutor {
     log.info("Perfect! I'm ready to brief your AI agent to start executing the integration code.");
 
     const shouldBrief = await confirm({
-      message: "Shall I go ahead and prepare the briefing for your AI assistant?",
+      message: "Shall I go ahead and brief your AI assistant?",
       initialValue: true,
     });
 
@@ -457,17 +506,31 @@ export class FlowExecutor {
           agentPrompt,
         });
 
-        log.success("Great! I've prepared your mission brief.");
-        log.info(
-          "Your " +
-            `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\` +
-            " contains all the integration details, captured data, and next steps."
-        );
+        // Check if AI agent is configured and invoke it
+        if (AIAgentInvoker.isConfigured()) {
+          const agentName = AIAgentInvoker.getConfiguredAgentName();
+          log.info(`Launching ${agentName} with your mission brief...`);
+
+          await AIAgentInvoker.invoke({
+            missionBriefPath: briefPath,
+            workingDirectory: process.cwd(),
+          });
+        } else {
+          log.success("Mission brief saved successfully!");
+          log.info(
+            "Your " +
+              `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\` +
+              " contains all the integration details, captured data, and next steps."
+          );
+          log.info(
+            "To enable automatic AI assistant launching, run 'hacksmith preferences' to configure your preferred AI agent."
+          );
+        }
       } catch (error) {
         log.warn(
-          `I couldn't generate the mission brief: ${error instanceof Error ? error.message : String(error)}`
+          `I couldn't complete the AI agent briefing: ${error instanceof Error ? error.message : String(error)}`
         );
-        log.info("But I've still prepared all the context for your AI assistant.");
+        log.info("You can find your mission brief and context in ~/.hacksmith/mission-brief.md");
       }
     } else {
       log.info("No problem! You can always run this integration again when you're ready.");

@@ -8,6 +8,8 @@ import { InteractiveCLI } from "./cli/interactive.js";
 import { CommandRegistry } from "./cli/command-registry.js";
 import { PlanCommand } from "./commands/plan.js";
 import { PreferencesCommand } from "./commands/preferences.js";
+import { RecoverCommand } from "./commands/recover.js";
+import { SessionCommand } from "./commands/session.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
@@ -18,6 +20,8 @@ async function main() {
   const registry = new CommandRegistry();
   registry.register(new PlanCommand());
   registry.register(new PreferencesCommand());
+  registry.register(new RecoverCommand());
+  registry.register(new SessionCommand());
 
   // If no arguments provided, start interactive mode
   if (process.argv.length <= 2) {
@@ -33,7 +37,16 @@ async function main() {
   } else {
     // Check if first argument is a blueprint path (shorthand syntax)
     const firstArg = process.argv[2];
-    const knownCommands = ["plan", "preferences", "p"]; // Include aliases
+    const knownCommands = [
+      "plan",
+      "preferences",
+      "recover",
+      "session",
+      "p",
+      "prefs",
+      "restore",
+      "sess",
+    ]; // Include aliases
 
     if (firstArg && !firstArg.startsWith("-") && !knownCommands.includes(firstArg)) {
       const remainingArgs = process.argv.slice(3);

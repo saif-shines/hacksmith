@@ -8,6 +8,7 @@ import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "@/utils/a
 import { preferences } from "@/utils/preferences-storage.js";
 import { TechStackDetector } from "@/utils/tech-stack-detector.js";
 import { MissionBriefGenerator } from "@/utils/mission-brief-generator.js";
+import { ProjectStorage } from "@/utils/project-storage.js";
 import { isCancelled, isNotCancelled } from "@/utils/type-guards.js";
 import { MISSION_BRIEF_FILENAME } from "@/constants/files.js";
 
@@ -162,8 +163,9 @@ export class PreferencesCommand extends Command {
         log.success("Excellent! I've analyzed your project:");
         log.message(TechStackDetector.getSummary(techStack));
 
-        // Save to preferences
-        preferences.saveTechStack(techStack);
+        // Save to project storage
+        const projectStorage = new ProjectStorage();
+        projectStorage.saveTechStack(techStack);
         log.success(
           "I've saved your tech stack details. This will help me provide better integration guidance!"
         );
@@ -231,8 +233,9 @@ export class PreferencesCommand extends Command {
         return;
       }
 
-      // Save to preferences
-      preferences.saveTechStack(techStack);
+      // Save to project storage
+      const projectStorage = new ProjectStorage();
+      projectStorage.saveTechStack(techStack);
       log.success("Perfect! I've saved your tech stack information for future integrations.");
     } catch (error) {
       s.stop("Scan failed");
@@ -247,7 +250,8 @@ export class PreferencesCommand extends Command {
    */
   private async showPreferences(): Promise<void> {
     const agent = preferences.getAIAgent();
-    const techStack = preferences.getTechStack();
+    const projectStorage = new ProjectStorage();
+    const techStack = projectStorage.getTechStack();
 
     log.step("Current Preferences");
 
@@ -295,7 +299,8 @@ export class PreferencesCommand extends Command {
    * Generate mission brief
    */
   private async generateMissionBrief(context: CommandContext): Promise<void> {
-    const techStack = preferences.getTechStack();
+    const projectStorage = new ProjectStorage();
+    const techStack = projectStorage.getTechStack();
 
     if (!techStack) {
       log.warn("I need to understand your project first!");

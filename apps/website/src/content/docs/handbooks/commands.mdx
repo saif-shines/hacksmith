@@ -144,7 +144,7 @@ hacksmith preferences setup
 2. **Tech Stack Scanning:**
    - Analyzes your project structure and dependencies
    - Detects languages, frameworks, package managers, databases, and more
-   - Saves tech stack to preferences for use in mission briefs
+   - Saves tech stack to current project for use in mission briefs
 
 **Example:**
 
@@ -154,7 +154,7 @@ hacksmith preferences setup
 
 #### `show`
 
-Display current preferences including configured AI agent and saved tech stack.
+Display current preferences including configured AI agent and current project's tech stack.
 
 ```bash
 hacksmith preferences show
@@ -164,7 +164,7 @@ hacksmith preferences show
 
 - AI agent provider and CLI path
 - AI agent version and last update time
-- Tech stack summary (languages, frameworks, etc.)
+- Current project's tech stack summary (languages, frameworks, etc.)
 - Tech stack scan time and project path
 
 **Example:**
@@ -175,7 +175,7 @@ hacksmith preferences show
 
 #### `scan`
 
-Scan and save your project's tech stack to preferences.
+Scan and save your current project's tech stack.
 
 ```bash
 hacksmith preferences scan
@@ -207,7 +207,7 @@ hacksmith preferences brief
 
 1. Prompts for an optional integration goal
 2. Generates a mission brief with tech stack context
-3. Saves the brief to `~/.hacksmith/mission-brief.md`
+3. Saves the brief to current project's `.hacksmith/mission-brief.md`
 4. Offers to copy the brief to clipboard
 
 **Example:**
@@ -225,18 +225,237 @@ What is your integration goal? (optional, press Enter to skip)
 
 #### `reset`
 
-Reset all preferences (AI agent configuration and tech stack).
+Reset system-level preferences (AI agent configuration only). Project-specific data is preserved.
 
 ```bash
 hacksmith preferences reset
 ```
 
-**Confirmation required.** This will clear all saved preferences.
+**Confirmation required.** This will clear AI agent configuration only. Project data remains intact.
 
 **Example:**
 
 ```bash
 hacksmith preferences reset
+```
+
+---
+
+## `session` Command
+
+The `session` command manages development sessions and tracks blueprint execution progress across projects.
+
+### Usage
+
+```bash
+hacksmith session [subcommand]
+```
+
+### Aliases
+
+- `sess`
+
+### Subcommands
+
+#### `status`
+
+Show current session status and project information.
+
+```bash
+hacksmith session status
+hacksmith session  # status is default
+```
+
+**Output includes:**
+
+- Current project name, location, and type
+- Git repository information (if available)
+- Active session details (blueprint, flow, progress)
+- Session timestamps
+
+**Example:**
+
+```bash
+hacksmith session status
+```
+
+#### `clear`
+
+Clear the current session state. Useful for starting fresh or cleaning up interrupted sessions.
+
+```bash
+hacksmith session clear
+```
+
+**What it does:**
+
+- Prompts for confirmation if there's an active session
+- Clears session progress while preserving captured data
+- Allows you to start blueprint execution from the beginning
+
+**Example:**
+
+```bash
+hacksmith session clear
+```
+
+#### `list`
+
+List all tracked projects and their completion history.
+
+```bash
+hacksmith session list
+```
+
+**Output includes:**
+
+- Project names and paths
+- Blueprint completion counts
+- Last activity timestamps
+- Git repository information
+
+**Example:**
+
+```bash
+hacksmith session list
+```
+
+---
+
+## `recover` Command
+
+The `recover` command restores project data from system backups. Hacksmith automatically backs up your project data after successful blueprint completions.
+
+### Usage
+
+```bash
+hacksmith recover [subcommand]
+```
+
+### Aliases
+
+- `restore`
+
+### Subcommands
+
+#### `interactive`
+
+Launch interactive recovery mode to browse and select backups.
+
+```bash
+hacksmith recover interactive
+hacksmith recover  # interactive is default
+```
+
+**What it does:**
+
+1. Checks if you're in a project directory
+2. Shows available project backups
+3. Lets you select which backup to restore
+4. Copies backup data to current project
+
+**Example:**
+
+```bash
+hacksmith recover interactive
+```
+
+#### `list`
+
+Display all available project backups without restoring.
+
+```bash
+hacksmith recover list
+```
+
+**Output includes:**
+
+- Project names and original paths
+- Number of completed blueprints
+- Last usage timestamps
+- Git repository information
+
+**Example:**
+
+```bash
+hacksmith recover list
+```
+
+#### `project`
+
+Restore a specific project by index number.
+
+```bash
+hacksmith recover project <index>
+```
+
+**Example:**
+
+```bash
+# First, list available backups
+hacksmith recover list
+
+# Then restore by index (1-based)
+hacksmith recover project 3
+```
+
+---
+
+## Project Data Management
+
+Hacksmith uses a project-aware storage system that keeps your data organized and secure.
+
+### Storage Architecture
+
+**Project-local storage** (`.hacksmith/` in project root):
+
+- Blueprint variables and progress
+- Tech stack analysis
+- Session state
+
+**System-level storage** (`~/.hacksmith/`):
+
+- AI agent preferences
+- Project backups (last 10 projects)
+- Global settings
+
+### Automatic Features
+
+**Session Recovery:**
+
+- Detects interrupted blueprint executions
+- Prompts to resume from where you left off
+- Preserves captured data and progress
+
+**Data Migration:**
+
+- Automatically migrates old global data to project-local storage
+- Preserves existing integrations during upgrade
+
+**Backup System:**
+
+- Creates backups after successful blueprint completions
+- Maintains last 10 projects with LRU eviction
+- Protects against accidental data loss
+
+### Data Storage Locations
+
+```
+Your Project/
+├── .hacksmith/
+│   ├── contextifact.json      # Blueprint variables
+│   ├── tech-stack.json        # Project tech stack
+│   ├── session-state.json     # Current session
+│   └── mission-brief.md       # Generated briefs
+
+~/.hacksmith/
+├── preferences.json           # AI agent config
+├── project-registry.json      # Project tracking
+└── projects/
+    ├── abc123/               # Project backup
+    │   ├── contextifact.json
+    │   └── tech-stack.json
+    └── def456/               # Another backup
 ```
 
 ---
@@ -259,7 +478,7 @@ Hacksmith integrates with AI CLIs to automate the next steps after executing a b
 4. Choose to:
    - **Launch AI agent automatically** (if CLI is configured)
    - **Copy to clipboard** (for manual mode)
-   - **Skip** and access the brief later at `~/.hacksmith/mission-brief.md`
+   - **Skip** and access the brief later at your project's `.hacksmith/mission-brief.md`
 
 ### Mission Brief Format
 
