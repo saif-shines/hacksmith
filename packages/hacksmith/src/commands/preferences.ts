@@ -111,7 +111,7 @@ export class PreferencesCommand extends Command {
         },
       ];
 
-      let selected;
+      let selected: string;
       try {
         // Debug output
         if (process.env.DEBUG) {
@@ -125,9 +125,9 @@ export class PreferencesCommand extends Command {
         const selectionPromise = select({
           message: "How would you like to work with AI?",
           options,
-        });
+        }) as Promise<string>;
 
-        const timeoutPromise = new Promise((_, reject) => {
+        const timeoutPromise = new Promise<never>((_, reject) => {
           globalThis.setTimeout(() => {
             reject(new Error("Selection timed out after 30 seconds"));
           }, 30000);
