@@ -11,7 +11,20 @@
 
 **From browsing to building. One command.**
 
+[![npm version](https://img.shields.io/npm/v/hacksmith.svg?style=flat-square)](https://www.npmjs.com/package/hacksmith)
+[![npm downloads](https://img.shields.io/npm/dm/hacksmith.svg?style=flat-square)](https://www.npmjs.com/package/hacksmith)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/saif-shines/hacksmith/ci.yml?branch=closed-alpha&style=flat-square&label=CI)](https://github.com/saif-shines/hacksmith/actions)
+[![License](https://img.shields.io/badge/license-Closed%20Alpha-orange?style=flat-square)](https://github.com/saif-shines/hacksmith/blob/main/LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![GitHub Stars](https://img.shields.io/github/stars/saif-shines/hacksmith?style=flat-square&logo=github)](https://github.com/saif-shines/hacksmith)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/saif-shines/hacksmith/blob/main/CONTRIBUTING.md)
+
 </div>
+
+---
+
+> **⚠️ Alpha Stage Notice:** Hacksmith is currently in closed alpha with a restrictive license that prevents commercial use and redistribution. **Contributions are welcome!** This will transition to a permissive open-source license (MIT/Apache 2.0) upon stable release. [Read the license →](./LICENSE)
 
 ---
 

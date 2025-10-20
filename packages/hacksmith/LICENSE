@@ -1,0 +1,50 @@
+# Hacksmith Closed Alpha License (TEMPORARY)
+
+Copyright (c) 2025 Hacksmith Contributors
+
+**⚠️ NOTICE: This is a temporary restrictive license for the ALPHA stage only.**
+**A permissive open-source license will be applied upon stable release.**
+
+## During Alpha Stage
+
+### You MAY:
+- ✅ View and study the source code
+- ✅ Fork the repository for the purpose of contributing back
+- ✅ Submit pull requests and contributions to the main repository
+- ✅ Use the software for personal testing and evaluation purposes
+- ✅ Report issues and provide feedback
+
+### You MAY NOT:
+- ❌ Use this software for commercial purposes
+- ❌ Redistribute, publish, or deploy modified versions
+- ❌ Use this code in your own products or services
+- ❌ Create derivative works for distribution
+- ❌ Remove or modify this license
+
+## Contributing
+
+**Contributions are welcome!** By submitting a contribution, you agree that:
+1. Your contribution will be licensed under the same terms during alpha
+2. Your contribution will transition to the permissive license upon stable release
+3. You retain copyright to your contributions
+
+## Future License
+
+Upon stable release (v1.0.0), this software will transition to a permissive 
+open-source license (likely MIT or Apache 2.0), allowing full commercial use 
+and redistribution.
+
+## Warranty Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+For questions about licensing, please open an issue at:
+https://github.com/saif-shines/hacksmith/issues
