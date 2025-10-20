@@ -128,9 +128,17 @@ export class PlanCommand extends Command {
   ): Promise<void> {
     context.spinner.start(`Reading blueprints from ${input}...`);
     const blueprint = await BlueprintService.load(input);
-    context.spinner.stop(
-      `Ready to guide on the topic: \n ${figures.pointerSmall} ${blueprint.overview?.description || "No description available"}`
-    );
+    context.spinner.stop();
+
+    // Show step-based info using clack
+    log.step(`Blueprint: ${input.split("/").pop()}`);
+    log.step(`Topic: ${blueprint.overview?.description || "No description available"}`);
+
+    // Check if there are no executable flows
+    const hasFlows = blueprint.flows && blueprint.flows.length > 0;
+    if (!hasFlows) {
+      this.showNoFlowsWarning(input);
+    }
 
     if (jsonOnly) {
       context.output(JSON.stringify(blueprint, null, 2));
@@ -269,7 +277,7 @@ export class PlanCommand extends Command {
       return;
     }
 
-    const formatted = BlueprintFormatter.format(blueprint, input);
+    const formatted = BlueprintFormatter.format(blueprint, input, devMode);
     BlueprintFormatter.print(formatted, context.output);
   }
 
@@ -327,6 +335,27 @@ export class PlanCommand extends Command {
     );
     context.output("");
     context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
+  }
+
+  private showNoFlowsWarning(input: string): void {
+    // Check if this is a GitHub URL and extract repo info
+    const githubMatch = input.match(/github\.com\/([^/]+\/[^/]+)/);
+
+    if (githubMatch) {
+      const repoPath = githubMatch[1];
+      const issuesUrl = `https://github.com/${repoPath}/issues`;
+
+      // Create clickable hyperlink using terminal escape sequences
+      const clickableIssues = `\x1b]8;;${issuesUrl}\x1b\\GitHub Issues\x1b]8;;\x1b\\`;
+
+      log.warn(
+        `Blueprint looks interesting, but the smith hasn't added executable steps yet. Maybe suggest they add some flows via ${clickableIssues}?`
+      );
+    } else {
+      log.warn(
+        "Blueprint looks interesting, but the smith hasn't added executable steps yet. Maybe suggest they add some flows to guide you?"
+      );
+    }
   }
 
   private handleBlueprintError(error: Error, isRepository: boolean): void {
