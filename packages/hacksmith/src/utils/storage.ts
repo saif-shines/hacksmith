@@ -154,5 +154,5 @@ export function getBlueprintId(blueprint: BlueprintConfig): string {
     return blueprint.smith;
   }
   // Simple hash of description for fallback
-  return blueprint.description?.replace(/\s+/g, "-").toLowerCase() || "default";
+  return blueprint.overview?.description?.replace(/\s+/g, "-").toLowerCase() || "default";
 }

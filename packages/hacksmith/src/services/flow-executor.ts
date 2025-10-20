@@ -134,8 +134,8 @@ export class FlowExecutor {
       this.context = this.initializeContext(blueprint);
     }
 
-    // Display overview if enabled
-    if (blueprint.overview?.enabled) {
+    // Display overview if enabled (defaults to true)
+    if (blueprint.overview.enabled !== false) {
       const shouldContinue = await this.displayOverview(blueprint);
       if (!shouldContinue) {
         cancel("Flow cancelled");

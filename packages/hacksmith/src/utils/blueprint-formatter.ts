@@ -10,9 +10,25 @@ export interface FormattedOutput {
   json: string;
 }
 
-// TODO: Come back and improve the experience, especially when blueprint is largely empty with just metadata.
 export class BlueprintFormatter {
   static format(blueprint: BlueprintConfig, sourcePath: string): FormattedOutput {
+    // Check if blueprint has no flows or steps
+    const hasFlows = blueprint.flows && blueprint.flows.length > 0;
+    const hasOverviewSteps = blueprint.overview?.steps && blueprint.overview.steps.length > 0;
+
+    if (!hasFlows && !hasOverviewSteps) {
+      return {
+        header: [
+          `${figures.pointerSmall} Reading the blueprint: ${sourcePath.split("/").pop()}`,
+          `   ${figures.pointerSmall} ${sourcePath}`,
+          "",
+          `${figures.warning} Looks like the smith is still authoring the blueprint..`,
+        ],
+        sections: [],
+        json: JSON.stringify(blueprint, null, 2),
+      };
+    }
+
     const header = [
       `${figures.pointerSmall} Reading the blueprint: ${sourcePath.split("/").pop()}`,
       `   ${figures.pointerSmall} ${sourcePath}`,
@@ -29,27 +45,30 @@ export class BlueprintFormatter {
       `   Provider: ${blueprint.provider || "Unknown"}`,
     ];
 
-    if (blueprint.description) {
-      basicInfo.push(`   Description: ${blueprint.description}`);
-    }
-
     sections.push({ title: "Basic Information", content: basicInfo });
 
-    // Overview section
-    if (blueprint.overview?.enabled) {
-      const overviewContent = [
-        `   Title: ${blueprint.overview.title}`,
-        `   Description: ${blueprint.overview.description}`,
-        `   Estimated Time: ${blueprint.overview.estimated_time}`,
-      ];
+    // Overview section (now always present since it's required)
+    const overviewContent = [];
 
-      if (blueprint.overview.steps && blueprint.overview.steps.length > 0) {
-        overviewContent.push("   Steps:");
-        blueprint.overview.steps.forEach((step, index) => {
-          overviewContent.push(`     ${index + 1}. ${step}`);
-        });
-      }
+    if (blueprint.overview.title) {
+      overviewContent.push(`   Title: ${blueprint.overview.title}`);
+    }
 
+    overviewContent.push(`   Description: ${blueprint.overview.description}`);
+
+    if (blueprint.overview.estimated_time) {
+      overviewContent.push(`   Estimated Time: ${blueprint.overview.estimated_time}`);
+    }
+
+    if (blueprint.overview.steps && blueprint.overview.steps.length > 0) {
+      overviewContent.push("   Steps:");
+      blueprint.overview.steps.forEach((step, index) => {
+        overviewContent.push(`     ${index + 1}. ${step}`);
+      });
+    }
+
+    // Only show overview section if enabled is not explicitly false
+    if (blueprint.overview.enabled !== false) {
       sections.push({ title: "📋 Overview Configuration", content: overviewContent });
     }
 
@@ -107,9 +126,11 @@ export class BlueprintFormatter {
       section.content.forEach((line) => logger(line));
     });
 
-    // Print JSON
-    logger("");
-    logger("📄 Full Blueprint JSON:");
-    formatted.json.split("\n").forEach((line) => logger(line));
+    // Only print JSON if there are sections (i.e., not an empty blueprint)
+    if (formatted.sections.length > 0) {
+      logger("");
+      logger("📄 Full Blueprint JSON:");
+      formatted.json.split("\n").forEach((line) => logger(line));
+    }
   }
 }
