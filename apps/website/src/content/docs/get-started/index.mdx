@@ -8,69 +8,54 @@ import { VideoPlayer } from "starlight-videos/components";
 
 From browsing to building. One command.
 
-**Hacksmith** accelerates engineering team productivity by automating complex setup and integration tasks through guided workflows called **blueprints**. Teams reduce onboarding time by up to 80% and standardize implementation processes across projects. Engineers switch between learning and building modes in seconds, eliminating context switching overhead.
+Hacksmith accelerates engineering productivity by automating complex setup and integration tasks through guided workflows called blueprints. Teams standardize implementation processes and cut onboarding time by up to 80%.
 
 ## Introduction
 
-**Hacksmith** helps engineering teams onboard new members and implement services faster. Teams use **blueprints**—structured workflow definitions—to guide users through complex multi-step processes like setting up payment systems or configuring development environments.
-
-Hacksmith eliminates the friction between learning how to implement features and actually building them. Teams maintain consistency across implementations while reducing the cognitive load of context switching.
+Teams use blueprints—structured workflow definitions—to guide users through multi‑step processes like setting up payment systems or configuring development environments. Hacksmith eliminates the gap between reading docs and shipping code.
 
 ## Core Concepts
 
-**Blueprints** define guided workflows that automate multi-step engineering tasks. Each blueprint contains a sequence of steps that can include user prompts, automated commands, and validation checks.
-
-**Workflows** execute these blueprints interactively, adapting based on user input and system state. Users provide responses to prompts while the tool handles the repetitive, error-prone parts of implementation.
-
-**Templates** within blueprints allow customization for different environments, projects, or user preferences. Teams create reusable blueprint templates that adapt to specific use cases.
-
-**Sessions** track blueprint execution progress across projects. Users can resume interrupted workflows from where they left off, and Hacksmith automatically backs up project data for recovery.
+- Blueprint: Defines a guided workflow for multi-step engineering tasks.
+- Workflow: Executes the blueprint interactively, adapting based on input and state.
+- Templates: Parameterize code/config outputs for different environments and stacks.
+- Sessions: Track progress and resume safely across runs and projects.
 
 ## Installation and Setup
 
-Install Hacksmith globally to access it from any project directory.
+Install Hacksmith and verify it works.
 
 ```bash
+# Option 1: Binary installer (recommended)
+curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
+
+# Option 2: npm (requires Node.js >=18)
 npm install -g hacksmith
-```
 
-Verify the installation works correctly.
-
-```bash
+# Verify
 hacksmith --version
 ```
 
-Hacksmith requires Node.js version 16 or later. The tool works on macOS, Linux, and Windows systems with standard terminal environments.
+When installed via npm, Hacksmith requires Node.js 18 or later. Binaries work on macOS, Linux, and Windows.
 
 ## Basic Usage
 
-Start Hacksmith with a blueprint file to begin a guided workflow.
+Start Hacksmith in interactive mode (no args) or run a blueprint directly.
 
 ```bash
+# Interactive mode
+hacksmith
+
+# Load a local blueprint
 hacksmith plan --blueprint ./path/to/blueprint.toml
-```
 
-List available blueprints in the current directory.
+# Load from GitHub (shorthand, auto-adds --execute unless provided)
+hacksmith saif-shines/hacksmith-blueprints
 
-```bash
-hacksmith list
-```
-
-Get help for any command or option.
-
-```bash
-hacksmith --help
-```
-
-Configure your AI assistant and analyze your project's tech stack.
-
-```bash
+# Configure AI assistant and analyze tech stack
 hacksmith preferences setup
-```
 
-Check your current session status and project information.
-
-```bash
+# Check session status
 hacksmith session status
 ```
 
@@ -78,30 +63,15 @@ hacksmith session status
 
 ### Integrate Payment Processing
 
-Add Stripe payments to a product by following guided setup steps.
-
-**Blueprint authors** create workflows that handle account creation, credential management, and integration setup automatically.
-
-**Users** run the blueprint and follow prompts for project-specific configuration:
+Add Stripe payments with a guided flow.
 
 ```bash
 hacksmith plan --blueprint ./stripe-integration.toml
 ```
 
-The workflow guides users through each step while handling the complex parts automatically.
-
 ### Onboard New Team Members
 
-Set up new engineers with development tools, documentation access, and project context.
-
-**Teams** create onboarding blueprints that standardize the setup process across all new hires.
-
-**New engineers** run the blueprint to get immediate access to:
-
-- Development tools and services
-- Team documentation and processes
-- Code repositories and permissions
-- Communication platforms and channels
+Standardize new-hire setup across tools, repos, and permissions.
 
 ```bash
 hacksmith plan --blueprint ./team-onboarding.toml
@@ -109,11 +79,7 @@ hacksmith plan --blueprint ./team-onboarding.toml
 
 ### Set Up Development Environments
 
-Configure local development environments with consistent tooling and dependencies.
-
-**DevOps teams** maintain environment blueprints that ensure all developers use identical setups.
-
-**Developers** run the blueprint to get a fully configured development environment:
+Create consistent local dev setups with required SDKs and configs.
 
 ```bash
 hacksmith plan --blueprint ./dev-environment.toml
@@ -121,11 +87,7 @@ hacksmith plan --blueprint ./dev-environment.toml
 
 ### Implement Authentication Systems
 
-Add user authentication and authorization to applications using providers like Auth0 or Firebase.
-
-**Security teams** create authentication blueprints that enforce security best practices.
-
-**Developers** follow guided workflows that implement proper authentication flows:
+Guide secure auth flows (e.g., Auth0, Firebase) tailored to your stack.
 
 ```bash
 hacksmith plan --blueprint ./auth-implementation.toml
@@ -133,119 +95,56 @@ hacksmith plan --blueprint ./auth-implementation.toml
 
 ## Architecture Overview
 
-Hacksmith operates through a three-layer architecture that separates concerns and enables flexibility.
-
-**Command Layer** handles user input and output, providing a consistent CLI experience across platforms.
-
-**Engine Layer** processes blueprint definitions, evaluates conditions, and executes workflow steps.
-
-**Service Layer** manages external integrations, file operations, and system interactions.
-
 ```
 User Input → Command Layer → Engine Layer → Service Layer → System Output
 ```
 
-Blueprints define the workflow logic in TOML format, specifying steps, conditions, and templates. The engine interprets these definitions at runtime, adapting execution based on user responses and system state.
+Blueprints define the workflow logic in TOML format. The engine interprets these definitions at runtime, adapting execution based on user responses and system state.
 
 ### Project-Aware Storage
 
-Hacksmith uses a project-aware storage system that keeps data organized and prevents conflicts between different projects:
+Hacksmith uses project-aware storage to keep data organized and avoid cross-project leakage:
 
-**Project-local storage** (`.hacksmith/` in project root):
-
-- Stores blueprint variables, tech stack analysis, and session state
-- Travels with your project and can be version controlled or shared with team members
-- Automatically created when you run blueprints in a project directory
-
-**System-level storage** (`~/.hacksmith/`):
-
-- Stores AI agent preferences and global settings
-- Maintains backups of the last 10 projects for disaster recovery
-- Shared across all projects on your system
+- Project-local storage (`.hacksmith/`): variables, tech stack, session state
+- System-level storage (`~/.hacksmith/`): AI agent preferences, backups, global settings
 
 ### Session Management
 
-Sessions track your progress through blueprint execution and enable resumption of interrupted workflows:
+Sessions save your progress and support resuming interrupted workflows:
 
-- **Automatic detection** of project boundaries using git repositories and package.json files
-- **Progress tracking** that saves your current step and captured variables
-- **Resume prompts** when you restart a blueprint that was previously interrupted
-- **Data backup** after successful completion to prevent loss of integration work
+- Automatic project detection (git/package files)
+- Progress tracking (current step, captured variables)
+- Resume prompts on restart
+- Automatic data backups after success
 
 ## Best Practices
 
-### Blueprint Design
-
-Structure blueprints with clear, single-purpose steps. Group related actions into logical phases that users can understand and follow.
-
-Write step descriptions that explain both what happens and why it matters. Users make better decisions when they understand the context of each action.
-
-Include validation checks at critical points to catch errors early. Users appreciate workflows that fail fast with clear error messages.
-
-### Team Adoption
-
-Start with high-impact, repetitive processes like onboarding or common integrations. Teams see immediate value and become advocates for broader adoption.
-
-Establish blueprint ownership within teams. Domain experts maintain the blueprints for their areas, ensuring accuracy and relevance.
-
-Review blueprints regularly to incorporate feedback and improve user experience. Successful blueprints evolve based on real usage patterns.
-
-### Security Considerations
-
-Never store sensitive credentials in blueprint files. Use environment variables or secure prompts for API keys and passwords.
-
-Implement proper error handling for external service failures. Users need clear guidance when integrations fail due to network issues or service outages.
+- Design clear steps with rationale and validation.
+- Favor adaptable prompts that work across stacks and frameworks.
+- Use conditional steps for optional or gated flows.
+- Mark secrets as sensitive; never print or store them in plaintext.
 
 ## Troubleshooting
 
-### Common Installation Issues
+### Installation
 
-**Problem:** `hacksmith: command not found` after installation.
+- If `hacksmith: command not found`, ensure the install directory is on your PATH or restart your terminal.
+- For npm installs, ensure Node.js >=18.
 
-**Solution:** Restart your terminal or source your shell profile. The PATH update requires a new shell session.
+### Blueprint execution
 
-**Problem:** Permission errors during global installation.
-
-**Solution:** Use a Node version manager like nvm, or install with `sudo npm install -g hacksmith` (not recommended for security).
-
-### Blueprint Execution Problems
-
-**Problem:** Blueprint fails with "template not found" errors.
-
-**Solution:** Verify the blueprint file path and ensure all referenced templates exist in the blueprint directory.
-
-**Problem:** Interactive prompts don't appear in non-interactive environments.
-
-**Solution:** Use the `--non-interactive` flag with environment variables for CI/CD environments:
-
-```bash
-hacksmith plan --blueprint ./blueprint.toml --non-interactive
-```
-
-### Performance Issues
-
-**Problem:** Blueprints run slowly with large codebases.
-
-**Solution:** Use the `--parallel` flag when steps can run independently, and ensure your system meets the minimum requirements.
+- If a blueprint fails with "template not found", verify the file path and referenced templates.
 
 ## Glossary
 
-**Blueprint**: A TOML file that defines a complete workflow with steps, conditions, and templates for automating engineering tasks.
-
-**Template**: Reusable configuration blocks within blueprints that customize behavior based on user input or environment variables.
-
-**Workflow**: The runtime execution of a blueprint, handling user interactions and step execution.
-
-**Step**: An individual action within a blueprint, such as running a command, prompting for input, or validating a condition.
-
-**Engine**: The core processing component that interprets blueprints and manages workflow execution.
+- Blueprint: TOML file defining steps, variables, and outputs.
+- Template: Reusable configuration blocks within blueprints.
+- Workflow: Runtime execution of a blueprint.
+- Step: Individual action in a workflow (input, navigate, info, etc.).
+- Engine: Processor that interprets blueprints and executes steps.
 
 ## Next Steps
 
-Explore the blueprint format specification to create custom workflows for your team.
-
-Check the CLI reference for advanced usage patterns and configuration options.
-
-Review example blueprints in the project repository to understand common patterns and best practices.
-
-Start with a simple use case that your team repeats frequently, then expand to more complex workflows as you gain experience.
+- Read the Blueprint Spec at `https://thehacksmith.dev/get-started/author-blueprint`
+- Follow Blueprint Best Practices at `https://thehacksmith.dev/get-started/blueprint-best-practices`
+- See the Command Reference at `https://thehacksmith.dev/handbooks/commands`

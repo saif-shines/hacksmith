@@ -5,62 +5,54 @@ tableOfContents: false
 
 import { Steps } from "@astrojs/starlight/components";
 
-At the moment, the product is not even launched. Since we do not expect a lot of traffic coming our way, the contents in ths page are going to change drastically.
+We welcome contributions! This monorepo includes both the CLI and the website. Follow the steps below to get set up.
 
-#### Development mode
-
-##### Setup
+#### Development setup
 
 <Steps>
 1. Clone the repository
+   
    ```sh
-   git clone git@github.com:saif-shines/hacksmith.git
+   git clone https://github.com/saif-shines/hacksmith.git
+   cd hacksmith
    ```
-2. We decided to use `pnpm`. No good reason. Install dependencies.
+
+2. Install dependencies
+
    ```sh
-    # Install and build everything
-    pnpm install && pnpm build:all
+   pnpm install
+   ```
 
-    # Install only (what you asked for)
-    pnpm install
+3. Common workflows
 
-    # Install with specific workspace filtering (if needed)
-    pnpm install --filter hacksmith
-    pnpm install --filter @hacksmith/website # we use astro starlight
+   ```sh
+   # Build everything
+   pnpm build:all
 
-    ````
+   # Website development (Starlight/Astro)
+   pnpm site:dev
 
-3.  You see this is a mono repo. There's both website and cli projects both present.
+   # CLI development
+   pnpm --filter hacksmith dev
+   # or watch/build
+   pnpm --filter hacksmith build:watch
+   ```
 
-    ````sh # CLI development
-    pnpm cli:dev -- plan --blueprint foo # equivalent to hacksmith -- plan --blueprint foo
+4. Adding dependencies
 
-        # Website development
-        pnpm site:dev
+   ```sh
+   # Add to CLI only
+   pnpm --filter hacksmith add <package>
 
-        # Build everything
-        pnpm build:all
-        ```
-    ````
+   # Add to website only
+   pnpm --filter @hacksmith/website add <package>
 
-4.  To add any npm package you will need this --filter flag to be passed
+   # Add dev dependency to all workspaces
+   pnpm -r add -D <package>
+   ```
 
-    ```sh
-    # Add to both projects individually
-    pnpm --filter hacksmith add <package-name>
-    pnpm --filter @hacksmith/website add <package-name>
+5. Commit conventions
 
-    # Or add as dev dependencies
-    pnpm --filter hacksmith add -D <package-name>
-    pnpm --filter @hacksmith/website add -D <package-name>
+   We use Conventional Commits enforced by commitlint. Prettier and ESLint run via pre-commit hooks.
 
-    # Add to all workspaces
-    pnpm -r add <package-name>
-
-    # Add as dev dependencies to all
-    pnpm -r add -D <package-name>
-    ```
-
-5.  When you try to commit, the commit message and prettier, eslint checks happen. We follow [commitlint](https://github.com/conventional-changelog/commitlint/#what-is-commitlint).
-
-  </Steps>
+</Steps>

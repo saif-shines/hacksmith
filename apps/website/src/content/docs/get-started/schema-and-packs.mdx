@@ -1,0 +1,71 @@
+---
+title: Blueprint Schema & Packs
+description: How Hacksmith blueprints and packs are structured and validated
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+Blueprints are TOML files that define guided workflows. Packs are curated sets of blueprints for a product.
+
+## Schema overview
+
+A minimal blueprint:
+
+```toml
+schema_version = "0.1.0"
+smith = "your-org/hacksmith-blueprints"
+
+[overview]
+enabled = true
+Title = "Onboard to Your Product"
+description = "Set up and integrate Your Product"
+
+[variables.api_key]
+description = "API key from dashboard"
+required = true
+sensitive = true
+
+[slugs]
+base_url = "https://app.yourproduct.com"
+
+[[flows]]
+id = "your-product"
+title = "Onboard to Your Product"
+```
+
+## Sections
+
+- Metadata: `schema_version`, `smith`
+- Overview: optional intro shown before flows
+- Variables: values to capture (mark secrets with `sensitive = true`)
+- Context: docs/links for AI agents
+- Slugs: URL templates for navigation
+- Agent: AI prompt template
+- Flows: step-by-step interactive experience
+
+## Packs
+
+A pack is a GitHub repo containing one or more blueprint files and docs, e.g. `your-org/hacksmith-blueprints`. The CLI supports GitHub shorthand for discovery:
+
+```bash
+hacksmith plan --github your-org/hacksmith-blueprints
+# or shorthand
+hacksmith your-org/hacksmith-blueprints
+```
+
+If a repo contains multiple blueprints, Hacksmith will list them and prompt you to choose.
+
+## Validation
+
+Blueprints are validated on load. Invalid combinations (e.g., both `--blueprint` and `--github`) or missing values are surfaced with actionable errors. Use predictable identifiers and add regex validation for formats specific to your product.
+
+## Environment
+
+Hacksmith respects:
+
+- `DEBUG=1` for verbose errors
+- `NO_COLOR` to disable colors
+
+Use project-local `.hacksmith/` for captured variables and session state, and `~/.hacksmith/` for system-level preferences.
+
+<Aside type="tip">Keep secrets out of files. Mark as sensitive and capture at runtime.</Aside>

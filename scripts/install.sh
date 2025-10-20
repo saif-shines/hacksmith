@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Hacksmith CLI Installer
-# Install with: curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/hacksmith/main/scripts/install.sh | bash
+# Install with: curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
 
 set -e
 
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO="YOUR_USERNAME/hacksmith"  # TODO: Update with your GitHub username
+REPO="saif-shines/hacksmith"
 BINARY_NAME="hacksmith"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 VERSION="${VERSION:-latest}"
