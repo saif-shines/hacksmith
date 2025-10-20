@@ -1,6 +1,7 @@
 {
   "name": "hacksmith",
   "version": "0.0.17",
+  "description": "From browsing to building. One command.",
   "private": false,
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
