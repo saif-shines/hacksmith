@@ -1,4 +1,4 @@
-import { confirm } from "@clack/prompts";
+import { confirm, log } from "@clack/prompts";
 import clipboardy from "clipboardy";
 import { readFileSync } from "fs";
 import { Command, CommandContext } from "@/types/command.js";
@@ -28,7 +28,7 @@ export class PlanCommand extends Command {
     // Validate arguments
     const validation = parser.validate(parsed);
     if (!validation.isValid) {
-      validation.errors.forEach((error) => context.error(error));
+      validation.errors.forEach((error) => log.error(error));
       return;
     }
 
@@ -115,8 +115,7 @@ export class PlanCommand extends Command {
     } catch (error) {
       context.spinner.stop();
       const err = error as Error;
-      const inputType = allowListing ? "repository" : "blueprint";
-      context.error(`Error processing ${inputType}: ${err.message}`);
+      this.handleBlueprintError(err, allowListing);
     }
   }
 
@@ -212,7 +211,7 @@ export class PlanCommand extends Command {
                 )
               );
             } else {
-              context.output(chalk.yellow(`\n${figures.warning} No AI agent CLI configured.`));
+              log.warn(`No AI agent CLI configured.`);
               context.output(
                 chalk.gray(
                   `${figures.pointer} You can use VS Code Copilot, Cursor, Windsurf, or other AI assistants.`
@@ -235,10 +234,8 @@ export class PlanCommand extends Command {
                   )
                 );
               } catch (error) {
-                context.output(
-                  chalk.yellow(
-                    `\n${figures.warning} Could not copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
-                  )
+                log.warn(
+                  `Could not copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
                 );
                 context.output(chalk.gray(`${figures.pointer} Mission brief is at: ${briefPath}`));
               }
@@ -266,7 +263,7 @@ export class PlanCommand extends Command {
       } else if (result.cancelled) {
         context.output(chalk.yellow("\nFlow execution cancelled"));
       } else {
-        context.error(`Flow execution failed: ${result.error || "Unknown error"}`);
+        log.error(`Flow execution failed: ${result.error || "Unknown error"}`);
       }
 
       return;
@@ -330,5 +327,34 @@ export class PlanCommand extends Command {
     );
     context.output("");
     context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
+  }
+
+  private handleBlueprintError(error: Error, isRepository: boolean): void {
+    const message = error.message;
+
+    // Check if this is a validation error with our new format
+    if (message.includes("[INCOMPLETE]")) {
+      // Extract filename from the message and make it clickable
+      const filenameMatch = message.match(/\[([^\]]+\.toml)\]/);
+      if (filenameMatch) {
+        const filename = filenameMatch[1];
+        const coreMessage = message.replace(/\[[^\]]+\.toml\]/, "").trim();
+        const sourceUrl = (error as Error & { sourceUrl?: string }).sourceUrl;
+
+        if (sourceUrl) {
+          // Create clickable link using terminal escape sequences
+          const clickableFilename = `\x1b]8;;${sourceUrl}\x1b\\[${filename}]\x1b]8;;\x1b\\`;
+          log.error(`${coreMessage} ${clickableFilename}`);
+        } else {
+          log.error(message);
+        }
+      } else {
+        log.error(message);
+      }
+    } else {
+      // Fallback for other errors
+      const inputType = isRepository ? "repository" : "blueprint";
+      log.error(`Error processing ${inputType}: ${message}`);
+    }
   }
 }
