@@ -2,33 +2,53 @@
 title: Try Hacksmith
 ---
 
-import { Button, Steps } from "@astrojs/starlight/components";
+import { Steps } from "@astrojs/starlight/components";
 
-We want to open source hacksmith. But the work is still in progress to keep the pipeline cleaned up.
+Get hands-on with Hacksmith in a few minutes.
 
-Until then you can:
+## Install
 
-- Author blueprints to onboard and implement for your users
-- Use hacksmith to speed up your own onboarding and implementation
+```bash
+# Recommended (no Node.js required)
+curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
 
-## Installing hacksmith
-
-<Steps>
-  1. Install Nodejs. (Coming soon: directly install binaries) 2. Run the following command: ```sh
-  npm i hacksmith ``` See the package on [npmjs](https://www.npmjs.com/package/hacksmith)
-</Steps>
+# Or via npm (Node.js >=18)
+npm i -g hacksmith
+```
 
 ## Quick Start
 
-After installation, set up Hacksmith for your project:
-
 <Steps>
-  1. **Navigate to your project directory** ```sh cd your-project ``` 2. **Set up preferences (AI
-  assistant and tech stack)** ```sh hacksmith preferences setup ``` This will: - Scan for AI CLIs
-  (Claude Code, GitHub Copilot, etc.) - Analyze your project's tech stack - Save everything to your
-  project's `.hacksmith/` folder 3. **Check your session status** ```sh hacksmith session status ```
-  4. **Run your first blueprint** ```sh hacksmith plan --blueprint ./example.toml --execute ``` If
-  interrupted, just run the same command again - Hacksmith will offer to resume!
-</Steps>
+1. Open any project folder in your terminal.
+2. Configure AI assistant and analyze your tech stack:
 
-## Run hacksmith directly
+```bash
+hacksmith preferences setup
+```
+
+3. Run your first blueprint (local file or URL):
+
+   ```bash
+   hacksmith plan --blueprint ./example.toml --execute
+   ```
+
+   You can also use a GitHub shorthand:
+
+   ```bash
+   hacksmith saif-shines/hacksmith-blueprints
+   ```
+
+4. Check session status and resume later if needed:
+
+   ```bash
+   hacksmith session status
+   ```
+
+   </Steps>
+
+## What to expect
+
+- Guided, interactive steps with clear instructions
+- Secure handling of sensitive values
+- Optional mission brief for your AI assistant after execution
+- Project-aware storage under `.hacksmith/`

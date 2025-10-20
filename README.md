@@ -1,156 +1,92 @@
-# Hacksmith
+<div align="center">
 
-A simple CLI tool for running blueprint-based workflows. This repository also contains the docs website built with Astro Starlight under `apps/website`.
+```
+ _                _                     _ _   _
+| |__   __ _  ___| | _____ _ __ ___  (_) |_| |__
+| '_ \ / _` |/ __| |/ / __| '_ ` _ \ | | __| '_ \
+| | | | (_| | (__|   <\__ \ | | | | || | |_| | | |
+|_| |_|\__,_|\___|_|\_\___/_| |_| |_|/ |\__|_| |_|
+                                   |__/
+```
 
-## Installation
+**From browsing to building. One command.**
 
-### Option 1: One-line Install (No Node.js required)
+</div>
 
-Install Hacksmith CLI without Node.js using the standalone binary installer:
+---
+
+You know that moment when you find a great new service, read the docs, and think "I'll integrate this later"? Later never comes. The setup is tedious. The docs are scattered. You forget the steps.
+
+Hacksmith fixes that.
+
+It's a CLI that turns integration docs into executable workflows. Someone writes a blueprint once, you run it, answer a few questions, and you're live. No more copy-pasting code snippets, hunting for API keys, or wondering if you missed a step.
+
+## Try it now
 
 ```bash
+npx hacksmith saif-shines/hacksmith-blueprints
+```
+
+That's it. Hacksmith will fetch the blueprint from GitHub and walk you through it. Want to run your own? Use any `owner/repo` combo where you've published blueprints.
+
+## Installation options
+
+Want it installed permanently?
+
+```bash
+# Via npm
+npm install -g hacksmith
+
+# One-line binary install (no Node.js needed)
 curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
 ```
 
-This will download and install the appropriate binary for your platform (macOS, Linux, or Windows).
+[Full installation guide →](https://thehacksmith.dev/handbooks/installation)
 
-### Option 2: Using npx (Requires Node.js)
+## What can you do with it?
 
-If you have Node.js installed, you can run Hacksmith without installation:
+- **Onboard faster**: New team members run a blueprint and get their entire dev environment configured
+- **Integrate in minutes**: Add Stripe, Auth0, or any service without reading 47 tabs of documentation
+- **Standardize setup**: Your whole team follows the same steps, every time
+- **Resume anywhere**: Started on your laptop, interrupted? Pick up where you left off on your desktop
 
-```bash
-npx hacksmith plan -b https://github.com/saif-shines/hacksmith-blueprints/blob/main/example.blueprint.toml
-```
+## How it works
 
-### Option 3: Install via npm (Requires Node.js)
+1. Someone writes a blueprint (a TOML file defining the workflow)
+2. You run it: `npx hacksmith owner/repo`
+3. Hacksmith guides you through prompts, runs commands, generates code
+4. You're done. Integration live.
 
-```bash
-npm install -g hacksmith
-```
+Blueprints can live in any GitHub repo. Point Hacksmith at it and go.
 
-## Usage
+## Learn more
 
-```bash
-# Run a blueprint plan
-hacksmith plan -b <blueprint-url>
+- [Documentation](https://thehacksmith.dev)
+- [Author your first blueprint](https://thehacksmith.dev/get-started/author-blueprint)
+- [See example blueprints](https://github.com/saif-shines/hacksmith-blueprints)
 
-# Run with environment variables
-hacksmith plan -b <blueprint-url> -e
+## Contributing
 
-# Show help
-hacksmith --help
-```
+This is a monorepo with the CLI (`packages/hacksmith`) and docs site (`apps/website`).
 
-## Website
-
-- Install deps: `pnpm i`
-- Dev: `pnpm site:dev`
-- Build: `pnpm site:build`
-- Preview: `pnpm site:preview`
-- Lint: `pnpm site:lint`
-- Format: `pnpm site:format`
-
-### Deploy (Netlify)
-
-- UI: Base dir `apps/website`, Build `pnpm --filter @hacksmith/website build`, Publish `apps/website/dist`
-- CLI:
+**Quick start for contributors:**
 
 ```bash
-pnpm dlx netlify-cli init
-pnpm dlx netlify-cli deploy --build --prod
+# Install dependencies
+pnpm install
+
+# Run CLI in dev mode
+pnpm dev
+
+# Run the docs site
+pnpm site:dev
+
+# Run tests
+pnpm test
 ```
 
-See `apps/website/README.md` for details.
+See [`CLAUDE.md`](./CLAUDE.md) for detailed development guidelines.
 
-## Packages
+---
 
-### Add a dependency to the `hacksmith` package
-
-- Runtime dependency:
-
-  ```bash
-  pnpm --filter hacksmith add <package>
-  ```
-
-- Dev dependency:
-
-  ```bash
-  pnpm --filter hacksmith add -D <package>
-  ```
-
-### Add a new package to the monorepo
-
-1. Create the package directory under `packages/` and initialize it.
-
-   ```bash
-   mkdir -p packages/<your-package>
-   cd packages/<your-package>
-   pnpm init -y
-   ```
-
-2. Set up `package.json`.
-   - Prefer the scope `@hacksmith/<your-package>` for internal libraries.
-   - For publishable CLIs or public libs, choose scope/name as appropriate.
-   - Ensure the following fields exist (adjust scripts to your stack):
-
-   ```json
-   {
-     "name": "@hacksmith/<your-package>",
-     "version": "0.0.0",
-     "private": true,
-     "type": "module",
-     "scripts": {
-       "dev": "nodemon src/index.ts",
-       "build": "echo 'build'",
-       "test": "bun test",
-       "publish:np": "pnpm dlx np"
-     },
-     "engines": {
-       "node": ">=18"
-     }
-   }
-   ```
-
-3. Add source files.
-
-   ```bash
-   mkdir -p src
-   echo "export const hello = () => 'hello';" > src/index.ts
-   ```
-
-4. Install dependencies for the new package (scoped to this workspace package).
-   - Runtime deps: `pnpm --filter @hacksmith/<your-package> add <dep>`
-   - Dev deps: `pnpm --filter @hacksmith/<your-package> add -D <dev-dep>`
-
-   Then make sure the workspace is linked:
-
-   ```bash
-   pnpm -w install
-   ```
-
-5. Use the new package from another workspace package.
-
-   ```bash
-   pnpm --filter <consumer-pkg> add @hacksmith/<your-package>@workspace:*
-   ```
-
-6. Build and test via repo scripts (Turbo picks up standard scripts).
-
-   ```bash
-   pnpm build:all
-   pnpm test:all
-   ```
-
-7. (Optional) Publish a public package.
-   - In `package.json`, set `"private": false` and ensure a valid name.
-   - From the repo root:
-
-   ```bash
-   pnpm --filter @hacksmith/<your-package> publish:np
-   ```
-
-Notes:
-
-- Workspaces are configured in `pnpm-workspace.yaml` to include `packages/*` and `apps/*`.
-- Turbo will cache `build` outputs if your package writes to `dist/` or `build/`.
-- Use `pnpm --filter <pkg> <command>` to target any package.
+Built by developers who got tired of spending hours on setup that should take minutes.

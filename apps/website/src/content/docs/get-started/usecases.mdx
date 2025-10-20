@@ -5,13 +5,37 @@ sidebar:
 description: Real-world examples of how Hacksmith can be used
 ---
 
-import { Aside, Card, CardGrid } from "@astrojs/starlight/components";
+import { Card, CardGrid } from "@astrojs/starlight/components";
 
-1. Developers trying to integrate payment experience into their project. Probably stripe.
-2. Setup VS code preferences
-3.
+Hacksmith shines wherever repeatable, multi-step engineering work exists. Common scenarios:
 
-### Simple usecases
+<CardGrid>
+  <Card title="Payments Integration" icon="credit-card">
+    Generate and validate a complete Stripe setup across stacks.
+  </Card>
+  <Card title="New Hire Onboarding" icon="person-add">
+    Standardize dev environment, access, and repos in minutes.
+  </Card>
+  <Card title="Local Dev Environments" icon="gear">
+    Provision tools, SDKs, and configs consistently for every project.
+  </Card>
+  <Card title="Auth & SSO" icon="lock">
+    Implement secure auth flows (Auth0, Firebase, custom) tailored to your stack.
+  </Card>
+</CardGrid>
 
-1. Onboard a newly joined engineer and let them get access or install the necessary tools.
-2. One can send this command as part of newsletter, and it automatically seems to work.
+### Example commands
+
+```bash
+# Payments
+hacksmith plan --blueprint ./stripe-integration.toml
+
+# Onboarding
+hacksmith plan --blueprint ./team-onboarding.toml
+
+# Dev environment
+hacksmith plan --blueprint ./dev-environment.toml
+
+# Auth
+hacksmith plan --blueprint ./auth-implementation.toml
+```

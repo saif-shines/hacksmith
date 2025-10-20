@@ -1,10 +1,6 @@
 ---
 title: Installation
 description: How to install Hacksmith CLI on your system
-sidebar:
-  badge:
-    text: WIP
-    variant: caution
 ---
 
 Hacksmith CLI can be installed in multiple ways depending on your needs and environment.
@@ -28,9 +24,9 @@ This downloads and installs a standalone binary for your platform (macOS, Linux,
 
 ### Supported Platforms
 
-- **macOS**: Apple Silicon (ARM64), Intel (x64)
-- **Linux**: x64, ARM64
-- **Windows**: x64
+- macOS: Apple Silicon (ARM64), Intel (x64)
+- Linux: x64, ARM64
+- Windows: x64
 
 ### Custom Installation Directory
 
@@ -62,13 +58,13 @@ Run Hacksmith without installing it permanently:
 npx hacksmith plan -b <blueprint-url>
 ```
 
-**Pros**:
+Pros:
 
 - No installation needed
 - Always uses latest version
 - Quick for one-off usage
 
-**Cons**:
+Cons:
 
 - Requires Node.js 18+
 - Downloads package each time (or uses npm cache)
@@ -94,13 +90,13 @@ Or with pnpm:
 pnpm add -g hacksmith
 ```
 
-**Pros**:
+Pros:
 
 - Integrates with Node.js ecosystem
 - Easy to update (`npm update -g hacksmith`)
 - Familiar for JavaScript developers
 
-**Cons**:
+Cons:
 
 - Requires Node.js 18+
 - Slower startup than binary
@@ -110,7 +106,7 @@ pnpm add -g hacksmith
 
 Download binaries directly from GitHub Releases:
 
-1. Visit [GitHub Releases](https://github.com/saif-shines/hacksmith/releases)
+1. Visit `https://github.com/saif-shines/hacksmith/releases`
 2. Download the binary for your platform:
    - macOS ARM64: `hacksmith-darwin-arm64`
    - macOS Intel: `hacksmith-darwin-x64`
@@ -119,14 +115,14 @@ Download binaries directly from GitHub Releases:
    - Windows: `hacksmith-windows-x64.exe`
 3. Move to a directory in your PATH:
 
-   ```bash
-   # macOS/Linux
-   mv hacksmith-darwin-arm64 /usr/local/bin/hacksmith
-   chmod +x /usr/local/bin/hacksmith
+```bash
+# macOS/Linux
+mv hacksmith-darwin-arm64 /usr/local/bin/hacksmith
+chmod +x /usr/local/bin/hacksmith
 
-   # Windows (PowerShell as Administrator)
-   Move-Item hacksmith-windows-x64.exe C:\Windows\System32\hacksmith.exe
-   ```
+# Windows (PowerShell as Administrator)
+Move-Item hacksmith-windows-x64.exe C:\Windows\System32\hacksmith.exe
+```
 
 ## Install from Source
 
@@ -180,10 +176,10 @@ After installation, verify Hacksmith is available:
 hacksmith --version
 ```
 
-You should see the version number:
+You should see the version number, for example:
 
 ```
-0.0.6
+0.0.x
 ```
 
 ## Updating
@@ -234,32 +230,33 @@ pnpm cli:unlink
 
 ### Command not found
 
-**Problem**: `hacksmith: command not found`
+Problem: `hacksmith: command not found`
 
-**Solutions**:
+Solutions:
 
 1. Check if binary exists:
 
-   ```bash
-   ls -la ~/.local/bin/hacksmith
-   ```
+```bash
+ls -la ~/.local/bin/hacksmith
+```
 
 2. Add to PATH:
 
-   ```bash
-   export PATH="$PATH:$HOME/.local/bin"
-   ```
+```bash
+export PATH="$PATH:$HOME/.local/bin"
+```
 
 3. Verify PATH includes installation directory:
-   ```bash
-   echo $PATH
-   ```
+
+```bash
+echo $PATH
+```
 
 ### Permission denied
 
-**Problem**: `Permission denied` when running hacksmith
+Problem: `Permission denied` when running hacksmith
 
-**Solution**: Make the binary executable:
+Solution: Make the binary executable:
 
 ```bash
 chmod +x ~/.local/bin/hacksmith
@@ -267,20 +264,20 @@ chmod +x ~/.local/bin/hacksmith
 
 ### Download fails
 
-**Problem**: Install script fails to download binary
+Problem: Install script fails to download binary
 
-**Solutions**:
+Solutions:
 
 1. Check internet connection
 2. Verify GitHub is accessible
-3. Try manual download from [GitHub Releases](https://github.com/saif-shines/hacksmith/releases)
+3. Try manual download from `https://github.com/saif-shines/hacksmith/releases`
 4. Check if your platform is supported
 
 ### Wrong architecture
 
-**Problem**: Binary doesn't run (e.g., ARM binary on x64 machine)
+Problem: Binary doesn't run (e.g., ARM binary on x64 machine)
 
-**Solution**: Download the correct binary for your platform:
+Solution: Download the correct binary for your platform:
 
 ```bash
 # Check your architecture
@@ -292,50 +289,51 @@ uname -m
 
 ### Node.js version mismatch
 
-**Problem**: `Error: Requires Node.js >=18`
+Problem: `Error: Requires Node.js >=18`
 
-**Solutions**:
+Solutions:
 
 1. Update Node.js:
 
-   ```bash
-   # Using nvm
-   nvm install 18
-   nvm use 18
+```bash
+# Using nvm
+nvm install 18
+nvm use 18
 
-   # Using Homebrew (macOS)
-   brew upgrade node
-   ```
+# Using Homebrew (macOS)
+brew upgrade node
+```
 
 2. Or use the standalone binary (no Node.js required):
-   ```bash
-   curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
-   ```
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/saif-shines/hacksmith/main/scripts/install.sh | bash
+```
 
 ## Comparison
 
-| Method            | Node.js Required | Size  | Startup Speed | Auto-updates |
-| ----------------- | ---------------- | ----- | ------------- | ------------ |
-| **Binary (curl)** | No               | ~50MB | Fast          | Manual       |
-| **npx**           | Yes (18+)        | ~20MB | Medium        | Automatic    |
-| **npm global**    | Yes (18+)        | ~20MB | Medium        | Manual       |
-| **From source**   | Yes (18+)        | ~20MB | Medium        | Manual       |
+| Method        | Node.js Required | Size  | Startup Speed | Auto-updates |
+| ------------- | ---------------- | ----- | ------------- | ------------ |
+| Binary (curl) | No               | ~50MB | Fast          | Manual       |
+| npx           | Yes (18+)        | ~20MB | Medium        | Automatic    |
+| npm global    | Yes (18+)        | ~20MB | Medium        | Manual       |
+| From source   | Yes (18+)        | ~20MB | Medium        | Manual       |
 
 ## Recommendations
 
-- **For end users**: Use the curl install script (no dependencies)
-- **For JavaScript developers**: Use npm/npx (familiar workflow)
-- **For contributors**: Install from source (easy development)
-- **For CI/CD**: Use npx (no global installation needed)
+- For end users: Use the curl install script (no dependencies)
+- For JavaScript developers: Use npm/npx (familiar workflow)
+- For contributors: Install from source (easy development)
+- For CI/CD: Use npx (no global installation needed)
 
 ## Next Steps
 
-- [Quick Start Guide](/get-started)
-- [Create Your First Blueprint](/cli/blueprint)
-- [Command Reference](/cli/commands)
+- Quick Start Guide: `/get-started`
+- Create Your First Blueprint: `/get-started/author-blueprint`
+- Command Reference: `/handbooks/commands`
 
 ## Related
 
-- [Testing Releases](/cli/testing-releases)
-- [Contributing Guide](/cli/contribute)
-- [GitHub Repository](https://github.com/saif-shines/hacksmith)
+- Testing Releases: `/handbooks/testing-releases`
+- Contributing Guide: `/handbooks/contribute`
+- GitHub Repository: `https://github.com/saif-shines/hacksmith`
