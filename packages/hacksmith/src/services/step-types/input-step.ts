@@ -1,5 +1,4 @@
-import { text, password } from "@clack/prompts";
-import chalk from "chalk";
+import { text, password, log } from "@clack/prompts";
 import type { FlowStep, FlowInput } from "@/types/blueprint.js";
 import type { VariableContext } from "@/utils/template-engine.js";
 import { TemplateEngine } from "@/utils/template-engine.js";
@@ -38,9 +37,7 @@ export class InputStepType extends BaseStepType {
         // Use default value or empty string in dev mode
         if (devMode) {
           const defaultValue = input.placeholder || "";
-          console.log(
-            chalk.gray(`[DEV MODE] Using default value for ${input.name}: "${defaultValue}"`)
-          );
+          log.message(`[DEV MODE] Using default value for ${input.name}: "${defaultValue}"`);
           variables[input.name] = defaultValue;
           continue;
         }
@@ -62,10 +59,8 @@ export class InputStepType extends BaseStepType {
       // Use default value or empty string in dev mode
       if (devMode) {
         const defaultValue = interpolated.placeholder || "";
-        console.log(
-          chalk.gray(
-            `[DEV MODE] Using default value for ${interpolated.save_to}: "${defaultValue}"`
-          )
+        log.message(
+          `[DEV MODE] Using default value for ${interpolated.save_to}: "${defaultValue}"`
         );
         variables[interpolated.save_to] = defaultValue;
         return { success: true, variables };

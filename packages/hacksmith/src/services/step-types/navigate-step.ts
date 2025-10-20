@@ -1,4 +1,4 @@
-import { note, confirm, spinner } from "@clack/prompts";
+import { note, confirm, spinner, log } from "@clack/prompts";
 import chalk from "chalk";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
@@ -38,7 +38,7 @@ export class NavigateStepType extends BaseStepType {
 
     // Skip browser opening and confirmation in dev mode
     if (devMode) {
-      console.log(chalk.gray("[DEV MODE] Skipping browser opening and confirmation"));
+      log.message("[DEV MODE] Skipping browser opening and confirmation");
       return { success: true };
     }
 
@@ -51,7 +51,7 @@ export class NavigateStepType extends BaseStepType {
       s.stop("Browser opened");
     } catch {
       s.stop("Could not open browser automatically");
-      console.log(chalk.yellow(`Please manually open: ${url}`));
+      log.warn(`Please manually open: ${url}`);
     }
 
     // Wait for user confirmation that they've completed the task

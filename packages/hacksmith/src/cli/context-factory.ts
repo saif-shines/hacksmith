@@ -1,6 +1,4 @@
-import { spinner } from "@clack/prompts";
-import chalk from "chalk";
-import figures from "figures";
+import { spinner, log } from "@clack/prompts";
 import terminal from "terminal-kit";
 import ora from "ora";
 import { CommandContext } from "@/types/command.js";
@@ -21,10 +19,10 @@ export function createInteractiveContext(): CommandContext {
   return {
     terminal: term,
     output: (message: string) => {
-      console.log(message);
+      log.message(message);
     },
     error: (message: string) => {
-      console.log(chalk.red(`${figures.cross} ${message}`));
+      log.error(message);
     },
     spinner: {
       start: (message: string) => {
@@ -46,8 +44,8 @@ export function createNonInteractiveContext(): CommandContext {
 
   return {
     terminal: null,
-    output: (message: string) => console.log(message),
-    error: (message: string) => console.log(chalk.red(`${figures.cross} ${message}`)),
+    output: (message: string) => log.message(message),
+    error: (message: string) => log.error(message),
     spinner: {
       start: (message: string) => {
         // Clear any existing spinner

@@ -545,7 +545,7 @@ export class FlowExecutor {
     if (!overview) return true;
 
     // Use the static method for rendering the card
-    FlowExecutor.renderOverviewCard(blueprint, console.log);
+    FlowExecutor.renderOverviewCard(blueprint, (message: string) => log.message(message));
 
     // Confirm to proceed
     const response = await confirm({

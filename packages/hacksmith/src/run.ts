@@ -4,6 +4,7 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { Command } from "commander";
+import { log } from "@clack/prompts";
 import { InteractiveCLI } from "./cli/interactive.js";
 import { CommandRegistry } from "./cli/command-registry.js";
 import { PlanCommand } from "./commands/plan.js";
@@ -96,16 +97,11 @@ async function main() {
     // Handle unknown commands with helpful error
     program.on("command:*", function () {
       const unknownCommand = program.args[0];
-      console.error(`
-      ❌ Unknown command: ${unknownCommand}
-
-      💡 If you meant to load a blueprint, use:
-        hacksmith plan -b ${unknownCommand}
-        or simply:
-        hacksmith ${unknownCommand}
-
-      📝 Type "hacksmith --help" for available commands
-      `);
+      log.error(`Unknown command: ${unknownCommand}`);
+      log.message(
+        `If you meant to load a blueprint, use:\n  hacksmith plan -b ${unknownCommand}\n  or simply:\n  hacksmith ${unknownCommand}`
+      );
+      log.message(`Type "hacksmith --help" for available commands`);
       process.exit(1);
     });
 
@@ -116,16 +112,16 @@ async function main() {
 
 main().catch((error) => {
   // More helpful error message (per clig.dev guidelines)
-  console.error("\n❌ Something went wrong:");
-  console.error(`   ${error instanceof Error ? error.message : String(error)}\n`);
+  log.error("Something went wrong:");
+  log.error(`${error instanceof Error ? error.message : String(error)}`);
 
   if (process.env.DEBUG) {
-    console.error("Stack trace:");
-    console.error(error instanceof Error ? error.stack : error);
+    log.error("Stack trace:");
+    log.error(error instanceof Error ? error.stack : error);
   } else {
-    console.error("💡 Run with DEBUG=1 for more details");
+    log.message("Run with DEBUG=1 for more details");
   }
 
-  console.error("\n📝 Need help? https://github.com/saif-shines/hacksmith/issues\n");
+  log.message("Need help? https://github.com/saif-shines/hacksmith/issues");
   process.exit(1);
 });
