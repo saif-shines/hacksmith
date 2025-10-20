@@ -1,6 +1,5 @@
-import { select, confirm, outro, text } from "@clack/prompts";
+import { select, confirm, text, log } from "@clack/prompts";
 import chalk from "chalk";
-import figures from "figures";
 import { writeFileSync } from "fs";
 import { join } from "path";
 import clipboardy from "clipboardy";
@@ -9,6 +8,7 @@ import { AICLIDetector, type DetectedAICLI, type AICLIProvider } from "@/utils/a
 import { preferences } from "@/utils/preferences-storage.js";
 import { TechStackDetector } from "@/utils/tech-stack-detector.js";
 import { MissionBriefGenerator } from "@/utils/mission-brief-generator.js";
+import { ProjectStorage } from "@/utils/project-storage.js";
 import { isCancelled, isNotCancelled } from "@/utils/type-guards.js";
 import { MISSION_BRIEF_FILENAME } from "@/constants/files.js";
 
@@ -22,10 +22,10 @@ export class PreferencesCommand extends Command {
 
     switch (subcommand) {
       case "show":
-        await this.showPreferences(context);
+        await this.showPreferences();
         break;
       case "reset":
-        await this.resetPreferences(context);
+        await this.resetPreferences();
         break;
       case "scan":
         await this.scanTechStack(context);
@@ -58,10 +58,10 @@ export class PreferencesCommand extends Command {
    * Interactive AI agent setup
    */
   private async setupPreferences(context: CommandContext): Promise<void> {
-    context.output(chalk.cyan.bold("\n✨ Let's set up your preferences\n"));
+    log.step("Let's set up your preferences");
 
     // Step 1: AI Agent Setup
-    context.output(chalk.bold("Step 1: AI Agent Configuration\n"));
+    log.step("Step 1: AI Agent Configuration");
 
     // Detect installed AI CLIs
     const s = context.spinner;
@@ -73,36 +73,34 @@ export class PreferencesCommand extends Command {
     let aiAgentConfigured = false;
 
     if (detected.length === 0) {
-      context.output(
-        chalk.yellow(
-          `\n${figures.warning} No AI CLIs detected.\n\nYou can:\n` +
-            `  1. Install an AI CLI:\n` +
-            `     • Claude Code: https://claude.com/claude-code\n` +
-            `     • GitHub Copilot: gh extension install copilot\n` +
-            `     • Google Gemini: (installation link)\n` +
-            `  2. Use VS Code Copilot, Cursor, Windsurf, or other AI assistants\n`
-        )
+      log.warn("I couldn't find any AI CLIs installed on your system.");
+      log.message("Here's how I can help you get set up:");
+      log.message("1. Install a dedicated AI CLI:");
+      log.message(
+        `   • \x1b]8;;https://claude.com/claude-code\x1b\\Claude Code\x1b]8;;\x1b\\ - Direct AI integration`
+      );
+      log.message("   • GitHub Copilot: Run 'gh extension install copilot'");
+      log.message("   • Other AI CLI tools");
+      log.message(
+        "2. Or use your existing AI assistants (VS Code Copilot, Cursor, Windsurf, etc.)"
       );
 
-      context.output(
-        chalk.cyan(
-          `\n${figures.info} When you execute blueprints, you can copy the mission brief to clipboard\n` +
-            `  and paste it into any AI assistant to get help with integration.\n`
-        )
+      log.info(
+        "When you execute blueprints, I'll copy the mission brief to your clipboard so you can paste it into any AI assistant for help with integration."
       );
     } else {
       // Show detected tools
-      context.output(chalk.green(`\n${figures.tick} Found ${detected.length} AI CLI(s):\n`));
+      log.success(`Great! I found ${detected.length} AI CLI(s) on your system:`);
       detected.forEach((tool) => {
-        const version = tool.version ? chalk.gray(`v${tool.version}`) : "";
-        context.output(`  ${figures.pointer} ${chalk.bold(tool.displayName)} ${version}`);
-        context.output(chalk.gray(`    ${tool.path}`));
+        const version = tool.version ? `v${tool.version}` : "";
+        log.message(`${tool.displayName} ${version}`, { symbol: "→" });
+        log.message(`  Installed at: ${tool.path}`);
       });
 
       // Always show selection menu with manual option
       const options = [
-        ...detected.map((tool) => ({
-          value: tool.name,
+        ...detected.map((tool, index) => ({
+          value: `tool-${index}`, // Use index-based values to avoid special chars
           label: tool.displayName,
           hint: tool.version ? `v${tool.version}` : undefined,
         })),
@@ -113,10 +111,35 @@ export class PreferencesCommand extends Command {
         },
       ];
 
-      const selected = await select({
-        message: "How would you like to work with AI?",
-        options,
-      });
+      let selected: string;
+      try {
+        // Debug output
+        if (process.env.DEBUG) {
+          log.info(`Presenting ${options.length} options for selection`);
+          options.forEach((opt, i) => {
+            log.info(`Option ${i}: value="${opt.value}", label="${opt.label}"`);
+          });
+        }
+
+        // Add a timeout to prevent hanging
+        const selectionPromise = select({
+          message: "How would you like to work with AI?",
+          options,
+        }) as Promise<string>;
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          globalThis.setTimeout(() => {
+            reject(new Error("Selection timed out after 30 seconds"));
+          }, 30000);
+        });
+
+        selected = await Promise.race([selectionPromise, timeoutPromise]);
+      } catch (error) {
+        log.error(`Selection failed: ${error instanceof Error ? error.message : String(error)}`);
+        log.info("This might be a terminal compatibility issue.");
+        log.info("Falling back to manual mode which works with all AI assistants...");
+        selected = "manual";
+      }
 
       if (isNotCancelled(selected)) {
         if (selected === "manual") {
@@ -127,32 +150,31 @@ export class PreferencesCommand extends Command {
             updated_at: new Date().toISOString(),
           });
 
-          context.output(
-            chalk.cyan(
-              `\n${figures.info} Manual mode configured! Mission brief will be copied to clipboard after execution.`
-            )
-          );
-          context.output(
-            chalk.gray(
-              `${figures.pointer} You can paste it into VS Code Copilot, Cursor, Windsurf, or any AI assistant.\n`
-            )
+          log.info("Perfect! I've configured manual mode for you.");
+          log.info(
+            "After executing blueprints, I'll copy the mission brief to your clipboard so you can paste it into any AI assistant."
           );
           aiAgentConfigured = true; // We did save a preference (manual mode)
-        } else {
-          const tool = detected.find((t) => t.name === selected);
+        } else if (selected.startsWith("tool-")) {
+          // Extract the index and get the corresponding tool
+          const toolIndex = parseInt(selected.replace("tool-", ""));
+          const tool = detected[toolIndex];
           if (tool) {
             this.savePreference(tool);
             aiAgentConfigured = true;
+          } else {
+            log.error("Invalid tool selection");
           }
         }
       }
     }
 
     // Step 2: Tech Stack Scanning
-    context.output(chalk.bold("\n\nStep 2: Tech Stack Scanning\n"));
+    log.step("Step 2: Tech Stack Scanning");
 
     const shouldScanTechStack = await confirm({
-      message: "Would you like to scan and save your project's tech stack?",
+      message:
+        "Would you like me to analyze your project's tech stack? This helps me provide better code examples.",
       initialValue: true,
     });
 
@@ -167,12 +189,15 @@ export class PreferencesCommand extends Command {
         s.stop("Scan complete!");
 
         // Display summary
-        context.output(chalk.green(`\n${figures.tick} Tech stack detected:\n`));
-        context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
+        log.success("Excellent! I've analyzed your project:");
+        log.message(TechStackDetector.getSummary(techStack));
 
-        // Save to preferences
-        preferences.saveTechStack(techStack);
-        context.output(chalk.green(`\n${figures.tick} Tech stack saved to preferences!`));
+        // Save to project storage
+        const projectStorage = new ProjectStorage();
+        projectStorage.saveTechStack(techStack);
+        log.success(
+          "I've saved your tech stack details. This will help me provide better integration guidance!"
+        );
       } catch (error) {
         s.stop("Scan failed");
         context.error(
@@ -183,9 +208,11 @@ export class PreferencesCommand extends Command {
 
     // Final summary
     if (aiAgentConfigured || shouldScanTechStack) {
-      outro(chalk.green(`\n${figures.tick} Setup complete!`));
+      log.success(
+        "Perfect! Your preferences are all set up. I'm ready to help you with integrations!"
+      );
     } else {
-      context.output(chalk.gray("\nSetup cancelled"));
+      log.info("No worries! You can run this setup anytime with 'hacksmith preferences setup'.");
     }
   }
 
@@ -200,8 +227,8 @@ export class PreferencesCommand extends Command {
       updated_at: new Date().toISOString(),
     });
 
-    outro(
-      chalk.green(`${figures.tick} Saved! You're all set to use ${chalk.bold(tool.displayName)}`)
+    log.success(
+      `Perfect! I've configured ${tool.displayName} as your AI assistant. You're all set!`
     );
   }
 
@@ -209,7 +236,7 @@ export class PreferencesCommand extends Command {
    * Scan and save tech stack
    */
   private async scanTechStack(context: CommandContext): Promise<void> {
-    context.output(chalk.cyan.bold("\n🔍 Scanning project tech stack...\n"));
+    log.step("Scanning project tech stack...");
 
     const s = context.spinner;
     s.start("Analyzing project structure and dependencies...");
@@ -221,23 +248,24 @@ export class PreferencesCommand extends Command {
       s.stop("Scan complete!");
 
       // Display summary
-      context.output(chalk.green(`\n${figures.tick} Tech stack detected:\n`));
-      context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
+      log.success("Great! Here's what I found in your project:");
+      log.message(TechStackDetector.getSummary(techStack));
 
       // Ask to save
       const shouldSave = await confirm({
-        message: "Save this tech stack to preferences?",
+        message: "Should I save this tech stack information to help with future integrations?",
         initialValue: true,
       });
 
       if (isCancelled(shouldSave) || !shouldSave) {
-        context.output(chalk.gray("\nScan cancelled"));
+        log.info("No problem! I won't save the tech stack information.");
         return;
       }
 
-      // Save to preferences
-      preferences.saveTechStack(techStack);
-      outro(chalk.green(`${figures.tick} Tech stack saved to preferences!`));
+      // Save to project storage
+      const projectStorage = new ProjectStorage();
+      projectStorage.saveTechStack(techStack);
+      log.success("Perfect! I've saved your tech stack information for future integrations.");
     } catch (error) {
       s.stop("Scan failed");
       context.error(
@@ -249,57 +277,50 @@ export class PreferencesCommand extends Command {
   /**
    * Show current preferences
    */
-  private async showPreferences(context: CommandContext): Promise<void> {
+  private async showPreferences(): Promise<void> {
     const agent = preferences.getAIAgent();
-    const techStack = preferences.getTechStack();
+    const projectStorage = new ProjectStorage();
+    const techStack = projectStorage.getTechStack();
 
-    context.output(chalk.cyan.bold("\n📋 Current Preferences\n"));
+    log.step("Current Preferences");
 
     // Show AI Agent
     if (!agent) {
-      context.output(
-        chalk.yellow(
-          `${figures.warning} No AI agent configured.\n\nRun: ${chalk.cyan("hacksmith preferences setup")} to set up`
-        )
-      );
+      log.warn("I don't have an AI agent configured yet.");
+      log.info("Run 'hacksmith preferences setup' to choose your preferred AI assistant");
     } else if (agent.provider === "none") {
       // Manual mode
-      context.output(chalk.bold("AI Agent:"));
-      context.output(`${chalk.green(figures.tick)} Mode: ${chalk.bold("Manual (clipboard)")}`);
-      context.output(
-        `${chalk.gray(figures.pointer)} Mission briefs will be copied to clipboard for use in any AI assistant`
-      );
+      log.step("AI Assistant Configuration:");
+      log.message("Mode: Manual (clipboard copy)");
+      log.message("I'll copy mission briefs to your clipboard for any AI assistant");
       const updatedAt = new Date(agent.updated_at);
       const timeAgo = this.getTimeAgo(updatedAt);
-      context.output(`${chalk.green(figures.tick)} Configured: ${timeAgo}\n`);
+      log.message(`Set up: ${timeAgo}`);
     } else {
       const updatedAt = new Date(agent.updated_at);
       const timeAgo = this.getTimeAgo(updatedAt);
 
-      context.output(chalk.bold("AI Agent:"));
-      context.output(`${chalk.green(figures.tick)} Provider: ${chalk.bold(agent.provider)}`);
-      context.output(`${chalk.green(figures.tick)} Path: ${agent.cli_path}`);
+      log.step("AI Assistant Configuration:");
+      log.message(`Assistant: ${agent.provider}`);
+      log.message(`Location: ${agent.cli_path}`);
       if (agent.version) {
-        context.output(`${chalk.green(figures.tick)} Version: ${agent.version}`);
+        log.message(`Version: ${agent.version}`);
       }
-      context.output(`${chalk.green(figures.tick)} Last updated: ${timeAgo}\n`);
+      log.message(`Last updated: ${timeAgo}`);
     }
 
     // Show Tech Stack
     if (!techStack) {
-      context.output(
-        chalk.yellow(
-          `${figures.warning} No tech stack scanned.\n\nRun: ${chalk.cyan("hacksmith preferences scan")} to scan project`
-        )
-      );
+      log.warn("I haven't analyzed your project's tech stack yet.");
+      log.info("Run 'hacksmith preferences scan' to analyze your current project");
     } else {
       const scannedAt = new Date(techStack.scannedAt);
       const timeAgo = this.getTimeAgo(scannedAt);
 
-      context.output(chalk.bold("\nTech Stack:"));
-      context.output(chalk.gray(TechStackDetector.getSummary(techStack)));
-      context.output(`\n${chalk.green(figures.tick)} Scanned: ${timeAgo}`);
-      context.output(`${chalk.green(figures.tick)} Path: ${techStack.projectPath}\n`);
+      log.step("Project Tech Stack:");
+      log.message(TechStackDetector.getSummary(techStack));
+      log.message(`Last analyzed: ${timeAgo}`);
+      log.message(`Project location: ${techStack.projectPath}`);
     }
   }
 
@@ -307,18 +328,18 @@ export class PreferencesCommand extends Command {
    * Generate mission brief
    */
   private async generateMissionBrief(context: CommandContext): Promise<void> {
-    const techStack = preferences.getTechStack();
+    const projectStorage = new ProjectStorage();
+    const techStack = projectStorage.getTechStack();
 
     if (!techStack) {
-      context.output(
-        chalk.yellow(
-          `\n${figures.warning} No tech stack scanned.\n\nRun: ${chalk.cyan("hacksmith preferences scan")} first`
-        )
+      log.warn("I need to understand your project first!");
+      log.info(
+        "Run 'hacksmith preferences scan' to analyze your tech stack, then I can create a better mission brief"
       );
       return;
     }
 
-    context.output(chalk.cyan.bold("\n📝 Generating Mission Brief...\n"));
+    log.step("Generating Mission Brief...");
 
     // Ask for integration goal (optional)
     const goal = await text({
@@ -338,39 +359,37 @@ export class PreferencesCommand extends Command {
 
     try {
       writeFileSync(briefPath, briefContent, "utf-8");
-      context.output(chalk.green(`\n${figures.tick} Mission brief generated successfully!`));
-      context.output(chalk.gray(`\nLocation: ${briefPath}`));
+      log.success("Perfect! I've created your mission brief.");
+      log.info(
+        "You can find it at: " + `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\`
+      );
 
       // Show a preview
-      context.output(chalk.bold("\n📋 Preview:\n"));
+      log.step("Here's a preview:");
       const preview = briefContent.split("\n").slice(0, 15).join("\n");
-      context.output(chalk.gray(preview));
-      context.output(chalk.gray("\n..."));
+      log.message(preview);
+      log.message("... (see full brief in file)");
 
       // Offer to copy to clipboard
       const shouldCopy = await confirm({
-        message: "Copy mission brief to clipboard?",
+        message: "Would you like me to copy this mission brief to your clipboard?",
         initialValue: true,
       });
 
       if (isNotCancelled(shouldCopy) && shouldCopy) {
         try {
           await clipboardy.write(briefContent);
-          outro(
-            chalk.green(
-              `\n${figures.tick} Mission brief copied to clipboard! Paste it into your AI assistant.`
-            )
+          log.success(
+            "Great! I've copied the mission brief to your clipboard. You can now paste it into any AI assistant."
           );
         } catch (error) {
-          context.output(
-            chalk.yellow(
-              `\n${figures.warning} Could not copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
-            )
+          log.warn(
+            `I couldn't copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
           );
-          outro(chalk.cyan(`\n${figures.info} Mission brief is ready at: ${briefPath}`));
+          log.info(`No worries! You can find your mission brief at: ${briefPath}`);
         }
       } else {
-        outro(chalk.cyan(`\n${figures.info} Mission brief is ready at: ${briefPath}`));
+        log.info(`No problem! Your mission brief is ready whenever you need it at: ${briefPath}`);
       }
     } catch (error) {
       context.error(
@@ -382,19 +401,22 @@ export class PreferencesCommand extends Command {
   /**
    * Reset all preferences
    */
-  private async resetPreferences(context: CommandContext): Promise<void> {
+  private async resetPreferences(): Promise<void> {
     const shouldReset = await confirm({
-      message: "Reset all preferences?",
+      message:
+        "Are you sure you want to reset all your preferences? This will clear your AI agent and tech stack settings.",
       initialValue: false,
     });
 
     if (isCancelled(shouldReset) || !shouldReset) {
-      context.output(chalk.gray("Reset cancelled"));
+      log.info("No worries! Your preferences are safe.");
       return;
     }
 
     preferences.clear();
-    outro(chalk.green(`${figures.tick} Preferences reset successfully`));
+    log.success(
+      "All preferences have been reset. Run 'hacksmith preferences setup' to configure them again."
+    );
   }
 
   /**

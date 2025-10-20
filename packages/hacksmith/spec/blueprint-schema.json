@@ -4,7 +4,7 @@
   "title": "Hacksmith Blueprint Schema",
   "description": "Schema for Hacksmith blueprint TOML files",
   "type": "object",
-  "required": ["schema_version"],
+  "required": ["schema_version", "overview"],
   "properties": {
     "schema_version": {
       "type": "string",
@@ -15,20 +15,31 @@
       "type": "string",
       "description": "Blueprint author/repository (e.g., 'owner/repo')"
     },
-    "description": {
-      "type": "string",
-      "description": "Blueprint description"
-    },
     "overview": {
       "type": "object",
+      "required": ["description"],
       "properties": {
-        "enabled": { "type": "boolean" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "estimated_time": { "type": "string" },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to show the overview (defaults to true)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title for the onboarding flow"
+        },
+        "description": {
+          "type": "string",
+          "description": "Blueprint description"
+        },
+        "estimated_time": {
+          "type": "string",
+          "description": "Expected completion time"
+        },
         "steps": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": { "type": "string" },
+          "description": "Array of high-level steps shown to users"
         }
       }
     },

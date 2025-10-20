@@ -56,6 +56,14 @@ export class CommandRegistry {
       cmd.argument("[subcommand]", "Subcommand (show, reset, setup, scan, or brief)", "setup");
     }
 
+    if (command.name === "recover") {
+      cmd.argument("[subcommand]", "Subcommand (list, project, or interactive)", "interactive");
+    }
+
+    if (command.name === "session") {
+      cmd.argument("[subcommand]", "Subcommand (status, clear, or list)", "status");
+    }
+
     cmd.action(async (subcommandOrOptions, maybeOptions) => {
       const { createNonInteractiveContext } = await import("./context-factory.js");
       const context = createNonInteractiveContext();
@@ -64,7 +72,11 @@ export class CommandRegistry {
       let args: string[] = [];
       let options: Record<string, unknown> = {};
 
-      if (command.name === "preferences") {
+      if (
+        command.name === "preferences" ||
+        command.name === "recover" ||
+        command.name === "session"
+      ) {
         // First argument is the subcommand
         if (typeof subcommandOrOptions === "string") {
           args = [subcommandOrOptions];
@@ -78,8 +90,8 @@ export class CommandRegistry {
         args = this.convertOptionsToArgs(options);
       }
 
-      // Add any additional args from options for non-preferences commands
-      if (command.name !== "preferences") {
+      // Add any additional args from options for commands that don't use subcommands
+      if (!["preferences", "recover", "session"].includes(command.name)) {
         args = this.convertOptionsToArgs(options);
       }
 

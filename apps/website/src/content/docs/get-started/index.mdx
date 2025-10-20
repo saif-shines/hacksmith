@@ -1,11 +1,12 @@
 ---
 title: Hacksmith
-
 sidebar:
   label: Overview
 ---
 
 import { VideoPlayer } from "starlight-videos/components";
+
+From browsing to building. One command.
 
 **Hacksmith** accelerates engineering team productivity by automating complex setup and integration tasks through guided workflows called **blueprints**. Teams reduce onboarding time by up to 80% and standardize implementation processes across projects. Engineers switch between learning and building modes in seconds, eliminating context switching overhead.
 
@@ -22,6 +23,8 @@ Hacksmith eliminates the friction between learning how to implement features and
 **Workflows** execute these blueprints interactively, adapting based on user input and system state. Users provide responses to prompts while the tool handles the repetitive, error-prone parts of implementation.
 
 **Templates** within blueprints allow customization for different environments, projects, or user preferences. Teams create reusable blueprint templates that adapt to specific use cases.
+
+**Sessions** track blueprint execution progress across projects. Users can resume interrupted workflows from where they left off, and Hacksmith automatically backs up project data for recovery.
 
 ## Installation and Setup
 
@@ -57,6 +60,18 @@ Get help for any command or option.
 
 ```bash
 hacksmith --help
+```
+
+Configure your AI assistant and analyze your project's tech stack.
+
+```bash
+hacksmith preferences setup
+```
+
+Check your current session status and project information.
+
+```bash
+hacksmith session status
 ```
 
 ## Use Cases
@@ -131,6 +146,31 @@ User Input → Command Layer → Engine Layer → Service Layer → System Outpu
 ```
 
 Blueprints define the workflow logic in TOML format, specifying steps, conditions, and templates. The engine interprets these definitions at runtime, adapting execution based on user responses and system state.
+
+### Project-Aware Storage
+
+Hacksmith uses a project-aware storage system that keeps data organized and prevents conflicts between different projects:
+
+**Project-local storage** (`.hacksmith/` in project root):
+
+- Stores blueprint variables, tech stack analysis, and session state
+- Travels with your project and can be version controlled or shared with team members
+- Automatically created when you run blueprints in a project directory
+
+**System-level storage** (`~/.hacksmith/`):
+
+- Stores AI agent preferences and global settings
+- Maintains backups of the last 10 projects for disaster recovery
+- Shared across all projects on your system
+
+### Session Management
+
+Sessions track your progress through blueprint execution and enable resumption of interrupted workflows:
+
+- **Automatic detection** of project boundaries using git repositories and package.json files
+- **Progress tracking** that saves your current step and captured variables
+- **Resume prompts** when you restart a blueprint that was previously interrupted
+- **Data backup** after successful completion to prevent loss of integration work
 
 ## Best Practices
 

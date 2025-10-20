@@ -10,7 +10,7 @@ export interface AuthConfig {
 export interface OverviewConfig {
   enabled?: boolean;
   title?: string;
-  description?: string;
+  description: string; // Required field
   estimated_time?: string;
   steps?: string[];
 }
@@ -130,8 +130,8 @@ export interface FlowStep {
 }
 
 export interface Flow {
-  id: string;
-  title: string;
+  id?: string;
+  title?: string;
   steps: FlowStep[];
 }
 
@@ -140,10 +140,9 @@ export interface BlueprintConfig {
   smith?: string;
   version?: string;
   name?: string;
-  description?: string;
   provider?: string;
   auth?: AuthConfig;
-  overview?: OverviewConfig;
+  overview: OverviewConfig; // Required field
   variables?: Record<string, VariableConfig>;
   context?: ContextConfig;
   output?: OutputConfig;

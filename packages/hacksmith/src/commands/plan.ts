@@ -1,6 +1,4 @@
-import { confirm } from "@clack/prompts";
-import clipboardy from "clipboardy";
-import { readFileSync } from "fs";
+import { log } from "@clack/prompts";
 import { Command, CommandContext } from "@/types/command.js";
 import { BlueprintService } from "@/services/blueprint-service.js";
 import { UIService } from "@/services/ui-service.js";
@@ -8,11 +6,6 @@ import { BlueprintFormatter } from "@/utils/blueprint-formatter.js";
 import { FlowExecutor } from "@/services/flow-executor.js";
 import { createPlanArgumentParser, PlanArgs } from "@/types/arguments.js";
 import { PLAN_COMMAND_DEFINITION } from "@/types/command-options.js";
-import { MissionBriefGenerator } from "@/utils/mission-brief-generator.js";
-import { AIAgentInvoker } from "@/utils/ai-agent-invoker.js";
-import { preferences } from "@/utils/preferences-storage.js";
-import { getBlueprintId } from "@/utils/storage.js";
-import { isNotCancelled } from "@/utils/type-guards.js";
 import chalk from "chalk";
 import figures from "figures";
 
@@ -28,7 +21,7 @@ export class PlanCommand extends Command {
     // Validate arguments
     const validation = parser.validate(parsed);
     if (!validation.isValid) {
-      validation.errors.forEach((error) => context.error(error));
+      validation.errors.forEach((error) => log.error(error));
       return;
     }
 
@@ -97,9 +90,9 @@ export class PlanCommand extends Command {
     try {
       // Check if we can list blueprints from this input
       if (allowListing && BlueprintService.canList(input)) {
-        context.spinner.start(`Fetching blueprints from ${input}...`);
+        context.spinner.start(`Reading blueprints from ${input}...`);
         const options = await BlueprintService.listAvailable(input);
-        context.spinner.stop(`${figures.tick} Found ${options.length} blueprint(s)`);
+        context.spinner.stop(`Found ${options.length} blueprint(s)`);
 
         const selectedUrl = await UIService.selectBlueprint(options);
         if (!selectedUrl) {
@@ -115,8 +108,7 @@ export class PlanCommand extends Command {
     } catch (error) {
       context.spinner.stop();
       const err = error as Error;
-      const inputType = allowListing ? "repository" : "blueprint";
-      context.error(`Error processing ${inputType}: ${err.message}`);
+      this.handleBlueprintError(err, allowListing);
     }
   }
 
@@ -127,12 +119,35 @@ export class PlanCommand extends Command {
     executeFlow: boolean,
     devMode: boolean
   ): Promise<void> {
-    context.spinner.start(`Loading blueprint from ${input}...`);
+    context.spinner.start(`Reading blueprints from ${input}...`);
     const blueprint = await BlueprintService.load(input);
-    context.spinner.stop(`${figures.tick} Blueprint ready`);
+    context.spinner.stop();
+
+    // Show step-based info using clack
+    log.step(`Blueprint: ${input.split("/").pop()}`);
+    log.step(`Topic: ${blueprint.overview?.description || "No description available"}`);
+
+    // Check if there are no executable flows and no overview steps
+    const hasFlows = blueprint.flows && blueprint.flows.length > 0;
+    const hasOverviewSteps = blueprint.overview?.steps && blueprint.overview.steps.length > 0;
 
     if (jsonOnly) {
       context.output(JSON.stringify(blueprint, null, 2));
+      return;
+    }
+
+    // Special handling for blueprints with overview steps but no flows
+    if (hasOverviewSteps && !hasFlows) {
+      FlowExecutor.renderOverviewCard(blueprint, context.output);
+      this.showNoFlowsWarning(input);
+      return;
+    }
+
+    // Handle completely empty blueprints
+    if (!hasFlows && !hasOverviewSteps) {
+      this.showNoFlowsWarning(input);
+      const formatted = BlueprintFormatter.format(blueprint, input, devMode);
+      BlueprintFormatter.print(formatted, context.output);
       return;
     }
 
@@ -143,134 +158,16 @@ export class PlanCommand extends Command {
 
       if (result.success) {
         executor.displaySummary();
-
-        // Generate mission brief after successful execution
-        try {
-          const flowNames = blueprint.flows.map((flow) => flow.title);
-          const blueprintName = blueprint.name || "Unknown Blueprint";
-          const blueprintId = getBlueprintId(blueprint);
-          const agentPrompt = blueprint.agent?.prompt_template;
-
-          const briefPath = MissionBriefGenerator.save({
-            blueprintName,
-            blueprintId,
-            flowsExecuted: flowNames,
-            executionSummary: `Successfully executed ${flowNames.length} flow(s) from ${blueprintName} blueprint.`,
-            agentPrompt,
-          });
-
-          context.output(
-            chalk.cyan(`\n${figures.info} Mission brief generated: ${chalk.bold(briefPath)}`)
-          );
-
-          // Check if AI agent is configured and offer to invoke it
-          if (AIAgentInvoker.isConfigured()) {
-            const agentName = AIAgentInvoker.getConfiguredAgentName();
-            const shouldInvoke = await confirm({
-              message: `Launch ${agentName} to continue with integration?`,
-              initialValue: true,
-            });
-
-            if (isNotCancelled(shouldInvoke) && shouldInvoke) {
-              context.output(
-                chalk.cyan(`\n${figures.pointer} Launching ${agentName} with mission brief...\n`)
-              );
-
-              try {
-                await AIAgentInvoker.invoke({
-                  missionBriefPath: briefPath,
-                  workingDirectory: process.cwd(),
-                });
-              } catch (error) {
-                context.output(
-                  chalk.yellow(
-                    `\n${figures.warning} Could not invoke ${agentName}: ${error instanceof Error ? error.message : String(error)}`
-                  )
-                );
-                context.output(
-                  chalk.gray(
-                    `${figures.pointer} You can manually open the mission brief at: ${briefPath}`
-                  )
-                );
-              }
-            } else {
-              context.output(
-                chalk.gray(`\n${figures.pointer} Mission brief is ready at: ${briefPath}`)
-              );
-            }
-          } else {
-            // No AI agent configured or manual mode - offer to copy to clipboard
-            const aiAgent = preferences.getAIAgent();
-            const isManualMode = aiAgent?.provider === "none";
-
-            if (isManualMode) {
-              context.output(
-                chalk.cyan(
-                  `\n${figures.info} Manual mode: Mission brief ready for your AI assistant.`
-                )
-              );
-            } else {
-              context.output(chalk.yellow(`\n${figures.warning} No AI agent CLI configured.`));
-              context.output(
-                chalk.gray(
-                  `${figures.pointer} You can use VS Code Copilot, Cursor, Windsurf, or other AI assistants.`
-                )
-              );
-            }
-
-            const shouldCopy = await confirm({
-              message: "Copy mission brief to clipboard?",
-              initialValue: true,
-            });
-
-            if (isNotCancelled(shouldCopy) && shouldCopy) {
-              try {
-                const briefContent = readFileSync(briefPath, "utf-8");
-                await clipboardy.write(briefContent);
-                context.output(
-                  chalk.green(
-                    `\n${figures.tick} Mission brief copied to clipboard! Paste it into your AI assistant.`
-                  )
-                );
-              } catch (error) {
-                context.output(
-                  chalk.yellow(
-                    `\n${figures.warning} Could not copy to clipboard: ${error instanceof Error ? error.message : String(error)}`
-                  )
-                );
-                context.output(chalk.gray(`${figures.pointer} Mission brief is at: ${briefPath}`));
-              }
-            } else {
-              context.output(
-                chalk.gray(`\n${figures.pointer} Mission brief is ready at: ${briefPath}`)
-              );
-              if (!isManualMode) {
-                context.output(
-                  chalk.gray(
-                    `${figures.pointer} Run ${chalk.cyan("hacksmith preferences setup")} to configure an AI CLI.`
-                  )
-                );
-              }
-            }
-          }
-        } catch (error) {
-          // Non-fatal error - log but don't fail
-          context.output(
-            chalk.yellow(
-              `\n${figures.warning} Could not generate mission brief: ${error instanceof Error ? error.message : String(error)}`
-            )
-          );
-        }
       } else if (result.cancelled) {
-        context.output(chalk.yellow("\nFlow execution cancelled"));
+        log.info("Flow execution cancelled");
       } else {
-        context.error(`Flow execution failed: ${result.error || "Unknown error"}`);
+        log.error(`Flow execution failed: ${result.error || "Unknown error"}`);
       }
 
       return;
     }
 
-    const formatted = BlueprintFormatter.format(blueprint, input);
+    const formatted = BlueprintFormatter.format(blueprint, input, devMode);
     BlueprintFormatter.print(formatted, context.output);
   }
 
@@ -328,5 +225,55 @@ export class PlanCommand extends Command {
     );
     context.output("");
     context.output('Type "/plan --help" or "hacksmith plan --help" for more options.');
+  }
+
+  private showNoFlowsWarning(input: string): void {
+    // Check if this is a GitHub URL and extract repo info
+    const githubMatch = input.match(/github\.com\/([^/]+\/[^/]+)/);
+
+    if (githubMatch) {
+      const repoPath = githubMatch[1];
+      const issuesUrl = `https://github.com/${repoPath}/issues`;
+
+      // Create clickable hyperlink using terminal escape sequences
+      const clickableIssues = `\x1b]8;;${issuesUrl}\x1b\\GitHub Issues\x1b]8;;\x1b\\`;
+
+      log.warn(
+        `Blueprint looks interesting, but the smith hasn't added executable steps yet. Maybe suggest they add some flows via ${clickableIssues}?`
+      );
+    } else {
+      log.warn(
+        "Blueprint looks interesting, but the smith hasn't added executable steps yet. Maybe suggest they add some flows to guide you?"
+      );
+    }
+  }
+
+  private handleBlueprintError(error: Error, isRepository: boolean): void {
+    const message = error.message;
+
+    // Check if this is a validation error with our new format
+    if (message.includes("[INCOMPLETE]")) {
+      // Extract filename from the message and make it clickable
+      const filenameMatch = message.match(/\[([^\]]+\.toml)\]/);
+      if (filenameMatch) {
+        const filename = filenameMatch[1];
+        const coreMessage = message.replace(/\[[^\]]+\.toml\]/, "").trim();
+        const sourceUrl = (error as Error & { sourceUrl?: string }).sourceUrl;
+
+        if (sourceUrl) {
+          // Create clickable link using terminal escape sequences
+          const clickableFilename = `\x1b]8;;${sourceUrl}\x1b\\[${filename}]\x1b]8;;\x1b\\`;
+          log.error(`${coreMessage} ${clickableFilename}`);
+        } else {
+          log.error(message);
+        }
+      } else {
+        log.error(message);
+      }
+    } else {
+      // Fallback for other errors
+      const inputType = isRepository ? "repository" : "blueprint";
+      log.error(`Error processing ${inputType}: ${message}`);
+    }
   }
 }

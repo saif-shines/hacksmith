@@ -57,14 +57,12 @@ Basic information about your blueprint:
 ```toml
 schema_version = "0.1.0"
 smith = "saif-shines/hacksmith-blueprints"
-description = "Example blueprint for onboarding a user to Scalekit for SSO"
 ```
 
 **Fields:**
 
 - **schema_version**: The blueprint specification version (currently `0.1.0`)
 - **smith**: Repository identifier where the blueprint is published
-- **description**: Human-readable summary of what **your product's** blueprint does
 
 ### 2. Overview (Optional)
 
@@ -74,6 +72,7 @@ Provides a user-friendly summary displayed before starting the flow:
 [overview]
 enabled = true
 title = "Onboard to Scalekit for SSO"
+description = "Example blueprint for onboarding a user to Scalekit for SSO"
 estimated_time = "60s"
 steps = [
   "Create account or login",
@@ -87,6 +86,7 @@ steps = [
 
 - **enabled**: Whether to show the overview
 - **title**: Display title for the onboarding flow
+- **description**: Human-readable summary of what **your product's** blueprint does
 - **estimated_time**: Expected completion time
 - **steps**: Array of high-level steps shown to users
 

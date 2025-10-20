@@ -73,4 +73,26 @@ export class GitHubUrlUtils {
     const baseUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
     return path ? `${baseUrl}/${path}` : baseUrl;
   }
+
+  /**
+   * Build Git Trees API URL for a given ref (branch/sha) with recursive listing.
+   */
+  static buildTreeUrl(owner: string, repo: string, ref: string): string {
+    return `https://api.github.com/repos/${owner}/${repo}/git/trees/${ref}?recursive=1`;
+  }
+
+  /**
+   * Build Repository metadata API URL (used to detect default_branch).
+   */
+  static buildRepoMetaUrl(owner: string, repo: string): string {
+    return `https://api.github.com/repos/${owner}/${repo}`;
+  }
+
+  /**
+   * Build GitHub contents API URL for a specific file path at a given ref.
+   */
+  static buildFileContentsUrl(owner: string, repo: string, path: string, ref: string): string {
+    const encodedPath = encodeURIComponent(path).replace(/%2F/g, "/");
+    return `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;
+  }
 }
