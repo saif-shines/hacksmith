@@ -99,8 +99,8 @@ export class PreferencesCommand extends Command {
 
       // Always show selection menu with manual option
       const options = [
-        ...detected.map((tool) => ({
-          value: tool.name,
+        ...detected.map((tool, index) => ({
+          value: `tool-${index}`, // Use index-based values to avoid special chars
           label: tool.displayName,
           hint: tool.version ? `v${tool.version}` : undefined,
         })),
@@ -111,10 +111,35 @@ export class PreferencesCommand extends Command {
         },
       ];
 
-      const selected = await select({
-        message: "How would you like to work with AI?",
-        options,
-      });
+      let selected;
+      try {
+        // Debug output
+        if (process.env.DEBUG) {
+          log.info(`Presenting ${options.length} options for selection`);
+          options.forEach((opt, i) => {
+            log.info(`Option ${i}: value="${opt.value}", label="${opt.label}"`);
+          });
+        }
+
+        // Add a timeout to prevent hanging
+        const selectionPromise = select({
+          message: "How would you like to work with AI?",
+          options,
+        });
+
+        const timeoutPromise = new Promise((_, reject) => {
+          globalThis.setTimeout(() => {
+            reject(new Error("Selection timed out after 30 seconds"));
+          }, 30000);
+        });
+
+        selected = await Promise.race([selectionPromise, timeoutPromise]);
+      } catch (error) {
+        log.error(`Selection failed: ${error instanceof Error ? error.message : String(error)}`);
+        log.info("This might be a terminal compatibility issue.");
+        log.info("Falling back to manual mode which works with all AI assistants...");
+        selected = "manual";
+      }
 
       if (isNotCancelled(selected)) {
         if (selected === "manual") {
@@ -130,11 +155,15 @@ export class PreferencesCommand extends Command {
             "After executing blueprints, I'll copy the mission brief to your clipboard so you can paste it into any AI assistant."
           );
           aiAgentConfigured = true; // We did save a preference (manual mode)
-        } else {
-          const tool = detected.find((t) => t.name === selected);
+        } else if (selected.startsWith("tool-")) {
+          // Extract the index and get the corresponding tool
+          const toolIndex = parseInt(selected.replace("tool-", ""));
+          const tool = detected[toolIndex];
           if (tool) {
             this.savePreference(tool);
             aiAgentConfigured = true;
+          } else {
+            log.error("Invalid tool selection");
           }
         }
       }
