@@ -11,6 +11,8 @@ import { SessionManager } from "@/utils/session-manager.js";
 import { ProjectStorage } from "@/utils/project-storage.js";
 import { Migration } from "@/utils/migration.js";
 import chalk from "chalk";
+import clipboardy from "clipboardy";
+import { readFileSync } from "fs";
 
 export interface FlowExecutionResult {
   success: boolean;
@@ -498,7 +500,7 @@ export class FlowExecutor {
         const blueprintId = getBlueprintId(this.blueprint!);
         const agentPrompt = this.blueprint?.agent?.prompt_template;
 
-        const briefPath = MissionBriefGenerator.save({
+        const briefPath = await MissionBriefGenerator.save({
           blueprintName,
           blueprintId,
           flowsExecuted: flowNames,
@@ -516,15 +518,44 @@ export class FlowExecutor {
             workingDirectory: process.cwd(),
           });
         } else {
-          log.success("Mission brief saved successfully!");
-          log.info(
-            "Your " +
-              `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\` +
-              " contains all the integration details, captured data, and next steps."
-          );
-          log.info(
-            "To enable automatic AI assistant launching, run 'hacksmith preferences' to configure your preferred AI agent."
-          );
+          // Check if manual mode (provider: "none") - copy to clipboard
+          const aiAgent = preferences.getAIAgent();
+          if (aiAgent && aiAgent.provider === "none") {
+            try {
+              const briefContent = readFileSync(briefPath, "utf-8");
+              await clipboardy.write(briefContent);
+              log.success("Mission brief saved and copied to clipboard!");
+              log.info(
+                "I've copied the mission brief to your clipboard. You can now paste it into any AI assistant (VS Code Copilot, Cursor, Windsurf, ChatGPT, etc.)."
+              );
+              log.info(
+                "Your " +
+                  `\x1b]8;;file://${briefPath}\x1b\\mission brief file\x1b]8;;\x1b\\` +
+                  " is also available for reference."
+              );
+            } catch (clipError) {
+              log.warn(
+                `I couldn't copy to clipboard: ${clipError instanceof Error ? clipError.message : String(clipError)}`
+              );
+              log.success("Mission brief saved successfully!");
+              log.info(
+                "Your " +
+                  `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\` +
+                  " contains all the integration details, captured data, and next steps."
+              );
+            }
+          } else {
+            // No AI agent configured at all
+            log.success("Mission brief saved successfully!");
+            log.info(
+              "Your " +
+                `\x1b]8;;file://${briefPath}\x1b\\mission brief\x1b]8;;\x1b\\` +
+                " contains all the integration details, captured data, and next steps."
+            );
+            log.info(
+              "To enable automatic AI assistant launching, run 'hacksmith preferences' to configure your preferred AI agent."
+            );
+          }
         }
       } catch (error) {
         log.warn(

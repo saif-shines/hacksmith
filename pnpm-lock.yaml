@@ -29,6 +29,9 @@ importers:
       astro-eslint-parser:
         specifier: ^1.2.2
         version: 1.2.2
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       eslint:
         specifier: ^9.34.0
         version: 9.34.0(jiti@2.5.1)
@@ -1482,6 +1485,10 @@ packages:
 
   dotenv@17.0.0:
     resolution: {integrity: sha512-A0BJ5lrpJVSfnMMXjmeO0xUnoxqsBHWCoqqTnGwGYVdnctqXXUEhJOO7LxmgxJon9tEZFGpe0xPRX0h2v3AANQ==}
+    engines: {node: '>=12'}
+
+  dotenv@17.2.3:
+    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
     engines: {node: '>=12'}
 
   dset@3.1.4:
@@ -4997,6 +5004,8 @@ snapshots:
       is-obj: 2.0.0
 
   dotenv@17.0.0: {}
+
+  dotenv@17.2.3: {}
 
   dset@3.1.4: {}
 

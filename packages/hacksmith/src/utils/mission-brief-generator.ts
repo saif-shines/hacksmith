@@ -2,6 +2,8 @@ import { writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { preferences } from "./preferences-storage.js";
 import { storage } from "./storage.js";
+import { ContextEnricher, type EnrichedContext } from "@/services/context-enricher.js";
+import { log } from "@clack/prompts";
 
 export interface MissionBriefContext {
   projectName?: string;
@@ -18,8 +20,15 @@ export class MissionBriefGenerator {
   /**
    * Generate a mission brief markdown file content
    */
-  static generate(context?: MissionBriefContext): string {
+  static async generate(context?: MissionBriefContext): Promise<string> {
     const techStack = preferences.getTechStack();
+
+    // Try to enrich with You.com API if available
+    let enrichedContext: EnrichedContext | null = null;
+    if (preferences.hasYouAPIKey()) {
+      log.info("✨ You.com API detected - enriching mission brief with live context...");
+      enrichedContext = await this.tryEnrichment(context, techStack);
+    }
 
     const sections: string[] = [];
 
@@ -52,6 +61,19 @@ export class MissionBriefGenerator {
       sections.push("");
       sections.push(context.agentPrompt);
       sections.push("");
+    }
+
+    // Integration Resources (from You.com API enrichment)
+    if (enrichedContext && enrichedContext.integrationGuides.length > 0) {
+      sections.push("## Integration Resources");
+      sections.push("");
+      sections.push("The following guides and tutorials may help with this integration:");
+      sections.push("");
+      enrichedContext.integrationGuides.forEach((guide) => {
+        sections.push(`### [${guide.title}](${guide.url})`);
+        sections.push(guide.description);
+        sections.push("");
+      });
     }
 
     // Integration Goal
@@ -164,6 +186,19 @@ export class MissionBriefGenerator {
         sections.push("```");
         sections.push("");
 
+        // Add enriched dependency context
+        if (enrichedContext && enrichedContext.dependencyContext.length > 0) {
+          sections.push("#### Important Dependency Notes");
+          sections.push("");
+          enrichedContext.dependencyContext.forEach((dep) => {
+            sections.push(`**${dep.name}** (${dep.version})`);
+            dep.resources.forEach((resource) => {
+              sections.push(`  - [${resource.title}](${resource.url})`);
+            });
+            sections.push("");
+          });
+        }
+
         if (Object.keys(techStack.dependencies).length > 20) {
           sections.push(
             `*... and ${Object.keys(techStack.dependencies).length - 20} more dependencies*`
@@ -230,11 +265,11 @@ export class MissionBriefGenerator {
   /**
    * Generate a mission brief for a specific integration
    */
-  static generateForIntegration(
+  static async generateForIntegration(
     productName: string,
     integrationGoal: string,
     additionalContext?: string
-  ): string {
+  ): Promise<string> {
     return this.generate({
       projectName: productName,
       integrationGoal,
@@ -278,12 +313,63 @@ export class MissionBriefGenerator {
   /**
    * Save mission brief to ~/.hacksmith/mission-brief.md
    */
-  static save(context?: MissionBriefContext): string {
-    const content = this.generate(context);
+  static async save(context?: MissionBriefContext): Promise<string> {
+    const content = await this.generate(context);
     const prefsPath = preferences.getPath();
     const briefPath = join(dirname(prefsPath), "mission-brief.md");
 
     writeFileSync(briefPath, content, "utf-8");
     return briefPath;
+  }
+
+  /**
+   * Try to enrich context using You.com API with timeout
+   * @param context - Mission brief context
+   * @param techStack - Detected tech stack
+   * @returns Enriched context or null if failed/timeout
+   */
+  private static async tryEnrichment(
+    context: MissionBriefContext | undefined,
+    techStack: ReturnType<typeof preferences.getTechStack>
+  ): Promise<EnrichedContext | null> {
+    const apiKey = preferences.getYouAPIKey();
+    if (!apiKey) return null;
+
+    try {
+      // Create enricher with timeout
+      const enricher = new ContextEnricher(apiKey);
+
+      // Set 5 second timeout
+      const enrichmentPromise = enricher.enrich(
+        context?.blueprintName,
+        techStack?.frameworks || [],
+        techStack?.dependencies || {}
+      );
+
+      let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+      const timeoutPromise = new Promise<null>((resolve) => {
+        timeoutId = globalThis.setTimeout(() => {
+          log.warn("Enrichment timed out after 5s, using standard brief");
+          resolve(null);
+        }, 5000);
+      });
+
+      // Race between enrichment and timeout
+      const result = await Promise.race([enrichmentPromise, timeoutPromise]);
+
+      // Clear timeout if enrichment succeeded
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
+
+      if (result) {
+        log.success("Mission brief enriched successfully!");
+      }
+
+      return result;
+    } catch (error) {
+      log.warn(`Enrichment failed: ${error}`);
+      return null;
+    }
   }
 }
