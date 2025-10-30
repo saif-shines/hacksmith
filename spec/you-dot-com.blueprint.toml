@@ -57,8 +57,18 @@ instructions = [
   "Sign in if you haven't already",
   "Navigate to the API Keys section",
   "Create a new API key or copy an existing one",
-  "Input the API key here"
+  "Keep it ready for the next step"
 ]
+
+[[flows.steps]]
+type = "input"
+title = "Paste your YOU.com API key"
+when = "has_you_dot_com_account == 'Yes'"
+markdown = """
+Paste the API key you just created from the You.com dashboard
+"""
+save_to = "api_key"
+
 
 [[flows.steps]]
 type = "info"

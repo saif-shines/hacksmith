@@ -346,8 +346,9 @@ export class MissionBriefGenerator {
         techStack?.dependencies || {}
       );
 
+      let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
       const timeoutPromise = new Promise<null>((resolve) => {
-        globalThis.setTimeout(() => {
+        timeoutId = globalThis.setTimeout(() => {
           log.warn("Enrichment timed out after 5s, using standard brief");
           resolve(null);
         }, 5000);
@@ -355,6 +356,11 @@ export class MissionBriefGenerator {
 
       // Race between enrichment and timeout
       const result = await Promise.race([enrichmentPromise, timeoutPromise]);
+
+      // Clear timeout if enrichment succeeded
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
 
       if (result) {
         log.success("Mission brief enriched successfully!");
