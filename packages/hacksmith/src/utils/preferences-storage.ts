@@ -119,6 +119,22 @@ class PreferencesStorage {
   hasAnyPreferences(): boolean {
     return this.getAIAgent() !== undefined || this.getTechStack() !== undefined;
   }
+
+  /**
+   * Get You.com API key from environment
+   * Used for mission brief enrichment
+   */
+  getYouAPIKey(): string | undefined {
+    return process.env.YOU_API_KEY;
+  }
+
+  /**
+   * Check if You.com API key is configured
+   */
+  hasYouAPIKey(): boolean {
+    const key = this.getYouAPIKey();
+    return key !== undefined && key.length > 0;
+  }
 }
 
 // Singleton instance

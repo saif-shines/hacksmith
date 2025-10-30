@@ -498,7 +498,7 @@ export class FlowExecutor {
         const blueprintId = getBlueprintId(this.blueprint!);
         const agentPrompt = this.blueprint?.agent?.prompt_template;
 
-        const briefPath = MissionBriefGenerator.save({
+        const briefPath = await MissionBriefGenerator.save({
           blueprintName,
           blueprintId,
           flowsExecuted: flowNames,

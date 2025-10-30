@@ -350,7 +350,7 @@ export class PreferencesCommand extends Command {
     const integrationGoal = typeof goal === "string" && goal.trim() ? goal.trim() : undefined;
 
     // Generate the brief
-    const briefContent = MissionBriefGenerator.generate({
+    const briefContent = await MissionBriefGenerator.generate({
       integrationGoal,
     });
 
