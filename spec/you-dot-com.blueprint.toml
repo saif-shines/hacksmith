@@ -1,0 +1,56 @@
+schema_version = "0.1.0"
+smith="saif-shines/hacksmith-blueprints"
+
+[overview]
+enabled = true
+title = "How to make first API call with You.com (nodejs)"
+description = "This blueprint takes you through signing up for You.com account and help you make thef irst API call"
+estimated_time = "60s"
+steps = [
+  "Create account",
+  "Login",
+  "Get the API Key",
+  "Write a script to explain the first API call in Nodejs"
+]
+
+[[flows]]
+id = "you.com"
+title = "Make your first API call with You.com"
+
+[[flows.steps]]
+type = "info"
+title = "Welcome to You.com"
+markdown = """
+You are going to review a simple script that uses your You.com account to make a API call and see the list of news articles
+"""
+
+[[flows.steps]]
+type = "navigate"
+title = "Sign up for You.com platform"
+when = "has_account == 'No'"  # Conditional execution
+url = "{{ slugs.base_url }}"
+instructions = [
+  "Complete the signup form",
+  "Verify your email",
+  "Access your dashboard"
+]
+
+
+[context.documentation]
+primary_docs = "https://documentation.you.com/get-started/welcome"
+search_api_doc = "https://documentation.you.com/api-reference/search"
+
+[slugs]
+base_url = "https://you.com"
+
+
+[agent]
+prompt_template = """
+Write a simple and well-commented Node.js script that performs the following steps:
+
+1. Makes an HTTP GET request to a You.com API to fetch the latest news articles.
+2. Extracts and displays the headline titles of the most recent articles.
+3. Logs the results clearly to the console.
+4. Use modern JavaScript (ES6 or later) and async/await syntax.
+5. Include clear instructions or comments explaining how to run the script and where to insert the API key if needed.
+"""
