@@ -13,6 +13,7 @@ steps = [
   "Write a script to explain the first API call in Nodejs"
 ]
 
+
 [[flows]]
 id = "you.com"
 title = "Make your first API call with You.com"
@@ -25,23 +26,63 @@ You are going to review a simple script that uses your You.com account to make a
 """
 
 [[flows.steps]]
+type = "choice"
+title = "Do you have You.com account?"
+markdown = """
+Also, make sure you are signed in to You.com in your current browser session.
+
+"""
+save_to = "has_you_dot_com_account"
+options = ["Yes", "No"]
+
+[[flows.steps]]
 type = "navigate"
-title = "Sign up for You.com platform"
-when = "has_account == 'No'"  # Conditional execution
-url = "{{ slugs.base_url }}"
+title = "Sign up for You.com"
+when = "has_you_dot_com_account == 'No'"
+url = "{{ slugs.static.home }}"
 instructions = [
+  "Click on the 'Sign up' button",
   "Complete the signup form",
   "Verify your email",
-  "Access your dashboard"
+  "Continue to access your API keys page"
 ]
+
+[[flows.steps]]
+type = "navigate"
+title = "Get your API key"
+when = "has_you_dot_com_account == 'Yes'"
+captures = "api_key"
+url = "{{ slugs.static.apikeys_page }}"
+instructions = [
+  "Sign in if you haven't already",
+  "Navigate to the API Keys section",
+  "Create a new API key or copy an existing one",
+  "Input the API key here"
+]
+
+[[flows.steps]]
+type = "info"
+title = "Writing a script "
+markdown = """
+run the script, to understand how YOu.com API works and you also make your first API call. Proceed now.
+"""
 
 
 [context.documentation]
 primary_docs = "https://documentation.you.com/get-started/welcome"
 search_api_doc = "https://documentation.you.com/api-reference/search"
 
+[variables.api_key]
+description = "API key from You.com"
+required = true
+sensitive = true
+
 [slugs]
 base_url = "https://you.com"
+
+[slugs.static]
+home = "https://you.com/home"
+apikeys_page= "https://you.com/platform/api-keys"
 
 
 [agent]
