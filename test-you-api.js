@@ -47,6 +47,12 @@ async function testContentsAPI() {
     }
 
     const data = await response.json();
+
+    // Check for error in response body
+    if (data.error) {
+      throw new Error(`API Error: ${data.error}`);
+    }
+
     console.log("\n✅ Contents API Response:");
     console.log(JSON.stringify(data, null, 2));
 
@@ -86,6 +92,12 @@ async function testSearchAPI(query = "hacksmith cli tool") {
     }
 
     const data = await response.json();
+
+    // Check for error in response body
+    if (data.error) {
+      throw new Error(`API Error: ${data.error}`);
+    }
+
     console.log("\n✅ Search API Response:");
     console.log(JSON.stringify(data, null, 2));
 
